@@ -1,0 +1,532 @@
+/* ============================================================
+   BIKE RENTAL TARZO — Global CSS
+   ============================================================ */
+
+:root {
+  --verde:        #2D8659;
+  --verde-light:  #4CAF50;
+  --verde-pale:   #e8f5e9;
+  --verde-pale2:  #f0faf4;
+  --accent:       #FF6B6B;
+  --accent-dark:  #e05555;
+  --white:        #FFFFFF;
+  --bg:           #F5F5F5;
+  --text:         #333333;
+  --text-light:   #666666;
+  --border:       #E0E0E0;
+  --shadow:       0 2px 12px rgba(0,0,0,0.08);
+  --radius:       12px;
+  --radius-sm:    8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 16px; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ─── Layout ─────────────────────────────────────────────── */
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: var(--verde);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.header p {
+  margin: 0;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+/* ─── Card ───────────────────────────────────────────────── */
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 24px;
+  margin-bottom: 16px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255,107,107,0.35);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--verde);
+  border: 2px solid var(--verde);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--verde-pale);
+}
+
+.btn-full { width: 100%; }
+
+.btn-nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.btn-nav-row .btn-primary { flex: 1; }
+
+/* ─── Form ───────────────────────────────────────────────── */
+
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  color: var(--text);
+  transition: border-color 0.15s;
+  background: white;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--verde);
+}
+.form-group input.error {
+  border-color: var(--accent);
+}
+.form-group .error-msg {
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+/* ─── Step title ─────────────────────────────────────────── */
+
+.step-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--verde);
+  margin: 0 0 6px;
+}
+.step-subtitle {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin: 0 0 24px;
+}
+
+/* ─── Selection Options ──────────────────────────────────── */
+
+.option-grid {
+  display: grid;
+  gap: 12px;
+}
+.option-grid-2 { grid-template-columns: 1fr 1fr; }
+
+.option-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  background: white;
+  display: block;
+  width: 100%;
+}
+.option-card:hover {
+  border-color: var(--verde-light);
+  background: var(--verde-pale2);
+}
+.option-card.selected {
+  border-color: var(--verde);
+  background: var(--verde-pale);
+}
+.option-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.option-card .opt-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.option-card .opt-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.option-card .opt-detail { font-size: 0.82rem; color: var(--text-light); margin-top: 2px; }
+.option-card .opt-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+/* ─── Calendar ───────────────────────────────────────────── */
+
+.calendar-wrapper {
+  user-select: none;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.calendar-nav h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.cal-nav-btn {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  width: 36px; height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-nav-btn:hover { border-color: var(--verde); }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-day-header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-light);
+  padding: 4px 0;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+  font-size: 0.85rem;
+  position: relative;
+}
+.cal-day .day-num { font-weight: 600; line-height: 1; }
+.cal-day .day-avail {
+  font-size: 0.6rem;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.cal-day.avail-full    { background: #e8f5e9; color: #1a5c3a; }
+.cal-day.avail-partial { background: #fff8e1; color: #7d5a00; }
+.cal-day.avail-none    { background: #fce4e4; color: #999; cursor: not-allowed; }
+.cal-day.past          { background: #f5f5f5; color: #ccc; cursor: not-allowed; }
+.cal-day.empty         { cursor: default; }
+.cal-day.selected      { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(45,134,89,0.25); }
+
+.cal-day.avail-full:hover,
+.cal-day.avail-partial:hover {
+  border-color: var(--verde);
+  transform: scale(1.05);
+}
+
+/* ─── Time slots ─────────────────────────────────────────── */
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.time-slot {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: white;
+  transition: all 0.15s;
+}
+.time-slot:hover { border-color: var(--verde); background: var(--verde-pale2); }
+.time-slot.selected {
+  border-color: var(--verde);
+  background: var(--verde-pale);
+  color: var(--verde);
+}
+
+/* ─── Bike selector ──────────────────────────────────────── */
+
+.bike-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.bike-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+}
+.bike-card:hover:not(.unavailable) {
+  border-color: var(--verde);
+  background: var(--verde-pale2);
+}
+.bike-card.selected {
+  border-color: var(--verde);
+  background: var(--verde-pale);
+}
+.bike-card.unavailable {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.bike-icon { font-size: 2rem; display: block; }
+.bike-label { font-size: 0.7rem; font-weight: 700; color: var(--text-light); margin-top: 4px; }
+
+/* ─── Summary box ────────────────────────────────────────── */
+
+.summary-box {
+  background: var(--verde-pale2);
+  border: 1px solid #b7e4c7;
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #d4edda;
+  font-size: 0.9rem;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row .label { color: var(--text-light); }
+.summary-row .value { font-weight: 700; color: var(--text); }
+.summary-row.total .value {
+  font-size: 1.3rem;
+  color: var(--verde);
+}
+
+/* ─── Sticky price banner ────────────────────────────────── */
+
+.sticky-price {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 2px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+}
+.sticky-price .price-label { font-size: 0.8rem; color: var(--text-light); }
+.sticky-price .price-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--verde);
+}
+
+/* ─── Success / Cancel pages ─────────────────────────────── */
+
+.result-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.result-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+.result-icon { font-size: 4rem; margin-bottom: 16px; }
+.result-card h1 { font-size: 1.6rem; color: var(--verde); margin: 0 0 8px; }
+.result-card p  { color: var(--text-light); margin: 0 0 24px; }
+
+/* ─── Badge disponibilità ────────────────────────────────── */
+
+.avail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.avail-badge.high   { background: #e8f5e9; color: #1a5c3a; }
+.avail-badge.medium { background: #fff8e1; color: #7d5a00; }
+.avail-badge.low    { background: #fce4e4; color: #c0392b; }
+
+/* ─── Loading / spinner ──────────────────────────────────── */
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--verde);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 24px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+/* ─── Admin dashboard ────────────────────────────────────── */
+
+.admin-header {
+  background: #1a1a2e;
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.admin-header h1 { margin: 0; font-size: 1.1rem; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--verde); }
+.stat-card .stat-label { font-size: 0.8rem; color: var(--text-light); margin-top: 4px; }
+
+.booking-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+}
+.booking-table th {
+  background: var(--verde);
+  color: white;
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+.booking-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.booking-table tr:last-child td { border-bottom: none; }
+.booking-table tr:hover td { background: var(--verde-pale2); }
+
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.status-badge.paid       { background: #e8f5e9; color: #1a5c3a; }
+.status-badge.pending    { background: #fff8e1; color: #7d5a00; }
+.status-badge.cancelled  { background: #fce4e4; color: #c0392b; }
+
+/* ─── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .main-content { padding: 16px 12px 80px; }
+  .card { padding: 20px 16px; }
+  .time-grid { grid-template-columns: repeat(3, 1fr); }
+  .bike-grid { grid-template-columns: repeat(5, 1fr); }
+  .option-grid-2 { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .booking-table th:nth-child(n+4),
+  .booking-table td:nth-child(n+4) { display: none; }
+}
