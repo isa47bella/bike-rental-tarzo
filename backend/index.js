@@ -40,9 +40,14 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: 'Errore interno del server' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚲 Bike Rental Tarzo — Backend`);
-  console.log(`   Server:    http://localhost:${PORT}`);
-  console.log(`   Health:    http://localhost:${PORT}/health`);
-  console.log(`   Ambiente:  ${process.env.NODE_ENV || 'development'}\n`);
-});
+// Avvia il server solo in locale (non su Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`\nBike Rental Tarzo — Backend`);
+    console.log(`   Server:    http://localhost:${PORT}`);
+    console.log(`   Health:    http://localhost:${PORT}/health`);
+    console.log(`   Ambiente:  ${process.env.NODE_ENV || 'development'}\n`);
+  });
+}
+
+module.exports = app;
