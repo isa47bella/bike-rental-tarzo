@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
   const biciOccupate = new Set(occupate.map(r => r.bicicletta_id));
 
   // Tutte e 5 le bici
-  const tutteLeBici = [1, 2, 3, 4, 5];
+  const tutteLeBici = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const biciDisponibili = tutteLeBici.filter(id => !biciOccupate.has(id));
 
   return res.json({

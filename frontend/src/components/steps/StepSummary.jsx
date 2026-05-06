@@ -66,8 +66,8 @@ export default function StepSummary({ booking, onBack }) {
           <span className="value">{booking.orario_restituzione}</span>
         </div>
         <div className="summary-row">
-          <span className="label">🚲 Bicicletta</span>
-          <span className="value">Bicicletta #{booking.bicicletta_id} (Papin Sport)</span>
+          <span className="label">🚲 Modello</span>
+          <span className="value">{booking.modello_nome || `Bicicletta #${booking.bicicletta_id}`}</span>
         </div>
         <div className="summary-row">
           <span className="label">👤 Cliente</span>

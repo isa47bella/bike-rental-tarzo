@@ -12,7 +12,7 @@ const supabase = require('../lib/supabase');
 const { sendConfirmationToCliente, sendNotificationToGestore } = require('../lib/email');
 const { calcRange, calcRestituzione } = require('./availability');
 
-const TOTAL_BIKES = 5;
+const TOTAL_BIKES = 10;
 
 // ─── Calcolo prezzo ───────────────────────────────────────────────────────────
 

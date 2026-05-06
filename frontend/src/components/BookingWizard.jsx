@@ -16,6 +16,7 @@ const INITIAL_BOOKING = {
   tipo_noleggio:       null,
   giorni:              1,
   bicicletta_id:       null,
+  modello_nome:        '',
   cliente_nome:        '',
   cliente_email:       '',
   cliente_telefono:    '',
