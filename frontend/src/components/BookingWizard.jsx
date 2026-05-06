@@ -67,7 +67,12 @@ export default function BookingWizard() {
     <div className="page-wrapper">
       {/* Header */}
       <header className="header">
-        <div style={{ fontSize: '1.8rem' }}>🚲</div>
+        <div className="header-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
+          </svg>
+        </div>
         <div>
           <h1>Bike Rental Tarzo</h1>
           <p>Colline del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)</p>

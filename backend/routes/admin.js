@@ -14,7 +14,7 @@ const supabase = require('../lib/supabase');
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
 function authMiddleware(req, res, next) {
-  const token = req.headers['x-admin-token'] || req.query.token;
+  const token = req.headers['x-admin-token'];
   if (!token || token !== process.env.ADMIN_TOKEN) {
     return res.status(401).json({ error: 'Non autorizzato' });
   }
@@ -26,7 +26,9 @@ router.use(authMiddleware);
 // ─── GET /api/admin/bookings ──────────────────────────────────────────────────
 
 router.get('/bookings', async (req, res) => {
-  const { status, from, to, limit = 50, offset = 0 } = req.query;
+  const { status, from, to } = req.query;
+  const limit  = Math.min(Math.max(parseInt(req.query.limit,  10) || 50,  1), 200);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
 
   let query = supabase
     .from('prenotazioni')
@@ -34,10 +36,11 @@ router.get('/bookings', async (req, res) => {
       id, cliente_nome, cliente_email, cliente_telefono,
       bicicletta_id, tipo_noleggio, giorni,
       data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
-      prezzo_totale, pagamento_status, created_at
+      prezzo_totale, pagamento_status, created_at,
+      stripe_payment_method_id, danno_status, danno_amount
     `)
     .order('data_ritiro', { ascending: true })
-    .range(Number(offset), Number(offset) + Number(limit) - 1);
+    .range(offset, offset + limit - 1);
 
   if (status) query = query.eq('pagamento_status', status);
   if (from)   query = query.gte('data_ritiro', from);
@@ -107,7 +110,10 @@ router.get('/stats', async (req, res) => {
 
 router.post('/bookings/:id/charge-damage', async (req, res) => {
   const { amount, motivo } = req.body;
-  if (!amount || amount <= 0) return res.status(400).json({ error: 'Importo non valido' });
+  const amountNum = parseFloat(amount);
+  if (!amountNum || amountNum <= 0 || amountNum > 5000) {
+    return res.status(400).json({ error: 'Importo non valido (max €5.000)' });
+  }
 
   const { data: prenotazione, error } = await supabase
     .from('prenotazioni')
@@ -123,22 +129,27 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
     return res.status(400).json({ error: 'Danno già addebitato' });
   }
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount:         Math.round(amount * 100),
-    currency:       'eur',
-    customer:       prenotazione.stripe_customer_id,
-    payment_method: prenotazione.stripe_payment_method_id,
-    confirm:        true,
-    off_session:    true,
-    description:    `Danno bici — ${prenotazione.cliente_nome}${motivo ? ': ' + motivo : ''}`,
-  });
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount:         Math.round(amountNum * 100),
+      currency:       'eur',
+      customer:       prenotazione.stripe_customer_id,
+      payment_method: prenotazione.stripe_payment_method_id,
+      confirm:        true,
+      off_session:    true,
+      description:    `Danno bici — ${prenotazione.cliente_nome}${motivo ? ': ' + motivo : ''}`,
+    });
 
-  await supabase
-    .from('prenotazioni')
-    .update({ danno_status: 'charged', danno_amount: amount })
-    .eq('id', req.params.id);
+    await supabase
+      .from('prenotazioni')
+      .update({ danno_status: 'charged', danno_amount: amountNum })
+      .eq('id', req.params.id);
 
-  return res.json({ success: true, payment_intent_id: paymentIntent.id });
+    return res.json({ success: true, payment_intent_id: paymentIntent.id });
+  } catch (stripeError) {
+    console.error('Stripe charge-damage error:', stripeError);
+    return res.status(402).json({ error: stripeError.message || 'Pagamento rifiutato dalla carta' });
+  }
 });
 
 module.exports = router;
