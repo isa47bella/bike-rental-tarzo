@@ -2,9 +2,9 @@ require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
 
-const availabilityRoutes = require('../backend/routes/availability');
-const paymentsRoutes     = require('../backend/routes/payments');
-const adminRoutes        = require('../backend/routes/admin');
+const availabilityRoutes = require('./routes/availability');
+const paymentsRoutes     = require('./routes/payments');
+const adminRoutes        = require('./routes/admin');
 
 const app = express();
 
