@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "mkdir -p api/routes api/lib && cp backend/routes/availability.js api/routes/ && cp backend/routes/payments.js api/routes/ && cp backend/routes/admin.js api/routes/ && cp backend/lib/supabase.js api/lib/ && cp backend/lib/email.js api/lib/ && cd frontend && npm install && npm run build",
+  "buildCommand": "mkdir -p api/routes api/lib && cp backend/routes/*.js api/routes/ && cp backend/lib/*.js api/lib/ && cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
