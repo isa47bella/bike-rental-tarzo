@@ -107,10 +107,16 @@ router.post('/checkout', async (req, res) => {
 
   // Crea sessione Stripe Checkout
   try {
+    const customer = await stripe.customers.create({
+      email: cliente_email,
+      name:  cliente_nome,
+      phone: cliente_telefono,
+    });
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode:                 'payment',
-      customer_email:       cliente_email,
+      customer:             customer.id,
       line_items: [{
         price_data: {
           currency:     'eur',
@@ -123,6 +129,9 @@ router.post('/checkout', async (req, res) => {
         },
         quantity: 1,
       }],
+      payment_intent_data: {
+        setup_future_usage: 'off_session',
+      },
       metadata: {
         prenotazione_id: prenotazione.id,
         bicicletta_id:   String(bicicletta_id),
@@ -180,6 +189,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     if (error) {
       console.error('Errore update prenotazione:', error);
       return res.status(500).send('DB error');
+    }
+
+    // Salva customer_id e payment_method per addebiti futuri (cauzione danni)
+    if (session.payment_intent) {
+      try {
+        const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+        const paymentMethodId = paymentIntent.payment_method;
+        await supabase
+          .from('prenotazioni')
+          .update({
+            stripe_customer_id:       session.customer,
+            stripe_payment_method_id: paymentMethodId,
+          })
+          .eq('stripe_session_id', session.id);
+      } catch (e) {
+        console.error('Errore salvataggio payment method:', e);
+      }
     }
 
     // Invia email (non bloccante — ignora errori email)

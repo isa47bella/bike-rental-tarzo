@@ -13,13 +13,16 @@ function tipoShort(tipo) {
 }
 
 export default function AdminDashboard() {
-  const [token,    setToken]    = useState(sessionStorage.getItem('admin_token') || '');
-  const [authed,   setAuthed]   = useState(false);
-  const [stats,    setStats]    = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [filter,   setFilter]   = useState('paid');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState(null);
+  const [token,       setToken]       = useState(sessionStorage.getItem('admin_token') || '');
+  const [authed,      setAuthed]      = useState(false);
+  const [stats,       setStats]       = useState(null);
+  const [bookings,    setBookings]    = useState([]);
+  const [filter,      setFilter]      = useState('paid');
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [damageModal, setDamageModal] = useState(null); // { id, nome } oppure null
+  const [damageAmount, setDamageAmount] = useState('');
+  const [damageMotivo, setDamageMotivo] = useState('');
 
   async function login() {
     sessionStorage.setItem('admin_token', token);
@@ -58,6 +61,22 @@ export default function AdminDashboard() {
     if (!confirm('Cancellare questa prenotazione?')) return;
     try {
       await adminApi.cancelBooking(id);
+      loadBookings(filter);
+    } catch (e) {
+      alert('Errore: ' + e.message);
+    }
+  }
+
+  async function chargeDamage() {
+    const amount = parseFloat(damageAmount);
+    if (!amount || amount <= 0) return alert('Inserisci un importo valido');
+    if (!confirm(`Addebitare €${amount} a ${damageModal.nome}?`)) return;
+    try {
+      await adminApi.chargeDamage(damageModal.id, amount, damageMotivo);
+      alert('Addebito effettuato con successo');
+      setDamageModal(null);
+      setDamageAmount('');
+      setDamageMotivo('');
       loadBookings(filter);
     } catch (e) {
       alert('Errore: ' + e.message);
@@ -241,6 +260,14 @@ export default function AdminDashboard() {
                           >
                             Cancella
                           </button>
+                          <button
+                            onClick={() => setDamageModal({ id: b.id, nome: b.cliente_nome })}
+                            style={{ background: 'none', border: '1px solid #e57373',
+                                     color: '#c0392b', borderRadius: 4, padding: '4px 8px',
+                                     cursor: 'pointer', fontSize: '0.75rem', marginLeft: 6 }}
+                          >
+                            Addebita Danno
+                          </button>
                         </td>
                       )}
                     </tr>
@@ -251,6 +278,38 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {damageModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 28, maxWidth: 380, width: '90%' }}>
+            <h2 style={{ margin: '0 0 8px' }}>Addebita Danno</h2>
+            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: 16 }}>
+              Cliente: <strong>{damageModal.nome}</strong>
+            </p>
+            <div className="form-group" style={{ marginBottom: 12 }}>
+              <label>Importo danni (€)</label>
+              <input type="number" min="1" step="0.01" placeholder="es. 80"
+                     value={damageAmount} onChange={e => setDamageAmount(e.target.value)} />
+            </div>
+            <div className="form-group" style={{ marginBottom: 20 }}>
+              <label>Motivo (opzionale)</label>
+              <input type="text" placeholder="es. Ruota anteriore rotta"
+                     value={damageMotivo} onChange={e => setDamageMotivo(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={chargeDamage}>
+                Addebita
+              </button>
+              <button onClick={() => setDamageModal(null)}
+                      style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid #ddd',
+                               background: 'white', cursor: 'pointer' }}>
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

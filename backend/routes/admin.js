@@ -8,6 +8,7 @@
 
 const express  = require('express');
 const router   = express.Router();
+const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
@@ -100,6 +101,44 @@ router.get('/stats', async (req, res) => {
     prenotazioni_future:  future || 0,
     incasso_totale:       incasso_totale.toFixed(2),
   });
+});
+
+// ─── POST /api/admin/bookings/:id/charge-damage ───────────────────────────────
+
+router.post('/bookings/:id/charge-damage', async (req, res) => {
+  const { amount, motivo } = req.body;
+  if (!amount || amount <= 0) return res.status(400).json({ error: 'Importo non valido' });
+
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .select('stripe_customer_id, stripe_payment_method_id, cliente_nome, danno_status')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !prenotazione) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!prenotazione.stripe_payment_method_id) {
+    return res.status(400).json({ error: 'Nessuna carta salvata per questa prenotazione' });
+  }
+  if (prenotazione.danno_status === 'charged') {
+    return res.status(400).json({ error: 'Danno già addebitato' });
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount:         Math.round(amount * 100),
+    currency:       'eur',
+    customer:       prenotazione.stripe_customer_id,
+    payment_method: prenotazione.stripe_payment_method_id,
+    confirm:        true,
+    off_session:    true,
+    description:    `Danno bici — ${prenotazione.cliente_nome}${motivo ? ': ' + motivo : ''}`,
+  });
+
+  await supabase
+    .from('prenotazioni')
+    .update({ danno_status: 'charged', danno_amount: amount })
+    .eq('id', req.params.id);
+
+  return res.json({ success: true, payment_intent_id: paymentIntent.id });
 });
 
 module.exports = router;

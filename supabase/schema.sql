@@ -53,3 +53,10 @@ CREATE INDEX IF NOT EXISTS idx_prenotazioni_stripe     ON prenotazioni (stripe_s
 -- In produzione abilita e configura le policy
 ALTER TABLE prenotazioni DISABLE ROW LEVEL SECURITY;
 ALTER TABLE biciclette   DISABLE ROW LEVEL SECURITY;
+
+-- ─── Sistema Cauzione / Salvataggio Carta ─────────────────────────────────────
+-- Eseguire anche nel SQL Editor di Supabase (progetto live)
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_customer_id       VARCHAR(200);
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_payment_method_id VARCHAR(200);
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_status             VARCHAR(50)   DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_amount             DECIMAL(10,2) DEFAULT NULL;

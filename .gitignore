@@ -1,0 +1,19 @@
+# Vercel
+.vercel
+
+# Dipendenze
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build
+frontend/dist/
+
+# Env
+.env
+.env.local
+backend/.env
+frontend/.env
+
+# macOS
+.DS_Store
