@@ -18,6 +18,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
 }));
 
+// Webhook Stripe: body RAW obbligatorio per la verifica firma — deve stare PRIMA di express.json()
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
 app.use('/api/availability', availabilityRoutes);
