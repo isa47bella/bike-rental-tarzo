@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api.js';
 
 const BIKE_MODELS = [
@@ -168,6 +169,7 @@ const IconPhone = () => (
 );
 
 export default function StepBike({ booking, onChange, onNext, onBack }) {
+  const { t } = useTranslation();
   const [disponibili, setDisponibili] = useState(null);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState(null);
@@ -194,7 +196,7 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
         onChange({ bicicletta_id: null, modello_nome: '' });
       }
     } catch {
-      setError('Impossibile verificare disponibilità. Riprova.');
+      setError('Impossibile verificare disponibilità. Riprova.'); // fallback Italian error
       setDisponibili([1,2,3,4,5,6,7,8,9,10]);
     } finally {
       setLoading(false);
@@ -216,13 +218,13 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
 
   return (
     <div>
-      <h2 className="step-title">Scegli il modello</h2>
-      <p className="step-subtitle">3 modelli di e-bike — seleziona quello che preferisci</p>
+      <h2 className="step-title">{t('stepBike.title')}</h2>
+      <p className="step-subtitle">{t('stepBike.subtitle')}</p>
 
       {loading && (
         <div className="loading-overlay">
           <div className="spinner" />
-          Verifica disponibilità...
+          {t('stepBike.checking')}
         </div>
       )}
 
@@ -250,8 +252,8 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
                   <div className="model-nome">{model.nome}</div>
                   <div className="model-specs">{model.specs}</div>
                   <div className="model-contact-panel">
-                    <div className="model-contact-msg">Non disponibile per questa data</div>
-                    <div className="model-contact-sub">Contattaci — possiamo trovare una soluzione</div>
+                    <div className="model-contact-msg">{t('stepBike.unavailable')}</div>
+                    <div className="model-contact-sub">{t('stepBike.unavailableSub')}</div>
                     <div className="model-contact-btns">
                       <a
                         href={WHATSAPP_URL}
@@ -260,14 +262,14 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
                         className="contact-btn whatsapp"
                         onClick={e => e.stopPropagation()}
                       >
-                        <IconWhatsApp /> WhatsApp
+                        <IconWhatsApp /> {t('stepBike.whatsapp')}
                       </a>
                       <a
                         href={PHONE_URL}
                         className="contact-btn phone"
                         onClick={e => e.stopPropagation()}
                       >
-                        <IconPhone /> Chiama
+                        <IconPhone /> {t('stepBike.call')}
                       </a>
                     </div>
                   </div>
@@ -287,7 +289,7 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
                 <div className="model-specs">{model.specs}</div>
                 <div className="model-desc">{model.descrizione}</div>
                 {isSelected && (
-                  <div className="model-check">✓ Selezionata</div>
+                  <div className="model-check">{t('stepBike.selected')}</div>
                 )}
               </button>
             );
@@ -296,13 +298,13 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
       )}
 
       <div className="btn-nav-row">
-        <button className="btn btn-secondary" onClick={onBack}>← Indietro</button>
+        <button className="btn btn-secondary" onClick={onBack}>{t('common.back')}</button>
         <button
           className="btn btn-primary"
           onClick={onNext}
           disabled={!booking.bicicletta_id}
         >
-          Continua →
+          {t('common.continue')}
         </button>
       </div>
     </div>

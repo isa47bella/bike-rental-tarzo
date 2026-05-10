@@ -1,0 +1,131 @@
+{
+  "lang": "EN",
+  "header": {
+    "subtitle": "Prosecco UNESCO Hills · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "progress": {
+    "steps": ["Date", "Time", "Type", "Bike", "Details", "Summary"]
+  },
+  "common": {
+    "continue": "Continue →",
+    "back": "← Back",
+    "loading": "Loading..."
+  },
+  "stepDate": {
+    "title": "Choose a date",
+    "subtitle": "Select the day you want to pick up the bike",
+    "legend": {
+      "available": "Available",
+      "partial": "Few spots",
+      "full": "Fully booked"
+    },
+    "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
+    "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+  },
+  "stepTime": {
+    "title": "Pick-up time",
+    "info": "Pick-up: <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "stepRentalType": {
+    "title": "Rental type",
+    "subtitle": "Pick-up: <b>{{time}}</b> on <b>{{date}}</b>",
+    "types": {
+      "4_ore": { "title": "4-Hour Rental", "detail": "Morning — Return by 12:00–13:00", "price": "€30" },
+      "intera_giornata": { "title": "Full Day", "detail": "Return by 16:00–18:00", "price": "€50" },
+      "3_piu_giorni": { "title": "3+ Days", "detail": "Return at same time", "price": "€45/day" }
+    },
+    "days": "days",
+    "totalDays": "days — <b>€{{price}}</b>",
+    "returnLabel": "Number of days",
+    "calculating": "Calculating return...",
+    "returnInfo": "🔄 <b>Return:</b> {{date}} at <b>{{time}}</b>"
+  },
+  "stepBike": {
+    "title": "Choose your bike",
+    "subtitle": "3 e-bike models — select the one you prefer",
+    "checking": "Checking availability...",
+    "errorAvail": "Unable to check availability. Please try again.",
+    "selected": "✓ Selected",
+    "unavailable": "Not available for this date",
+    "unavailableSub": "Contact us — we can find a solution",
+    "whatsapp": "WhatsApp",
+    "call": "Call us"
+  },
+  "stepContact": {
+    "title": "Your details",
+    "subtitle": "You'll receive a confirmation by email. No spam, just your booking.",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone / WhatsApp",
+    "notes": "Notes (optional)",
+    "notesPlaceholder": "Height, special requests, meeting point...",
+    "namePlaceholder": "John Smith",
+    "phonePlaceholder": "+44 7700 900123",
+    "privacy": "🔒 Your data is used only to manage your booking and is not shared with third parties.",
+    "goPayment": "Proceed to payment →",
+    "errors": {
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email address",
+      "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Invalid phone number"
+    }
+  },
+  "stepSummary": {
+    "title": "Booking summary",
+    "subtitle": "Review your details and proceed to payment",
+    "fields": {
+      "type": "Rental type",
+      "days": "Number of days",
+      "daysValue": "{{n}} days",
+      "pickupDay": "Pick-up date",
+      "pickupTime": "Pick-up time",
+      "returnDay": "Return date",
+      "returnTime": "Return time",
+      "bike": "Model",
+      "customer": "Customer",
+      "email": "Email",
+      "phone": "Phone",
+      "total": "Total"
+    },
+    "types": {
+      "4_ore": "4-Hour Rental",
+      "intera_giornata": "Full Day Rental",
+      "3_piu_giorni": "Multi-Day Rental"
+    },
+    "paymentInfo": "💳 Payment is <b>100% upfront</b> via Stripe (credit/debit card). You'll receive a confirmation email right after payment.",
+    "depositInfo": "🔒 At the time of payment, <b>€1,000 will be held</b> on your card as a security deposit. The amount is not charged: it will be automatically released when the bike is returned in good condition.",
+    "modify": "← Edit",
+    "pay": "💳 Pay €{{amount}}",
+    "processing": "⏳ Processing...",
+    "secureNote": "🔒 Secure payment via Stripe — We never store your card details"
+  },
+  "success": {
+    "confirming": "Confirming your payment…",
+    "wait": "Please wait a moment",
+    "title": "Booking Confirmed!",
+    "thanks": "Thank you <b>{{name}}</b>! A confirmation has been sent to <b>{{email}}</b>",
+    "checkEmail": "Payment received! Check your email for details.",
+    "fields": {
+      "code": "Code",
+      "type": "Type",
+      "pickup": "Pick-up",
+      "return": "Return",
+      "where": "Location"
+    },
+    "whereValue": "Via Pecol 22, Arfanta di Tarzo (TV)",
+    "bringDocs": "At pick-up bring: ID document + booking code <b>{{code}}</b>",
+    "newBooking": "New Booking",
+    "paymentNote": "Payment received. Check your email for confirmation."
+  },
+  "cancel": {
+    "title": "Payment cancelled",
+    "message": "Your payment was cancelled. No charge has been made. You can try again whenever you like.",
+    "retry": "Try again"
+  },
+  "wizard": {
+    "problems": "Need help? Message us on WhatsApp 📱",
+    "totalLabel": "Booking total",
+    "payAt": "Pay at checkout"
+  }
+}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api.js';
 import ProgressBar     from './ProgressBar.jsx';
+import LanguageSwitcher from './LanguageSwitcher.jsx';
 import StepDate        from './steps/StepDate.jsx';
 import StepTime        from './steps/StepTime.jsx';
 import StepRentalType  from './steps/StepRentalType.jsx';
@@ -27,10 +29,10 @@ const INITIAL_BOOKING = {
 };
 
 export default function BookingWizard() {
+  const { t } = useTranslation();
   const [step,    setStep]    = useState(1);
   const [booking, setBooking] = useState(INITIAL_BOOKING);
 
-  // Quando tipo/orario/data cambiano, aggiorna data+orario restituzione
   useEffect(() => {
     if (booking.data_ritiro && booking.orario_ritiro && booking.tipo_noleggio) {
       api.calcolaRestituzione(
@@ -66,7 +68,6 @@ export default function BookingWizard() {
 
   return (
     <div className="page-wrapper">
-      {/* Header */}
       <header className="header">
         <div className="header-logo">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -74,10 +75,11 @@ export default function BookingWizard() {
             <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
           </svg>
         </div>
-        <div>
+        <div style={{ flex: 1 }}>
           <h1>Bike Rental Tarzo</h1>
-          <p>Colline del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)</p>
+          <p>{t('header.subtitle')}</p>
         </div>
+        <LanguageSwitcher />
       </header>
 
       <main className="main-content">
@@ -92,26 +94,19 @@ export default function BookingWizard() {
           {step === 6 && <StepSummary     {...stepProps} />}
         </div>
 
-        {/* Nota contatto */}
-        <div style={{
-          textAlign: 'center',
-          color: 'var(--text-light)',
-          fontSize: '0.82rem',
-          marginTop: 8,
-        }}>
-          Problemi? Scrivici su WhatsApp 📱
+        <div style={{ textAlign: 'center', color: 'var(--text-light)', fontSize: '0.82rem', marginTop: 8 }}>
+          {t('wizard.problems')}
         </div>
       </main>
 
-      {/* Sticky price banner (visibile dagli step 3 in poi) */}
       {step >= 3 && booking.prezzo_totale > 0 && (
         <div className="sticky-price">
           <div>
-            <div className="price-label">Totale prenotazione</div>
+            <div className="price-label">{t('wizard.totalLabel')}</div>
             <div className="price-value">€{Number(booking.prezzo_totale).toFixed(2)}</div>
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', textAlign: 'right' }}>
-            Paga solo<br />al checkout
+            {t('wizard.payAt')}
           </div>
         </div>
       )}

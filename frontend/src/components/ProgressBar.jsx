@@ -1,5 +1,8 @@
+import { useTranslation } from 'react-i18next';
+
 export default function ProgressBar({ currentStep, totalSteps }) {
-  const labels = ['Data', 'Orario', 'Tipo', 'Bici', 'Contatti', 'Riepilogo'];
+  const { t } = useTranslation();
+  const labels = t('progress.steps', { returnObjects: true });
 
   return (
     <div className="progress-wrapper">

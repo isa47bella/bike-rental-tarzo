@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api.js';
 
-function formatDateIT(dateStr) {
+const LOCALE_MAP = { it: 'it-IT', en: 'en-GB', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+
+function formatDate(dateStr, locale) {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-}
-
-function tipoLabel(tipo) {
-  const labels = {
-    '4_ore':           'Noleggio 4 Ore',
-    'intera_giornata': 'Noleggio Intera Giornata',
-    '3_piu_giorni':    'Noleggio Multi-Giorno',
-  };
-  return labels[tipo] || tipo;
+  return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 const IconCheck = () => (
@@ -30,6 +24,8 @@ const IconClock2 = () => (
 );
 
 export default function SuccessPage() {
+  const { t, i18n } = useTranslation();
+  const locale = LOCALE_MAP[i18n.language] || 'it-IT';
   const [searchParams] = useSearchParams();
   const sessionId      = searchParams.get('session_id');
   const [booking, setBooking] = useState(null);
@@ -38,7 +34,6 @@ export default function SuccessPage() {
 
   useEffect(() => {
     if (!sessionId) { setLoading(false); return; }
-
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
@@ -49,13 +44,12 @@ export default function SuccessPage() {
         clearInterval(interval);
       } catch {
         if (attempts >= 6) {
-          setError('Pagamento ricevuto. Controlla la tua email per la conferma.');
+          setError(t('success.paymentNote'));
           setLoading(false);
           clearInterval(interval);
         }
       }
     }, 1500);
-
     return () => clearInterval(interval);
   }, [sessionId]);
 
@@ -63,43 +57,34 @@ export default function SuccessPage() {
     <div className="result-page">
       <div className="result-card">
         <div className="result-icon"><IconClock2 /></div>
-        <h1>Confermando il pagamento…</h1>
-        <p>Attendere qualche secondo</p>
+        <h1>{t('success.confirming')}</h1>
+        <p>{t('success.wait')}</p>
         <div className="spinner" />
       </div>
     </div>
   );
 
+  const tipoLabel = booking ? (t(`stepSummary.types.${booking.tipo_noleggio}`) || booking.tipo_noleggio) : '';
+
   return (
     <div className="result-page">
       <div className="result-card">
         <div className="result-icon"><IconCheck /></div>
-        <h1 style={{ color: 'var(--success)' }}>Prenotazione Confermata!</h1>
+        <h1 style={{ color: 'var(--success)' }}>{t('success.title')}</h1>
 
         {error ? (
           <p>{error}</p>
         ) : booking ? (
           <>
-            <p>
-              Grazie <strong>{booking.cliente_nome}</strong>!<br />
-              Hai ricevuto la conferma su <strong>{booking.cliente_email}</strong>
-            </p>
+            <p dangerouslySetInnerHTML={{ __html: t('success.thanks', { name: booking.cliente_nome, email: booking.cliente_email }) }} />
 
-            <div style={{
-              background: 'var(--primary-pale)',
-              border: '1px solid var(--primary-light)',
-              borderRadius: 8,
-              padding: '16px 20px',
-              textAlign: 'left',
-              marginBottom: 16,
-              fontSize: '0.9rem',
-            }}>
+            <div style={{ background: 'var(--primary-pale)', border: '1px solid var(--primary-light)', borderRadius: 8, padding: '16px 20px', textAlign: 'left', marginBottom: 16, fontSize: '0.9rem' }}>
               {[
-                ['Codice',        booking.id.toUpperCase().substring(0, 8)],
-                ['Tipo',          tipoLabel(booking.tipo_noleggio)],
-                ['Ritiro',        `${formatDateIT(booking.data_ritiro)} ore ${booking.orario_ritiro?.substring(0,5)}`],
-                ['Restituzione',  `${formatDateIT(booking.data_restituzione)} ore ${booking.orario_restituzione?.substring(0,5)}`],
-                ['Dove',          'Via Pecol 22, Arfanta di Tarzo (TV)'],
+                [t('success.fields.code'),   booking.id.toUpperCase().substring(0, 8)],
+                [t('success.fields.type'),   tipoLabel],
+                [t('success.fields.pickup'), `${formatDate(booking.data_ritiro, locale)} ${booking.orario_ritiro?.substring(0,5)}`],
+                [t('success.fields.return'), `${formatDate(booking.data_restituzione, locale)} ${booking.orario_restituzione?.substring(0,5)}`],
+                [t('success.fields.where'),  t('success.whereValue')],
               ].map(([label, value]) => (
                 <div key={label} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'baseline' }}>
                   <span style={{ color: 'var(--text-light)', fontWeight: 500, minWidth: 100, fontSize: '0.85rem' }}>{label}</span>
@@ -108,28 +93,15 @@ export default function SuccessPage() {
               ))}
             </div>
 
-            <div style={{
-              background: 'var(--warning-bg)',
-              borderRadius: 8,
-              padding: '12px 16px',
-              fontSize: '0.82rem',
-              color: 'var(--warning)',
-              marginBottom: 24,
-              textAlign: 'left',
-            }}>
-              <strong>Al ritiro porta:</strong> documento identità + codice <strong>{booking.id.toUpperCase().substring(0, 8)}</strong>
-            </div>
+            <div style={{ background: 'var(--warning-bg)', borderRadius: 8, padding: '12px 16px', fontSize: '0.82rem', color: 'var(--warning)', marginBottom: 24, textAlign: 'left' }}
+              dangerouslySetInnerHTML={{ __html: t('success.bringDocs', { code: booking.id.toUpperCase().substring(0, 8) }) }}
+            />
           </>
         ) : (
-          <p style={{ marginBottom: 24 }}>
-            Pagamento ricevuto con successo!<br />
-            Controlla la tua email per i dettagli.
-          </p>
+          <p style={{ marginBottom: 24 }}>{t('success.checkEmail')}</p>
         )}
 
-        <Link to="/" className="btn btn-primary btn-full">
-          Nuova Prenotazione
-        </Link>
+        <Link to="/" className="btn btn-primary btn-full">{t('success.newBooking')}</Link>
       </div>
     </div>
   );

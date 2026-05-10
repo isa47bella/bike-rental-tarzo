@@ -1,0 +1,131 @@
+{
+  "lang": "ES",
+  "header": {
+    "subtitle": "Colinas del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "progress": {
+    "steps": ["Fecha", "Hora", "Tipo", "Bici", "Datos", "Resumen"]
+  },
+  "common": {
+    "continue": "Continuar →",
+    "back": "← Atrás",
+    "loading": "Cargando..."
+  },
+  "stepDate": {
+    "title": "Elige una fecha",
+    "subtitle": "Selecciona el día en que quieres recoger la bici",
+    "legend": {
+      "available": "Disponible",
+      "partial": "Pocas plazas",
+      "full": "Completo"
+    },
+    "months": ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
+    "days": ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"]
+  },
+  "stepTime": {
+    "title": "Hora de recogida",
+    "info": "Recogida: <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "stepRentalType": {
+    "title": "Tipo de alquiler",
+    "subtitle": "Recogida: <b>{{time}}</b> del <b>{{date}}</b>",
+    "types": {
+      "4_ore": { "title": "Alquiler 4 Horas", "detail": "Mañana — Devolución 12:00–13:00", "price": "€30" },
+      "intera_giornata": { "title": "Día completo", "detail": "Devolución 16:00–18:00", "price": "€50" },
+      "3_piu_giorni": { "title": "3+ Días", "detail": "Devolución a la misma hora", "price": "€45/día" }
+    },
+    "days": "días",
+    "totalDays": "días — <b>€{{price}}</b>",
+    "returnLabel": "Número de días",
+    "calculating": "Calculando devolución...",
+    "returnInfo": "🔄 <b>Devolución:</b> {{date}} a las <b>{{time}}</b>"
+  },
+  "stepBike": {
+    "title": "Elige tu bici",
+    "subtitle": "3 modelos de e-bike — selecciona el que prefieras",
+    "checking": "Verificando disponibilidad...",
+    "errorAvail": "No se pudo verificar la disponibilidad. Inténtalo de nuevo.",
+    "selected": "✓ Seleccionada",
+    "unavailable": "No disponible para esta fecha",
+    "unavailableSub": "Contáctanos — podemos encontrar una solución",
+    "whatsapp": "WhatsApp",
+    "call": "Llamar"
+  },
+  "stepContact": {
+    "title": "Tus datos",
+    "subtitle": "Recibirás una confirmación por email. Sin spam, solo tu reserva.",
+    "name": "Nombre y Apellidos",
+    "email": "Email",
+    "phone": "Teléfono / WhatsApp",
+    "notes": "Notas (opcional)",
+    "notesPlaceholder": "Altura, peticiones especiales, punto de encuentro...",
+    "namePlaceholder": "Juan García",
+    "phonePlaceholder": "+34 600 123 456",
+    "privacy": "🔒 Tus datos se usan únicamente para gestionar tu reserva y no se comparten con terceros.",
+    "goPayment": "Ir al pago →",
+    "errors": {
+      "nameRequired": "El nombre es obligatorio",
+      "emailRequired": "El email es obligatorio",
+      "emailInvalid": "Email no válido",
+      "phoneRequired": "El teléfono es obligatorio",
+      "phoneInvalid": "Teléfono no válido"
+    }
+  },
+  "stepSummary": {
+    "title": "Resumen de reserva",
+    "subtitle": "Revisa los detalles y procede al pago",
+    "fields": {
+      "type": "Tipo de alquiler",
+      "days": "Número de días",
+      "daysValue": "{{n}} días",
+      "pickupDay": "Fecha de recogida",
+      "pickupTime": "Hora de recogida",
+      "returnDay": "Fecha de devolución",
+      "returnTime": "Hora de devolución",
+      "bike": "Modelo",
+      "customer": "Cliente",
+      "email": "Email",
+      "phone": "Teléfono",
+      "total": "Total"
+    },
+    "types": {
+      "4_ore": "Alquiler 4 Horas",
+      "intera_giornata": "Alquiler Día Completo",
+      "3_piu_giorni": "Alquiler Multidía"
+    },
+    "paymentInfo": "💳 El pago es <b>100% anticipado</b> mediante Stripe (tarjeta de crédito/débito). Recibirás un email de confirmación inmediatamente después del pago.",
+    "depositInfo": "🔒 En el momento del pago se <b>retendrán €1.000</b> en tu tarjeta como depósito de seguridad. El importe no se cobra: se liberará automáticamente cuando la bici sea devuelta en buen estado.",
+    "modify": "← Modificar",
+    "pay": "💳 Pagar €{{amount}}",
+    "processing": "⏳ Procesando...",
+    "secureNote": "🔒 Pago seguro gestionado por Stripe — No guardamos los datos de tu tarjeta"
+  },
+  "success": {
+    "confirming": "Confirmando el pago…",
+    "wait": "Espera un momento",
+    "title": "¡Reserva Confirmada!",
+    "thanks": "¡Gracias <b>{{name}}</b>! Has recibido la confirmación en <b>{{email}}</b>",
+    "checkEmail": "¡Pago recibido! Revisa tu email para más detalles.",
+    "fields": {
+      "code": "Código",
+      "type": "Tipo",
+      "pickup": "Recogida",
+      "return": "Devolución",
+      "where": "Lugar"
+    },
+    "whereValue": "Via Pecol 22, Arfanta di Tarzo (TV)",
+    "bringDocs": "Al recoger lleva: documento de identidad + código <b>{{code}}</b>",
+    "newBooking": "Nueva Reserva",
+    "paymentNote": "Pago recibido. Revisa tu email para la confirmación."
+  },
+  "cancel": {
+    "title": "Pago cancelado",
+    "message": "El pago ha sido cancelado. No se ha realizado ningún cargo. Puedes intentarlo de nuevo cuando quieras.",
+    "retry": "Intentar de nuevo"
+  },
+  "wizard": {
+    "problems": "¿Problemas? Escríbenos por WhatsApp 📱",
+    "totalLabel": "Total reserva",
+    "payAt": "Pagar en checkout"
+  }
+}

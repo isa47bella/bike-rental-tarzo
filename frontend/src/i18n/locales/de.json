@@ -1,0 +1,131 @@
+{
+  "lang": "DE",
+  "header": {
+    "subtitle": "Prosecco UNESCO-Hügel · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "progress": {
+    "steps": ["Datum", "Uhrzeit", "Typ", "Fahrrad", "Kontakt", "Überblick"]
+  },
+  "common": {
+    "continue": "Weiter →",
+    "back": "← Zurück",
+    "loading": "Laden..."
+  },
+  "stepDate": {
+    "title": "Datum wählen",
+    "subtitle": "Wählen Sie den Tag, an dem Sie das Fahrrad abholen möchten",
+    "legend": {
+      "available": "Verfügbar",
+      "partial": "Wenige Plätze",
+      "full": "Ausgebucht"
+    },
+    "months": ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
+    "days": ["Mo","Di","Mi","Do","Fr","Sa","So"]
+  },
+  "stepTime": {
+    "title": "Abholzeit",
+    "info": "Abholung: <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "stepRentalType": {
+    "title": "Mietart",
+    "subtitle": "Abholung: <b>{{time}}</b> am <b>{{date}}</b>",
+    "types": {
+      "4_ore": { "title": "4-Stunden-Miete", "detail": "Morgens — Rückgabe 12:00–13:00", "price": "€30" },
+      "intera_giornata": { "title": "Ganzer Tag", "detail": "Rückgabe 16:00–18:00", "price": "€50" },
+      "3_piu_giorni": { "title": "3+ Tage", "detail": "Rückgabe zur selben Zeit", "price": "€45/Tag" }
+    },
+    "days": "Tage",
+    "totalDays": "Tage — <b>€{{price}}</b>",
+    "returnLabel": "Anzahl der Tage",
+    "calculating": "Rückgabe wird berechnet...",
+    "returnInfo": "🔄 <b>Rückgabe:</b> {{date}} um <b>{{time}}</b>"
+  },
+  "stepBike": {
+    "title": "Fahrrad wählen",
+    "subtitle": "3 E-Bike-Modelle — wählen Sie Ihr bevorzugtes",
+    "checking": "Verfügbarkeit wird geprüft...",
+    "errorAvail": "Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.",
+    "selected": "✓ Ausgewählt",
+    "unavailable": "Für dieses Datum nicht verfügbar",
+    "unavailableSub": "Kontaktieren Sie uns — wir finden eine Lösung",
+    "whatsapp": "WhatsApp",
+    "call": "Anrufen"
+  },
+  "stepContact": {
+    "title": "Ihre Kontaktdaten",
+    "subtitle": "Sie erhalten eine Bestätigung per E-Mail. Kein Spam, nur Ihre Buchung.",
+    "name": "Vor- und Nachname",
+    "email": "E-Mail",
+    "phone": "Telefon / WhatsApp",
+    "notes": "Anmerkungen (optional)",
+    "notesPlaceholder": "Körpergröße, Sonderwünsche, Treffpunkt...",
+    "namePlaceholder": "Max Mustermann",
+    "phonePlaceholder": "+49 170 1234567",
+    "privacy": "🔒 Ihre Daten werden nur zur Verwaltung Ihrer Buchung verwendet und nicht an Dritte weitergegeben.",
+    "goPayment": "Zur Zahlung →",
+    "errors": {
+      "nameRequired": "Name ist erforderlich",
+      "emailRequired": "E-Mail ist erforderlich",
+      "emailInvalid": "Ungültige E-Mail-Adresse",
+      "phoneRequired": "Telefonnummer ist erforderlich",
+      "phoneInvalid": "Ungültige Telefonnummer"
+    }
+  },
+  "stepSummary": {
+    "title": "Buchungsübersicht",
+    "subtitle": "Überprüfen Sie Ihre Daten und fahren Sie mit der Zahlung fort",
+    "fields": {
+      "type": "Mietart",
+      "days": "Anzahl der Tage",
+      "daysValue": "{{n}} Tage",
+      "pickupDay": "Abholdatum",
+      "pickupTime": "Abholzeit",
+      "returnDay": "Rückgabedatum",
+      "returnTime": "Rückgabezeit",
+      "bike": "Modell",
+      "customer": "Kunde",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "total": "Gesamt"
+    },
+    "types": {
+      "4_ore": "4-Stunden-Miete",
+      "intera_giornata": "Tagesmiete",
+      "3_piu_giorni": "Mehrtagsmiete"
+    },
+    "paymentInfo": "💳 Die Zahlung erfolgt <b>100% im Voraus</b> über Stripe (Kredit-/Debitkarte). Sie erhalten sofort nach der Zahlung eine Bestätigungs-E-Mail.",
+    "depositInfo": "🔒 Bei der Zahlung werden <b>€1.000 als Kaution</b> auf Ihrer Karte reserviert. Der Betrag wird nicht abgebucht: Er wird automatisch freigegeben, wenn das Fahrrad in einwandfreiem Zustand zurückgegeben wird.",
+    "modify": "← Bearbeiten",
+    "pay": "💳 Zahlen €{{amount}}",
+    "processing": "⏳ Wird bearbeitet...",
+    "secureNote": "🔒 Sichere Zahlung über Stripe — Wir speichern keine Kartendaten"
+  },
+  "success": {
+    "confirming": "Zahlung wird bestätigt…",
+    "wait": "Bitte einen Moment warten",
+    "title": "Buchung bestätigt!",
+    "thanks": "Vielen Dank <b>{{name}}</b>! Eine Bestätigung wurde an <b>{{email}}</b> gesendet",
+    "checkEmail": "Zahlung erhalten! Prüfen Sie Ihre E-Mail für Details.",
+    "fields": {
+      "code": "Code",
+      "type": "Typ",
+      "pickup": "Abholung",
+      "return": "Rückgabe",
+      "where": "Ort"
+    },
+    "whereValue": "Via Pecol 22, Arfanta di Tarzo (TV)",
+    "bringDocs": "Bitte bei Abholung mitbringen: Ausweis + Buchungscode <b>{{code}}</b>",
+    "newBooking": "Neue Buchung",
+    "paymentNote": "Zahlung erhalten. Prüfen Sie Ihre E-Mail für die Bestätigung."
+  },
+  "cancel": {
+    "title": "Zahlung abgebrochen",
+    "message": "Ihre Zahlung wurde abgebrochen. Es wurde kein Betrag abgebucht. Sie können es jederzeit erneut versuchen.",
+    "retry": "Erneut versuchen"
+  },
+  "wizard": {
+    "problems": "Probleme? Schreiben Sie uns auf WhatsApp 📱",
+    "totalLabel": "Buchungsgesamt",
+    "payAt": "Zahlung beim Checkout"
+  }
+}

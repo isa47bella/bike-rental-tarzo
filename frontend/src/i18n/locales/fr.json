@@ -1,0 +1,131 @@
+{
+  "lang": "FR",
+  "header": {
+    "subtitle": "Collines du Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "progress": {
+    "steps": ["Date", "Heure", "Type", "Vélo", "Coordonnées", "Récap"]
+  },
+  "common": {
+    "continue": "Continuer →",
+    "back": "← Retour",
+    "loading": "Chargement..."
+  },
+  "stepDate": {
+    "title": "Choisissez une date",
+    "subtitle": "Sélectionnez le jour où vous souhaitez récupérer le vélo",
+    "legend": {
+      "available": "Disponible",
+      "partial": "Peu de places",
+      "full": "Complet"
+    },
+    "months": ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+    "days": ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"]
+  },
+  "stepTime": {
+    "title": "Heure de retrait",
+    "info": "Retrait : <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "stepRentalType": {
+    "title": "Type de location",
+    "subtitle": "Retrait : <b>{{time}}</b> le <b>{{date}}</b>",
+    "types": {
+      "4_ore": { "title": "Location 4 Heures", "detail": "Matin — Retour 12:00–13:00", "price": "€30" },
+      "intera_giornata": { "title": "Journée complète", "detail": "Retour 16:00–18:00", "price": "€50" },
+      "3_piu_giorni": { "title": "3+ Jours", "detail": "Retour à la même heure", "price": "€45/jour" }
+    },
+    "days": "jours",
+    "totalDays": "jours — <b>€{{price}}</b>",
+    "returnLabel": "Nombre de jours",
+    "calculating": "Calcul du retour...",
+    "returnInfo": "🔄 <b>Retour :</b> {{date}} à <b>{{time}}</b>"
+  },
+  "stepBike": {
+    "title": "Choisissez votre vélo",
+    "subtitle": "3 modèles de e-bike — sélectionnez celui que vous préférez",
+    "checking": "Vérification de la disponibilité...",
+    "errorAvail": "Impossible de vérifier la disponibilité. Veuillez réessayer.",
+    "selected": "✓ Sélectionné",
+    "unavailable": "Non disponible pour cette date",
+    "unavailableSub": "Contactez-nous — nous pouvons trouver une solution",
+    "whatsapp": "WhatsApp",
+    "call": "Appeler"
+  },
+  "stepContact": {
+    "title": "Vos coordonnées",
+    "subtitle": "Vous recevrez une confirmation par email. Pas de spam, juste votre réservation.",
+    "name": "Nom et Prénom",
+    "email": "Email",
+    "phone": "Téléphone / WhatsApp",
+    "notes": "Notes (optionnel)",
+    "notesPlaceholder": "Taille, demandes spéciales, point de rencontre...",
+    "namePlaceholder": "Jean Dupont",
+    "phonePlaceholder": "+33 6 12 34 56 78",
+    "privacy": "🔒 Vos données sont utilisées uniquement pour gérer votre réservation et ne sont pas partagées avec des tiers.",
+    "goPayment": "Procéder au paiement →",
+    "errors": {
+      "nameRequired": "Le nom est obligatoire",
+      "emailRequired": "L'email est obligatoire",
+      "emailInvalid": "Adresse email invalide",
+      "phoneRequired": "Le numéro de téléphone est obligatoire",
+      "phoneInvalid": "Numéro de téléphone invalide"
+    }
+  },
+  "stepSummary": {
+    "title": "Récapitulatif de réservation",
+    "subtitle": "Vérifiez les détails et procédez au paiement",
+    "fields": {
+      "type": "Type de location",
+      "days": "Nombre de jours",
+      "daysValue": "{{n}} jours",
+      "pickupDay": "Date de retrait",
+      "pickupTime": "Heure de retrait",
+      "returnDay": "Date de retour",
+      "returnTime": "Heure de retour",
+      "bike": "Modèle",
+      "customer": "Client",
+      "email": "Email",
+      "phone": "Téléphone",
+      "total": "Total"
+    },
+    "types": {
+      "4_ore": "Location 4 Heures",
+      "intera_giornata": "Location Journée Complète",
+      "3_piu_giorni": "Location Multi-Jours"
+    },
+    "paymentInfo": "💳 Le paiement est <b>100% anticipé</b> via Stripe (carte de crédit/débit). Vous recevrez un email de confirmation immédiatement après le paiement.",
+    "depositInfo": "🔒 Au moment du paiement, <b>1 000 € seront retenus</b> sur votre carte en guise de caution. Le montant n'est pas débité : il sera libéré automatiquement à la restitution du vélo en bon état.",
+    "modify": "← Modifier",
+    "pay": "💳 Payer €{{amount}}",
+    "processing": "⏳ Traitement...",
+    "secureNote": "🔒 Paiement sécurisé via Stripe — Nous ne conservons pas vos données de carte"
+  },
+  "success": {
+    "confirming": "Confirmation du paiement…",
+    "wait": "Veuillez patienter un instant",
+    "title": "Réservation Confirmée !",
+    "thanks": "Merci <b>{{name}}</b> ! Une confirmation a été envoyée à <b>{{email}}</b>",
+    "checkEmail": "Paiement reçu ! Vérifiez votre email pour les détails.",
+    "fields": {
+      "code": "Code",
+      "type": "Type",
+      "pickup": "Retrait",
+      "return": "Retour",
+      "where": "Lieu"
+    },
+    "whereValue": "Via Pecol 22, Arfanta di Tarzo (TV)",
+    "bringDocs": "Au retrait, apportez : pièce d'identité + code <b>{{code}}</b>",
+    "newBooking": "Nouvelle Réservation",
+    "paymentNote": "Paiement reçu. Vérifiez votre email pour la confirmation."
+  },
+  "cancel": {
+    "title": "Paiement annulé",
+    "message": "Votre paiement a été annulé. Aucun montant n'a été débité. Vous pouvez réessayer quand vous le souhaitez.",
+    "retry": "Réessayer"
+  },
+  "wizard": {
+    "problems": "Problèmes ? Écrivez-nous sur WhatsApp 📱",
+    "totalLabel": "Total réservation",
+    "payAt": "Payer au checkout"
+  }
+}

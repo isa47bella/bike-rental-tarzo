@@ -1201,6 +1201,26 @@ body {
   font-size: 1rem;
   line-height: 1;
 }
+/* ── Language Switcher ─────────────────────────────────────── */
+.lang-switcher {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.lang-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.lang-btn:hover { opacity: 0.8; transform: scale(1.1); }
+.lang-btn.active { opacity: 1; }
+
 @media (max-width: 480px) {
   .site-footer { flex-direction: column; gap: 8px; }
   .footer-divider { display: none; }

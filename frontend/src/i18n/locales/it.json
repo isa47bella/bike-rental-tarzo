@@ -1,0 +1,131 @@
+{
+  "lang": "IT",
+  "header": {
+    "subtitle": "Colline del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "progress": {
+    "steps": ["Data", "Orario", "Tipo", "Bici", "Contatti", "Riepilogo"]
+  },
+  "common": {
+    "continue": "Continua →",
+    "back": "← Indietro",
+    "loading": "Caricamento..."
+  },
+  "stepDate": {
+    "title": "Scegli la data",
+    "subtitle": "Seleziona il giorno in cui vuoi ritirare la bici",
+    "legend": {
+      "available": "Disponibile",
+      "partial": "Pochi posti",
+      "full": "Completo"
+    },
+    "months": ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"],
+    "days": ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"]
+  },
+  "stepTime": {
+    "title": "Orario di ritiro",
+    "info": "Ritiro: <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
+  },
+  "stepRentalType": {
+    "title": "Tipo di noleggio",
+    "subtitle": "Ritiro: <b>{{time}}</b> del <b>{{date}}</b>",
+    "types": {
+      "4_ore": { "title": "Noleggio 4 Ore", "detail": "Mattina — Restituzione 12:00–13:00", "price": "€30" },
+      "intera_giornata": { "title": "Intera Giornata", "detail": "Restituzione 16:00–18:00", "price": "€50" },
+      "3_piu_giorni": { "title": "3+ Giorni", "detail": "Restituzione stesso orario", "price": "€45/giorno" }
+    },
+    "days": "giorni",
+    "totalDays": "giorni — <b>€{{price}}</b>",
+    "returnLabel": "Numero di giorni",
+    "calculating": "Calcolo restituzione...",
+    "returnInfo": "🔄 <b>Restituzione:</b> {{date}} alle <b>{{time}}</b>"
+  },
+  "stepBike": {
+    "title": "Scegli il modello",
+    "subtitle": "3 modelli di e-bike — seleziona quello che preferisci",
+    "checking": "Verifica disponibilità...",
+    "errorAvail": "Impossibile verificare disponibilità. Riprova.",
+    "selected": "✓ Selezionata",
+    "unavailable": "Non disponibile per questa data",
+    "unavailableSub": "Contattaci — possiamo trovare una soluzione",
+    "whatsapp": "WhatsApp",
+    "call": "Chiama"
+  },
+  "stepContact": {
+    "title": "I tuoi contatti",
+    "subtitle": "Riceverai la conferma via email. Nessuno spam, solo la prenotazione.",
+    "name": "Nome e Cognome",
+    "email": "Email",
+    "phone": "Telefono / WhatsApp",
+    "notes": "Note (opzionale)",
+    "notesPlaceholder": "Altezza, richieste speciali, punto di incontro...",
+    "namePlaceholder": "Mario Rossi",
+    "phonePlaceholder": "+39 320 123 4567",
+    "privacy": "🔒 I tuoi dati sono usati solo per gestire la prenotazione. Non vengono condivisi con terze parti.",
+    "goPayment": "Vai al pagamento →",
+    "errors": {
+      "nameRequired": "Il nome è obbligatorio",
+      "emailRequired": "L'email è obbligatoria",
+      "emailInvalid": "Email non valida",
+      "phoneRequired": "Il telefono è obbligatorio",
+      "phoneInvalid": "Telefono non valido"
+    }
+  },
+  "stepSummary": {
+    "title": "Riepilogo prenotazione",
+    "subtitle": "Controlla i dettagli e procedi al pagamento",
+    "fields": {
+      "type": "Tipo noleggio",
+      "days": "Numero giorni",
+      "daysValue": "{{n}} giorni",
+      "pickupDay": "Giorno ritiro",
+      "pickupTime": "Orario ritiro",
+      "returnDay": "Giorno restituzione",
+      "returnTime": "Orario restituzione",
+      "bike": "Modello",
+      "customer": "Cliente",
+      "email": "Email",
+      "phone": "Telefono",
+      "total": "Totale"
+    },
+    "types": {
+      "4_ore": "Noleggio 4 Ore",
+      "intera_giornata": "Noleggio Intera Giornata",
+      "3_piu_giorni": "Noleggio Multi-Giorno"
+    },
+    "paymentInfo": "💳 Il pagamento è <b>100% anticipato</b> tramite Stripe (carta di credito/debito). Riceverai conferma via email subito dopo il pagamento.",
+    "depositInfo": "🔒 Al momento del pagamento verranno <b>bloccati €1.000</b> sulla tua carta come cauzione. L'importo non viene addebitato: sarà sbloccato automaticamente alla restituzione della bici in buone condizioni.",
+    "modify": "← Modifica",
+    "pay": "💳 Paga €{{amount}}",
+    "processing": "⏳ Elaborazione...",
+    "secureNote": "🔒 Pagamento sicuro gestito da Stripe — Non salviamo i dati della carta"
+  },
+  "success": {
+    "confirming": "Confermando il pagamento…",
+    "wait": "Attendere qualche secondo",
+    "title": "Prenotazione Confermata!",
+    "thanks": "Grazie <b>{{name}}</b>! Hai ricevuto la conferma su <b>{{email}}</b>",
+    "checkEmail": "Pagamento ricevuto con successo! Controlla la tua email per i dettagli.",
+    "fields": {
+      "code": "Codice",
+      "type": "Tipo",
+      "pickup": "Ritiro",
+      "return": "Restituzione",
+      "where": "Dove"
+    },
+    "whereValue": "Via Pecol 22, Arfanta di Tarzo (TV)",
+    "bringDocs": "Al ritiro porta: documento identità + codice <b>{{code}}</b>",
+    "newBooking": "Nuova Prenotazione",
+    "paymentNote": "Pagamento ricevuto. Controlla la tua email per la conferma."
+  },
+  "cancel": {
+    "title": "Pagamento annullato",
+    "message": "Il pagamento è stato annullato. Nessun addebito è stato effettuato. Puoi riprovare quando vuoi.",
+    "retry": "Riprova la prenotazione"
+  },
+  "wizard": {
+    "problems": "Problemi? Scrivici su WhatsApp 📱",
+    "totalLabel": "Totale prenotazione",
+    "payAt": "Paga solo al checkout"
+  }
+}
