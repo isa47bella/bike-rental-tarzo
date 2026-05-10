@@ -81,4 +81,10 @@ export const adminApi = {
 
   chargeDamage: (id, amount, motivo = '') =>
     adminPost(`/admin/bookings/${id}/charge-damage`, { amount, motivo }),
+
+  releaseDeposit: (id) =>
+    adminPost(`/admin/bookings/${id}/release-deposit`, {}),
+
+  captureDeposit: (id, amount, motivo = '') =>
+    adminPost(`/admin/bookings/${id}/capture-deposit`, { amount, motivo }),
 };

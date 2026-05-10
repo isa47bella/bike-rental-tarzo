@@ -92,12 +92,25 @@ export default function StepSummary({ booking, onBack }) {
         border: '1px solid #ffe082',
         borderRadius: 8,
         padding: '12px 16px',
-        marginBottom: 20,
+        marginBottom: 12,
         fontSize: '0.85rem',
         color: '#7d5a00',
       }}>
         💳 Il pagamento è <strong>100% anticipato</strong> tramite Stripe (carta di credito/debito).
         Riceverai conferma via email subito dopo il pagamento.
+      </div>
+
+      <div style={{
+        background: '#f0f4ff',
+        border: '1px solid #c7d2fe',
+        borderRadius: 8,
+        padding: '12px 16px',
+        marginBottom: 20,
+        fontSize: '0.85rem',
+        color: '#3730a3',
+      }}>
+        🔒 Al momento del pagamento verranno <strong>bloccati €1.000</strong> sulla tua carta come cauzione.
+        L&apos;importo non viene addebitato: sarà sbloccato automaticamente alla restituzione della bici in buone condizioni.
       </div>
 
       {error && (

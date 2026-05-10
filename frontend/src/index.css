@@ -860,10 +860,14 @@ body {
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
-.status-badge.paid       { background: rgba(74,222,128,0.12); color: #4ADE80; border: 1px solid rgba(74,222,128,0.2); }
-.status-badge.pending    { background: rgba(251,191,36,0.12);  color: #FBB024; border: 1px solid rgba(251,191,36,0.2); }
-.status-badge.cancelled  { background: rgba(248,113,113,0.12); color: #F87171; border: 1px solid rgba(248,113,113,0.2); }
-.status-badge.charged    { background: rgba(251,146,60,0.12);  color: #FB923C; border: 1px solid rgba(251,146,60,0.2); }
+.status-badge.paid             { background: rgba(74,222,128,0.12);  color: #4ADE80; border: 1px solid rgba(74,222,128,0.2); }
+.status-badge.pending          { background: rgba(251,191,36,0.12);   color: #FBB024; border: 1px solid rgba(251,191,36,0.2); }
+.status-badge.cancelled        { background: rgba(248,113,113,0.12);  color: #F87171; border: 1px solid rgba(248,113,113,0.2); }
+.status-badge.charged          { background: rgba(251,146,60,0.12);   color: #FB923C; border: 1px solid rgba(251,146,60,0.2); }
+.status-badge.cauzione-ok      { background: rgba(99,102,241,0.15);   color: #818CF8; border: 1px solid rgba(99,102,241,0.25); }
+.status-badge.cauzione-captured{ background: rgba(251,146,60,0.12);   color: #FB923C; border: 1px solid rgba(251,146,60,0.2); }
+.status-badge.cauzione-released{ background: rgba(148,163,184,0.12);  color: #94A3B8; border: 1px solid rgba(148,163,184,0.2); }
+.status-badge.cauzione-failed  { background: rgba(248,113,113,0.12);  color: #F87171; border: 1px solid rgba(248,113,113,0.2); }
 
 /* Card indicator */
 .card-indicator {
@@ -907,6 +911,20 @@ body {
   opacity: 0.35;
   cursor: not-allowed;
 }
+.admin-action-btn.deposit-release {
+  border-color: rgba(74,222,128,0.35);
+  color: #4ADE80;
+  background: rgba(74,222,128,0.08);
+  margin-right: 4px;
+}
+.admin-action-btn.deposit-release:hover { background: rgba(74,222,128,0.18); }
+.admin-action-btn.deposit-capture {
+  border-color: rgba(251,191,36,0.35);
+  color: #FBB024;
+  background: rgba(251,191,36,0.08);
+  margin-right: 4px;
+}
+.admin-action-btn.deposit-capture:hover { background: rgba(251,191,36,0.18); }
 
 /* Empty state */
 .admin-empty {

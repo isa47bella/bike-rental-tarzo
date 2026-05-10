@@ -75,10 +75,13 @@ export default function AdminDashboard() {
   const [filter,       setFilter]       = useState('paid');
   const [loading,      setLoading]      = useState(false);
   const [error,        setError]        = useState(null);
-  const [damageModal,  setDamageModal]  = useState(null); // { id, nome }
-  const [damageAmount, setDamageAmount] = useState('');
-  const [damageMotivo, setDamageMotivo] = useState('');
-  const [damageLoading, setDamageLoading] = useState(false);
+  const [damageModal,    setDamageModal]    = useState(null); // { id, nome }
+  const [damageAmount,   setDamageAmount]   = useState('');
+  const [damageMotivo,   setDamageMotivo]   = useState('');
+  const [damageLoading,  setDamageLoading]  = useState(false);
+  const [depositModal,   setDepositModal]   = useState(null); // { id, nome, action: 'release'|'capture' }
+  const [depositAmount,  setDepositAmount]  = useState('');
+  const [depositLoading, setDepositLoading] = useState(false);
 
   const loadBookings = useCallback(async (status) => {
     setFilter(status);
@@ -157,6 +160,30 @@ export default function AdminDashboard() {
       alert('Errore: ' + e.message);
     } finally {
       setDamageLoading(false);
+    }
+  }
+
+  async function handleDeposit() {
+    setDepositLoading(true);
+    try {
+      if (depositModal.action === 'release') {
+        if (!confirm(`Rilasciare la cauzione di €1.000 a ${depositModal.nome}?`)) return;
+        await adminApi.releaseDeposit(depositModal.id);
+        alert('Cauzione rilasciata — €1.000 sbloccati sulla carta del cliente');
+      } else {
+        const amount = parseFloat(depositAmount);
+        if (!amount || amount <= 0 || amount > 1000) return alert('Inserisci un importo valido (max €1.000)');
+        if (!confirm(`Incassare €${amount.toFixed(2)} dalla cauzione di ${depositModal.nome}?`)) return;
+        await adminApi.captureDeposit(depositModal.id, amount);
+        alert(`€${amount.toFixed(2)} addebitati dalla cauzione`);
+      }
+      setDepositModal(null);
+      setDepositAmount('');
+      await loadBookings(filter);
+    } catch (e) {
+      alert('Errore: ' + e.message);
+    } finally {
+      setDepositLoading(false);
     }
   }
 
@@ -316,8 +343,8 @@ export default function AdminDashboard() {
                     <th>Bici</th>
                     <th>Prezzo</th>
                     <th>Status</th>
-                    {filter === 'paid' && <th>Carta</th>}
-                    {filter === 'paid' && <th>Danno</th>}
+                    {filter === 'paid' && <th>Cauzione</th>}
+                    {filter === 'paid' && <th>Danno extra</th>}
                     {filter === 'paid' && <th>Azioni</th>}
                   </tr>
                 </thead>
@@ -360,10 +387,22 @@ export default function AdminDashboard() {
 
                       {filter === 'paid' && (
                         <td>
-                          {b.stripe_payment_method_id ? (
-                            <span className="card-indicator saved"><IconCard /> Salvata</span>
-                          ) : (
-                            <span className="card-indicator no-card"><IconAlert /> Nessuna</span>
+                          {b.cauzione_status === 'authorized' && (
+                            <span className="status-badge cauzione-ok">€1.000 bloccati</span>
+                          )}
+                          {b.cauzione_status === 'captured' && (
+                            <span className="status-badge cauzione-captured">
+                              €{Number(b.cauzione_captured_amount || 0).toFixed(0)} incassati
+                            </span>
+                          )}
+                          {b.cauzione_status === 'cancelled' && (
+                            <span className="status-badge cauzione-released">Rilasciata</span>
+                          )}
+                          {b.cauzione_status === 'failed' && (
+                            <span className="status-badge cauzione-failed">Non riuscita</span>
+                          )}
+                          {(!b.cauzione_status || b.cauzione_status === 'pending') && (
+                            <span style={{ color: '#475569', fontSize: '0.78rem' }}>—</span>
                           )}
                         </td>
                       )}
@@ -382,19 +421,41 @@ export default function AdminDashboard() {
 
                       {filter === 'paid' && (
                         <td style={{ whiteSpace: 'nowrap' }}>
+                          {/* Gestione cauzione */}
+                          {b.cauzione_status === 'authorized' && (
+                            <>
+                              <button
+                                className="admin-action-btn deposit-release"
+                                onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' })}
+                                title="Bici restituita OK — sblocca €1.000"
+                              >
+                                ✓ Rilascia
+                              </button>
+                              <button
+                                className="admin-action-btn deposit-capture"
+                                onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}
+                                title="Addebita danni dalla cauzione (max €1.000)"
+                              >
+                                ⚠ Danni
+                              </button>
+                            </>
+                          )}
+                          {/* Addebito extra se cauzione fallita/già gestita */}
+                          {b.cauzione_status !== 'authorized' && (
+                            <button
+                              className="admin-action-btn damage"
+                              onClick={() => setDamageModal({ id: b.id, nome: b.cliente_nome })}
+                              disabled={!b.stripe_payment_method_id || b.danno_status === 'charged'}
+                              title="Addebita danno extra sulla carta"
+                            >
+                              Addebita extra
+                            </button>
+                          )}
                           <button
                             className="admin-action-btn cancel"
                             onClick={() => cancelBooking(b.id)}
                           >
                             Cancella
-                          </button>
-                          <button
-                            className="admin-action-btn damage"
-                            onClick={() => setDamageModal({ id: b.id, nome: b.cliente_nome })}
-                            disabled={!b.stripe_payment_method_id || b.danno_status === 'charged'}
-                            title={!b.stripe_payment_method_id ? 'Nessuna carta salvata' : b.danno_status === 'charged' ? 'Già addebitato' : 'Addebita danno'}
-                          >
-                            Addebita Danno
                           </button>
                         </td>
                       )}
@@ -406,6 +467,65 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Deposit Modal */}
+      {depositModal && (
+        <div className="admin-modal-overlay" onClick={e => e.target === e.currentTarget && setDepositModal(null)}>
+          <div className="admin-modal">
+            <h2>{depositModal.action === 'release' ? '✓ Rilascia Cauzione' : '⚠ Incassa Danni da Cauzione'}</h2>
+            <div className="admin-modal-sub">
+              Cliente: <strong>{depositModal.nome}</strong>
+            </div>
+
+            {depositModal.action === 'release' ? (
+              <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: '12px 0' }}>
+                I <strong style={{ color: '#4ADE80' }}>€1.000 bloccati</strong> sulla carta del cliente verranno sbloccati immediatamente. Operazione irreversibile.
+              </p>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: '12px 0 4px' }}>
+                  Inserisci l&apos;importo dei danni da trattenere (max €1.000). Il resto verrà sbloccato automaticamente.
+                </p>
+                <div className="admin-form-group">
+                  <label>Importo danni (€)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    step="0.01"
+                    placeholder="es. 150"
+                    value={depositAmount}
+                    onChange={e => setDepositAmount(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="admin-modal-actions">
+              <button
+                className={`admin-modal-btn ${depositModal.action === 'release' ? 'confirm' : 'confirm'}`}
+                onClick={handleDeposit}
+                disabled={depositLoading || (depositModal.action === 'capture' && !depositAmount)}
+                style={depositModal.action === 'release' ? { background: '#166534', borderColor: '#166534' } : {}}
+              >
+                {depositLoading
+                  ? 'In corso…'
+                  : depositModal.action === 'release'
+                    ? '✓ Sblocca €1.000'
+                    : `⚠ Incassa €${parseFloat(depositAmount || 0).toFixed(2)}`}
+              </button>
+              <button
+                className="admin-modal-btn cancel-btn"
+                onClick={() => { setDepositModal(null); setDepositAmount(''); }}
+                disabled={depositLoading}
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Damage Modal */}
       {damageModal && (

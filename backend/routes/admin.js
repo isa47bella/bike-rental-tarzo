@@ -152,4 +152,73 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/bookings/:id/release-deposit ────────────────────────────
+// Rilascia la cauzione (bici restituita senza danni)
+
+router.post('/bookings/:id/release-deposit', async (req, res) => {
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .select('cauzione_pi_id, cauzione_status, cliente_nome')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !prenotazione) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!prenotazione.cauzione_pi_id) return res.status(400).json({ error: 'Nessuna cauzione attiva' });
+  if (prenotazione.cauzione_status !== 'authorized') {
+    return res.status(400).json({ error: `Cauzione non rilasciabile (stato: ${prenotazione.cauzione_status})` });
+  }
+
+  try {
+    await stripe.paymentIntents.cancel(prenotazione.cauzione_pi_id);
+    await supabase
+      .from('prenotazioni')
+      .update({ cauzione_status: 'cancelled' })
+      .eq('id', req.params.id);
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('Errore release deposit:', e);
+    return res.status(402).json({ error: e.message || 'Errore Stripe' });
+  }
+});
+
+// ─── POST /api/admin/bookings/:id/capture-deposit ────────────────────────────
+// Incassa la cauzione per danni (importo ≤ €1.000)
+
+router.post('/bookings/:id/capture-deposit', async (req, res) => {
+  const { amount, motivo } = req.body;
+  const amountNum = parseFloat(amount);
+  if (!amountNum || amountNum <= 0 || amountNum > 1000) {
+    return res.status(400).json({ error: 'Importo non valido (max €1.000)' });
+  }
+
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .select('cauzione_pi_id, cauzione_status, cliente_nome')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !prenotazione) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!prenotazione.cauzione_pi_id) return res.status(400).json({ error: 'Nessuna cauzione attiva' });
+  if (prenotazione.cauzione_status !== 'authorized') {
+    return res.status(400).json({ error: `Cauzione non incassabile (stato: ${prenotazione.cauzione_status})` });
+  }
+
+  try {
+    await stripe.paymentIntents.capture(prenotazione.cauzione_pi_id, {
+      amount_to_capture: Math.round(amountNum * 100),
+    });
+    await supabase
+      .from('prenotazioni')
+      .update({
+        cauzione_status:           'captured',
+        cauzione_captured_amount:  amountNum,
+      })
+      .eq('id', req.params.id);
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('Errore capture deposit:', e);
+    return res.status(402).json({ error: e.message || 'Errore Stripe' });
+  }
+});
+
 module.exports = router;

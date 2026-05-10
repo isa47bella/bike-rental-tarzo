@@ -191,11 +191,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       return res.status(500).send('DB error');
     }
 
-    // Salva customer_id e payment_method per addebiti futuri (cauzione danni)
+    // Salva customer_id e payment_method
+    let paymentMethodId = null;
     if (session.payment_intent) {
       try {
         const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
-        const paymentMethodId = paymentIntent.payment_method;
+        paymentMethodId = paymentIntent.payment_method;
         await supabase
           .from('prenotazioni')
           .update({
@@ -205,6 +206,36 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           .eq('stripe_session_id', session.id);
       } catch (e) {
         console.error('Errore salvataggio payment method:', e);
+      }
+    }
+
+    // ── Crea autorizzazione cauzione €1.000 (blocca senza addebitare) ──
+    if (paymentMethodId && session.customer && prenotazione) {
+      try {
+        const cauPI = await stripe.paymentIntents.create({
+          amount:         100000, // €1.000 in centesimi
+          currency:       'eur',
+          customer:       session.customer,
+          payment_method: paymentMethodId,
+          capture_method: 'manual',   // blocca ma NON addebita
+          confirm:        true,
+          off_session:    true,
+          description:    `Cauzione bici — ${prenotazione.cliente_nome} (${prenotazione.id.substring(0, 8)})`,
+        });
+        await supabase
+          .from('prenotazioni')
+          .update({
+            cauzione_pi_id:  cauPI.id,
+            cauzione_status: cauPI.status === 'requires_capture' ? 'authorized' : 'failed',
+          })
+          .eq('id', prenotazione.id);
+        console.log(`Cauzione autorizzata: ${cauPI.id} per prenotazione ${prenotazione.id}`);
+      } catch (cauErr) {
+        console.error('Errore creazione cauzione:', cauErr.message);
+        await supabase
+          .from('prenotazioni')
+          .update({ cauzione_status: 'failed' })
+          .eq('id', prenotazione.id);
       }
     }
 
