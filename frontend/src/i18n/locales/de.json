@@ -8,6 +8,7 @@
       "Datum",
       "Fahrrad",
       "Typ",
+      "Extras",
       "Kontakt",
       "Übersicht"
     ]
@@ -141,6 +142,8 @@
       "returnDay": "Rückgabedatum",
       "returnTime": "Rückgabezeit",
       "bike": "Modell",
+      "accessories": "Zubehör",
+      "noAccessories": "Keines",
       "customer": "Kunde",
       "email": "E-Mail",
       "phone": "Telefon",
@@ -155,7 +158,7 @@
       "multi_giorno": "Mehrtägig"
     },
     "paymentInfo": "💳 Die Zahlung erfolgt <b>100% im Voraus</b> über Stripe (Kredit-/Debitkarte). Sie erhalten sofort nach der Zahlung eine Bestätigungs-E-Mail.",
-    "depositInfo": "🔒 <b>Kaution €1.000:</b> Der Betrag wird <b>2 Tage vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Der Betrag wird nicht abgebucht und nach Rückgabe des Fahrrads in einwandfreiem Zustand automatisch freigegeben. Bei unzureichenden Mitteln kann die Buchung storniert werden.",
+    "depositInfo": "🔒 <b>Kaution €1.000:</b> Der Betrag wird <b>2 Tage vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Er wird nach Rückgabe des Fahrrads und Zubehörs in einwandfreiem Zustand freigegeben. Bei Verlust oder Schaden werden die Kosten von der Kaution abgezogen.",
     "modify": "← Bearbeiten",
     "pay": "💳 Zahlen €{{amount}}",
     "processing": "⏳ Wird bearbeitet...",
@@ -188,6 +191,18 @@
     "problems": "Probleme? Schreiben Sie uns auf WhatsApp 📱",
     "totalLabel": "Buchungsgesamt",
     "payAt": "Zahlung beim Checkout"
+  },
+  "stepAccessori": {
+    "title": "Enthaltenes Zubehör",
+    "subtitle": "Wählen Sie das Zubehör, das Sie benötigen — im Preis inbegriffen, keine Zusatzkosten",
+    "included": "Inklusive",
+    "items": {
+      "casco":    { "label": "Helm",             "desc": "CE-zugelassener Helm · Verstellbare Größe" },
+      "lucchetto":{ "label": "Schloss",          "desc": "Zahlenkombinationsschloss" },
+      "kit_foro": { "label": "Pannenhilfe-Set",  "desc": "Schlauch + Reifenheber + Taschenpumpe" }
+    },
+    "cauzioneNote": "⚠️ Bei Verlust oder Beschädigung von Zubehör werden die Kosten durch die Kaution von €1.000 gedeckt.",
+    "skipNote": "Kein Zubehör benötigt? Drücken Sie Weiter um ohne fortzufahren."
   },
   "customExp": {
     "title": "Etwas Besonderes gewünscht?",

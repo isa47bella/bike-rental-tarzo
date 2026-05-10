@@ -67,6 +67,14 @@ export default function StepSummary({ booking, onBack }) {
           <span className="value">{booking.bike_nome || booking.modello_nome || `Bici #${booking.bicicletta_id}`}</span>
         </div>
         <div className="summary-row">
+          <span className="label">{t('stepSummary.fields.accessories')}</span>
+          <span className="value">
+            {booking.accessori && booking.accessori.length > 0
+              ? booking.accessori.map(k => t(`stepAccessori.items.${k}.label`)).join(', ')
+              : t('stepSummary.fields.noAccessories')}
+          </span>
+        </div>
+        <div className="summary-row">
           <span className="label">{t('stepSummary.fields.customer')}</span>
           <span className="value">{booking.cliente_nome}</span>
         </div>

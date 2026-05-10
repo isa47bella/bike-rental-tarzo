@@ -8,6 +8,7 @@
       "Fecha",
       "Bici",
       "Tipo",
+      "Extras",
       "Contacto",
       "Resumen"
     ]
@@ -141,6 +142,8 @@
       "returnDay": "Fecha de devolución",
       "returnTime": "Hora de devolución",
       "bike": "Modelo",
+      "accessories": "Accesorios",
+      "noAccessories": "Ninguno",
       "customer": "Cliente",
       "email": "Email",
       "phone": "Teléfono",
@@ -155,7 +158,7 @@
       "multi_giorno": "Varios Días"
     },
     "paymentInfo": "💳 El pago es <b>100% anticipado</b> mediante Stripe (tarjeta de crédito/débito). Recibirás un email de confirmación inmediatamente después del pago.",
-    "depositInfo": "🔒 <b>Depósito de €1.000:</b> el bloqueo se realiza en tu tarjeta <b>2 días antes de la recogida</b>, no en el momento del pago. El importe no se cobra y se liberará automáticamente al devolver la bici en buen estado. Si la tarjeta no tiene fondos suficientes, la reserva podría cancelarse.",
+    "depositInfo": "🔒 <b>Depósito de €1.000:</b> el bloqueo se realiza en tu tarjeta <b>2 días antes de la recogida</b>, no en el momento del pago. Se liberará al devolver la bici y los accesorios en buen estado. En caso de pérdida o daño, los costes se deducirán del depósito.",
     "modify": "← Modificar",
     "pay": "💳 Pagar €{{amount}}",
     "processing": "⏳ Procesando...",
@@ -188,6 +191,18 @@
     "problems": "¿Problemas? Escríbenos por WhatsApp 📱",
     "totalLabel": "Total reserva",
     "payAt": "Pagar en checkout"
+  },
+  "stepAccessori": {
+    "title": "Accesorios incluidos",
+    "subtitle": "Selecciona los accesorios que necesitas — incluidos en el precio, sin coste adicional",
+    "included": "Incluido",
+    "items": {
+      "casco":    { "label": "Casco",              "desc": "Casco homologado CE · Talla ajustable" },
+      "lucchetto":{ "label": "Candado",            "desc": "Candado de combinación numérica" },
+      "kit_foro": { "label": "Kit de Pinchazo",    "desc": "Cámara + desmontables + bomba de bolsillo" }
+    },
+    "cauzioneNote": "⚠️ En caso de pérdida o daño de los accesorios, los costes serán cubiertos por el depósito de €1.000.",
+    "skipNote": "¿No necesitas accesorios? Pulsa Continuar para proceder sin ellos."
   },
   "customExp": {
     "title": "¿Buscas algo especial?",

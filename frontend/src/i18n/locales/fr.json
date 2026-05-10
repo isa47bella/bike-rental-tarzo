@@ -8,6 +8,7 @@
       "Date",
       "Vélo",
       "Type",
+      "Extras",
       "Contact",
       "Récap"
     ]
@@ -141,6 +142,8 @@
       "returnDay": "Date de retour",
       "returnTime": "Heure de retour",
       "bike": "Modèle",
+      "accessories": "Accessoires",
+      "noAccessories": "Aucun",
       "customer": "Client",
       "email": "Email",
       "phone": "Téléphone",
@@ -155,7 +158,7 @@
       "multi_giorno": "Multi-Jours"
     },
     "paymentInfo": "💳 Le paiement est <b>100% anticipé</b> via Stripe (carte de crédit/débit). Vous recevrez un email de confirmation immédiatement après le paiement.",
-    "depositInfo": "🔒 <b>Caution de 1 000 € :</b> le blocage est effectué sur votre carte <b>2 jours avant le retrait</b>, pas au moment du paiement. Le montant n'est pas débité et sera libéré automatiquement à la restitution du vélo en bon état. En cas de fonds insuffisants, la réservation pourrait être annulée.",
+    "depositInfo": "🔒 <b>Caution de 1 000 € :</b> le blocage est effectué sur votre carte <b>2 jours avant le retrait</b>, pas au moment du paiement. Il sera libéré à la restitution du vélo et des accessoires en bon état. En cas de perte ou dommage, les frais seront déduits de la caution.",
     "modify": "← Modifier",
     "pay": "💳 Payer €{{amount}}",
     "processing": "⏳ Traitement...",
@@ -188,6 +191,18 @@
     "problems": "Problèmes ? Écrivez-nous sur WhatsApp 📱",
     "totalLabel": "Total réservation",
     "payAt": "Payer au checkout"
+  },
+  "stepAccessori": {
+    "title": "Accessoires inclus",
+    "subtitle": "Sélectionnez les accessoires dont vous avez besoin — inclus dans le prix, sans frais supplémentaires",
+    "included": "Inclus",
+    "items": {
+      "casco":    { "label": "Casque",      "desc": "Casque homologué CE · Taille réglable" },
+      "lucchetto":{ "label": "Antivol",     "desc": "Antivol à code numérique" },
+      "kit_foro": { "label": "Kit Crevaison","desc": "Chambre à air + démonte-pneu + pompe de poche" }
+    },
+    "cauzioneNote": "⚠️ En cas de perte ou de dommage aux accessoires, les frais seront couverts par la caution de 1 000 €.",
+    "skipNote": "Vous n'avez pas besoin d'accessoires ? Appuyez sur Continuer pour procéder sans."
   },
   "customExp": {
     "title": "Vous cherchez quelque chose de spécial?",

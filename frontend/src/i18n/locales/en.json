@@ -8,6 +8,7 @@
       "Date",
       "Bike",
       "Type",
+      "Extras",
       "Contact",
       "Summary"
     ]
@@ -141,6 +142,8 @@
       "returnDay": "Return date",
       "returnTime": "Return time",
       "bike": "Model",
+      "accessories": "Accessories",
+      "noAccessories": "None",
       "customer": "Customer",
       "email": "Email",
       "phone": "Phone",
@@ -155,7 +158,7 @@
       "multi_giorno": "Multi-Day"
     },
     "paymentInfo": "💳 Payment is <b>100% upfront</b> via Stripe (credit/debit card). You'll receive a confirmation email right after payment.",
-    "depositInfo": "🔒 <b>€1,000 security deposit:</b> the hold is placed on your card <b>2 days before pickup</b>, not at checkout. The amount is not charged and will be automatically released when the bike is returned in good condition. If your card has insufficient funds, your booking may be cancelled.",
+    "depositInfo": "🔒 <b>€1,000 security deposit:</b> the hold is placed on your card <b>2 days before pickup</b>, not at checkout. The amount is not charged and will be released when the bike and accessories are returned in good condition. In case of damage or loss, costs will be deducted from the deposit.",
     "modify": "← Edit",
     "pay": "💳 Pay €{{amount}}",
     "processing": "⏳ Processing...",
@@ -188,6 +191,18 @@
     "problems": "Need help? Message us on WhatsApp 📱",
     "totalLabel": "Booking total",
     "payAt": "Pay at checkout"
+  },
+  "stepAccessori": {
+    "title": "Included accessories",
+    "subtitle": "Select the accessories you need — included in the price, no extra cost",
+    "included": "Included",
+    "items": {
+      "casco":    { "label": "Helmet",       "desc": "CE-certified helmet · Adjustable size" },
+      "lucchetto":{ "label": "Lock",         "desc": "Combination padlock" },
+      "kit_foro": { "label": "Puncture Kit", "desc": "Inner tube + tyre levers + portable pump" }
+    },
+    "cauzioneNote": "⚠️ If accessories are lost or damaged, costs will be covered by the €1,000 security deposit.",
+    "skipNote": "Don't need any accessories? Press Continue to proceed without."
   },
   "customExp": {
     "title": "Looking for something special?",

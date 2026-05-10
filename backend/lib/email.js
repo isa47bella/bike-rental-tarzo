@@ -21,11 +21,23 @@ function formatDate(dateStr) {
 
 function tipoLabel(tipo) {
   const labels = {
-    '4_ore':           'Noleggio 4 Ore',
-    'intera_giornata': 'Noleggio Intera Giornata',
-    '3_piu_giorni':    'Noleggio Multi-Giorno',
+    'mezza_mattina':    'Mezza Giornata Mattina (09:00–13:00)',
+    'mezza_pomeriggio': 'Mezza Giornata Pomeriggio (14:00–18:00)',
+    'intera_giornata':  'Giornata Intera (09:00–18:00)',
+    'multi_giorno':     'Multi-Giorno',
+    '4_ore':            'Noleggio 4 Ore',
+    '3_piu_giorni':     'Noleggio Multi-Giorno',
   };
   return labels[tipo] || tipo;
+}
+
+function accLabel(key) {
+  const labels = { casco: 'Casco', lucchetto: 'Lucchetto', kit_foro: 'Kit Foratura' };
+  return labels[key] || key;
+}
+
+function parseAccessori(raw) {
+  return (raw || '').split(',').filter(Boolean);
 }
 
 // ─── Template email conferma cliente ─────────────────────────────────────────
@@ -83,6 +95,7 @@ function buildClienteHtml(p) {
               ${p.giorni > 1 ? row('📆 Numero Giorni', p.giorni + ' giorni') : ''}
               ${row('💶 Totale Pagato',   '€' + Number(p.prezzo_totale).toFixed(2))}
               ${row('🚲 Bicicletta',      'Bicicletta ' + p.bicicletta_id + ' (Papin Sport)')}
+              ${parseAccessori(p.accessori).length > 0 ? row('🎒 Accessori inclusi', parseAccessori(p.accessori).map(accLabel).join(', ')) : ''}
             </table>
 
             <!-- Dove venire -->
@@ -101,7 +114,9 @@ function buildClienteHtml(p) {
               <ul style="color:#555;font-size:14px;margin:8px 0 0;padding-left:20px;">
                 <li>Documento di identità</li>
                 <li>Questo codice prenotazione: <strong>${p.id.toUpperCase().substring(0, 8)}</strong></li>
-                <li>Casco (consigliato, non incluso)</li>
+                ${parseAccessori(p.accessori).includes('casco') ? '<li>Casco <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : '<li>Casco <span style="color:#888;">(consigliato, non incluso)</span></li>'}
+                ${parseAccessori(p.accessori).includes('lucchetto') ? '<li>Lucchetto <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : ''}
+                ${parseAccessori(p.accessori).includes('kit_foro') ? '<li>Kit foratura <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : ''}
               </ul>
             </div>
 
@@ -154,6 +169,7 @@ function buildGestoreHtml(p) {
     <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${p.orario_restituzione.substring(0,5)}</p>
     <p><strong>Bicicletta:</strong> #${p.bicicletta_id}</p>
     <p><strong>Totale:</strong> €${Number(p.prezzo_totale).toFixed(2)} — <span style="color:#2D8659;font-weight:bold;">PAGATO ✓</span></p>
+    ${parseAccessori(p.accessori).length > 0 ? `<p><strong>Accessori richiesti:</strong> ${parseAccessori(p.accessori).map(accLabel).join(', ')}</p>` : '<p><strong>Accessori:</strong> Nessuno</p>'}
     ${p.cliente_note ? `<p><strong>Note:</strong> ${p.cliente_note}</p>` : ''}
   </div>
 </body></html>`;

@@ -8,6 +8,7 @@
       "Data",
       "Bici",
       "Tipo",
+      "Extra",
       "Contatti",
       "Riepilogo"
     ]
@@ -141,6 +142,8 @@
       "returnDay": "Giorno restituzione",
       "returnTime": "Orario restituzione",
       "bike": "Modello",
+      "accessories": "Accessori",
+      "noAccessories": "Nessuno",
       "customer": "Cliente",
       "email": "Email",
       "phone": "Telefono",
@@ -155,7 +158,7 @@
       "multi_giorno": "Multi-Giorno"
     },
     "paymentInfo": "💳 Il pagamento è <b>100% anticipato</b> tramite Stripe (carta di credito/debito). Riceverai conferma via email subito dopo il pagamento.",
-    "depositInfo": "🔒 <b>Cauzione di €1.000:</b> il blocco viene eseguito sulla tua carta <b>2 giorni prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato automaticamente alla restituzione in buone condizioni. Se la carta non ha fondi sufficienti, la prenotazione potrebbe essere annullata.",
+    "depositInfo": "🔒 <b>Cauzione di €1.000:</b> il blocco viene eseguito sulla tua carta <b>2 giorni prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato alla restituzione della bici e degli accessori in buone condizioni. In caso di danni o smarrimento, i costi saranno trattenuti dalla cauzione.",
     "modify": "← Modifica",
     "pay": "💳 Paga €{{amount}}",
     "processing": "⏳ Elaborazione...",
@@ -188,6 +191,18 @@
     "problems": "Problemi? Scrivici su WhatsApp 📱",
     "totalLabel": "Totale prenotazione",
     "payAt": "Paga solo al checkout"
+  },
+  "stepAccessori": {
+    "title": "Accessori inclusi",
+    "subtitle": "Seleziona gli accessori di cui hai bisogno — inclusi nel prezzo, senza costi aggiuntivi",
+    "included": "Incluso",
+    "items": {
+      "casco":    { "label": "Casco",         "desc": "Casco omologato CE · Taglia regolabile" },
+      "lucchetto":{ "label": "Lucchetto",     "desc": "Lucchetto a combinazione numerica" },
+      "kit_foro": { "label": "Kit Foratura",  "desc": "Camera d'aria + leve + gonfiatore tascabile" }
+    },
+    "cauzioneNote": "⚠️ In caso di smarrimento o danno agli accessori, i costi saranno coperti dalla cauzione di €1.000.",
+    "skipNote": "Non hai bisogno di accessori? Premi Continua per procedere senza."
   },
   "customExp": {
     "title": "Vuoi qualcosa di speciale?",

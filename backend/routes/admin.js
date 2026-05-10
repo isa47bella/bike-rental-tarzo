@@ -39,7 +39,7 @@ router.get('/bookings', async (req, res) => {
       data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
       prezzo_totale, pagamento_status, created_at,
       stripe_payment_method_id, danno_status, danno_amount,
-      cauzione_status, cauzione_captured_amount
+      cauzione_status, cauzione_captured_amount, accessori
     `)
     .order('data_ritiro', { ascending: true })
     .range(offset, offset + limit - 1);

@@ -5,10 +5,11 @@ import LanguageSwitcher from './LanguageSwitcher.jsx';
 import StepDate         from './steps/StepDate.jsx';
 import StepBike         from './steps/StepBike.jsx';
 import StepRentalType   from './steps/StepRentalType.jsx';
+import StepAccessori    from './steps/StepAccessori.jsx';
 import StepContact      from './steps/StepContact.jsx';
 import StepSummary      from './steps/StepSummary.jsx';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 const INITIAL_BOOKING = {
   data_ritiro:         null,
@@ -20,6 +21,7 @@ const INITIAL_BOOKING = {
   data_restituzione:   null,
   orario_restituzione: null,
   prezzo_totale:       0,
+  accessori:           [],  // 'casco' | 'lucchetto' | 'kit_foro'
   cliente_nome:        '',
   cliente_email:       '',
   cliente_telefono:    '',
@@ -73,8 +75,9 @@ export default function BookingWizard() {
           {step === 1 && <StepDate        {...stepProps} />}
           {step === 2 && <StepBike        {...stepProps} />}
           {step === 3 && <StepRentalType  {...stepProps} />}
-          {step === 4 && <StepContact     {...stepProps} />}
-          {step === 5 && <StepSummary     {...stepProps} />}
+          {step === 4 && <StepAccessori   {...stepProps} />}
+          {step === 5 && <StepContact     {...stepProps} />}
+          {step === 6 && <StepSummary     {...stepProps} />}
         </div>
 
         <div style={{ textAlign: 'center', color: 'var(--text-light)', fontSize: '0.82rem', marginTop: 8 }}>

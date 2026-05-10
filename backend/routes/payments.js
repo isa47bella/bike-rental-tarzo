@@ -59,7 +59,13 @@ router.post('/checkout', async (req, res) => {
     bike_type,
     tipo_noleggio, giorni = 1,
     data_ritiro,
+    accessori: accessoriRaw = [],
   } = req.body;
+
+  const VALID_ACC = ['casco', 'lucchetto', 'kit_foro'];
+  const accessoriStr = (Array.isArray(accessoriRaw) ? accessoriRaw : [])
+    .filter(a => VALID_ACC.includes(a))
+    .join(',');
 
   // Validazione
   if (!cliente_nome || !cliente_email || !cliente_telefono) {
@@ -131,6 +137,7 @@ router.post('/checkout', async (req, res) => {
       start_ts:            start.toISOString(),
       end_ts:              end.toISOString(),
       prezzo_totale:       prezzo,
+      accessori:           accessoriStr,
       pagamento_status:    'pending',
     })
     .select()
