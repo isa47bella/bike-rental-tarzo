@@ -151,8 +151,8 @@ const ICONS = {
   ),
 };
 
-const WHATSAPP_URL = 'https://wa.me/393917563277';
-const PHONE_URL    = 'tel:+393917563277';
+const WHATSAPP_URL = 'https://wa.me/393928614635';
+const PHONE_URL    = 'tel:+393928614635';
 
 const IconWhatsApp = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
