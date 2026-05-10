@@ -1,54 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../lib/api.js';
-import ProgressBar     from './ProgressBar.jsx';
+import ProgressBar      from './ProgressBar.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
-import StepDate        from './steps/StepDate.jsx';
-import StepTime        from './steps/StepTime.jsx';
-import StepRentalType  from './steps/StepRentalType.jsx';
-import StepBike        from './steps/StepBike.jsx';
-import StepContact     from './steps/StepContact.jsx';
-import StepSummary     from './steps/StepSummary.jsx';
+import StepDate         from './steps/StepDate.jsx';
+import StepBike         from './steps/StepBike.jsx';
+import StepRentalType   from './steps/StepRentalType.jsx';
+import StepContact      from './steps/StepContact.jsx';
+import StepSummary      from './steps/StepSummary.jsx';
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 5;
 
 const INITIAL_BOOKING = {
   data_ritiro:         null,
-  orario_ritiro:       null,
-  tipo_noleggio:       null,
+  bike_type:           null,   // 'ecity' | 'emtb' | 'bimbo'
+  bike_nome:           '',     // nome display
+  tipo_noleggio:       null,   // 'mezza_mattina' | 'mezza_pomeriggio' | 'intera_giornata' | 'multi_giorno'
   giorni:              1,
-  bicicletta_id:       null,
-  modello_nome:        '',
+  orario_ritiro:       null,   // derivato da tipo_noleggio
+  data_restituzione:   null,
+  orario_restituzione: null,
+  prezzo_totale:       0,
   cliente_nome:        '',
   cliente_email:       '',
   cliente_telefono:    '',
   cliente_note:        '',
-  data_restituzione:   null,
-  orario_restituzione: null,
-  prezzo_totale:       0,
+  // assegnati al checkout:
+  bicicletta_id:       null,
+  modello_nome:        '',
 };
 
 export default function BookingWizard() {
   const { t } = useTranslation();
   const [step,    setStep]    = useState(1);
   const [booking, setBooking] = useState(INITIAL_BOOKING);
-
-  useEffect(() => {
-    if (booking.data_ritiro && booking.orario_ritiro && booking.tipo_noleggio) {
-      api.calcolaRestituzione(
-        booking.data_ritiro,
-        booking.orario_ritiro,
-        booking.tipo_noleggio,
-        booking.giorni || 1
-      ).then(res => {
-        setBooking(b => ({
-          ...b,
-          data_restituzione:   res.data_restituzione,
-          orario_restituzione: res.orario_restituzione,
-        }));
-      }).catch(() => {});
-    }
-  }, [booking.data_ritiro, booking.orario_ritiro, booking.tipo_noleggio, booking.giorni]);
 
   function updateBooking(partial) {
     setBooking(b => ({ ...b, ...partial }));
@@ -87,11 +71,10 @@ export default function BookingWizard() {
 
         <div className="card">
           {step === 1 && <StepDate        {...stepProps} />}
-          {step === 2 && <StepTime        {...stepProps} />}
+          {step === 2 && <StepBike        {...stepProps} />}
           {step === 3 && <StepRentalType  {...stepProps} />}
-          {step === 4 && <StepBike        {...stepProps} />}
-          {step === 5 && <StepContact     {...stepProps} />}
-          {step === 6 && <StepSummary     {...stepProps} />}
+          {step === 4 && <StepContact     {...stepProps} />}
+          {step === 5 && <StepSummary     {...stepProps} />}
         </div>
 
         <div style={{ textAlign: 'center', color: 'var(--text-light)', fontSize: '0.82rem', marginTop: 8 }}>

@@ -6,10 +6,9 @@
   "progress": {
     "steps": [
       "Date",
-      "Heure",
-      "Type",
       "Vélo",
-      "Coordonnées",
+      "Type",
+      "Contact",
       "Récap"
     ]
   },
@@ -48,7 +47,8 @@
       "Ven",
       "Sam",
       "Dim"
-    ]
+    ],
+    "minAdvance": "La réservation doit être effectuée au moins 2 jours à l'avance"
   },
   "stepTime": {
     "title": "Heure de retrait",
@@ -56,7 +56,7 @@
   },
   "stepRentalType": {
     "title": "Type de location",
-    "subtitle": "Retrait : <b>{{time}}</b> le <b>{{date}}</b>",
+    "subtitle": "Vélo : <b>{{bike}}</b> · Date : <b>{{date}}</b>",
     "types": {
       "4_ore": {
         "title": "Location 4 Heures",
@@ -64,32 +64,50 @@
         "price": "€30"
       },
       "intera_giornata": {
-        "title": "Journée complète",
-        "detail": "Retour 16:00–18:00",
+        "title": "Journée entière",
+        "detail": "09:00 – 18:00",
         "price": "€50"
       },
       "3_piu_giorni": {
         "title": "3+ Jours",
         "detail": "Retour à la même heure",
         "price": "€45/jour"
+      },
+      "mezza_mattina": {
+        "title": "½ Matin",
+        "detail": "09:00 – 13:00"
+      },
+      "mezza_pomeriggio": {
+        "title": "½ Après-midi",
+        "detail": "14:00 – 18:00"
+      },
+      "multi_giorno": {
+        "title": "Multi-jours",
+        "detail": "Min. 2 jours",
+        "price": "€{{price}}"
       }
     },
     "days": "jours",
     "totalDays": "jours — <b>€{{price}}</b>",
     "returnLabel": "Nombre de jours",
     "calculating": "Calcul du retour...",
-    "returnInfo": "🔄 <b>Retour :</b> {{date}} à <b>{{time}}</b>"
+    "returnInfo": "🔄 <b>Retour :</b> {{date}} à <b>{{time}}</b> — <b>€{{price}}</b>",
+    "daysLabel": "Nombre de jours",
+    "daysCount": "{{n}} jours"
   },
   "stepBike": {
-    "title": "Choisissez votre vélo",
-    "subtitle": "3 modèles de e-bike — sélectionnez celui que vous préférez",
+    "title": "Choisir le modèle",
+    "subtitle": "Sélectionnez le vélo électrique de votre choix",
     "checking": "Vérification de la disponibilité...",
     "errorAvail": "Impossible de vérifier la disponibilité. Veuillez réessayer.",
     "selected": "✓ Sélectionné",
-    "unavailable": "Non disponible pour cette date",
-    "unavailableSub": "Contactez-nous — nous pouvons trouver une solution",
+    "unavailable": "Non disponible",
+    "unavailableSub": "Contactez-nous — nous trouverons une solution",
     "whatsapp": "WhatsApp",
-    "call": "Appeler"
+    "call": "Appeler",
+    "halfDay": "demi-journée",
+    "fullDay": "Journée complète",
+    "multiFrom": "Multi-jours à partir de"
   },
   "stepContact": {
     "title": "Vos coordonnées",
@@ -130,8 +148,11 @@
     },
     "types": {
       "4_ore": "Location 4 Heures",
-      "intera_giornata": "Location Journée Complète",
-      "3_piu_giorni": "Location Multi-Jours"
+      "intera_giornata": "Journée Entière",
+      "3_piu_giorni": "Location Multi-Jours",
+      "mezza_mattina": "½ Journée Matin",
+      "mezza_pomeriggio": "½ Journée Après-midi",
+      "multi_giorno": "Multi-Jours"
     },
     "paymentInfo": "💳 Le paiement est <b>100% anticipé</b> via Stripe (carte de crédit/débit). Vous recevrez un email de confirmation immédiatement après le paiement.",
     "depositInfo": "🔒 <b>Caution de 1 000 € :</b> le blocage est effectué sur votre carte <b>2 jours avant le retrait</b>, pas au moment du paiement. Le montant n'est pas débité et sera libéré automatiquement à la restitution du vélo en bon état. En cas de fonds insuffisants, la réservation pourrait être annulée.",

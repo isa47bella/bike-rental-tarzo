@@ -6,11 +6,10 @@
   "progress": {
     "steps": [
       "Datum",
-      "Uhrzeit",
-      "Typ",
       "Fahrrad",
+      "Typ",
       "Kontakt",
-      "Überblick"
+      "Übersicht"
     ]
   },
   "common": {
@@ -48,15 +47,16 @@
       "Fr",
       "Sa",
       "So"
-    ]
+    ],
+    "minAdvance": "Die Buchung muss mindestens 2 Tage im Voraus erfolgen"
   },
   "stepTime": {
     "title": "Abholzeit",
     "info": "Abholung: <b>08:00 – 10:00</b> · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "stepRentalType": {
-    "title": "Mietart",
-    "subtitle": "Abholung: <b>{{time}}</b> am <b>{{date}}</b>",
+    "title": "Verleihtyp",
+    "subtitle": "E-Bike: <b>{{bike}}</b> · Datum: <b>{{date}}</b>",
     "types": {
       "4_ore": {
         "title": "4-Stunden-Miete",
@@ -65,31 +65,49 @@
       },
       "intera_giornata": {
         "title": "Ganzer Tag",
-        "detail": "Rückgabe 16:00–18:00",
+        "detail": "09:00 – 18:00",
         "price": "€50"
       },
       "3_piu_giorni": {
         "title": "3+ Tage",
         "detail": "Rückgabe zur selben Zeit",
         "price": "€45/Tag"
+      },
+      "mezza_mattina": {
+        "title": "½ Vormittag",
+        "detail": "09:00 – 13:00"
+      },
+      "mezza_pomeriggio": {
+        "title": "½ Nachmittag",
+        "detail": "14:00 – 18:00"
+      },
+      "multi_giorno": {
+        "title": "Mehrtägig",
+        "detail": "Min. 2 Tage",
+        "price": "€{{price}}"
       }
     },
     "days": "Tage",
     "totalDays": "Tage — <b>€{{price}}</b>",
     "returnLabel": "Anzahl der Tage",
     "calculating": "Rückgabe wird berechnet...",
-    "returnInfo": "🔄 <b>Rückgabe:</b> {{date}} um <b>{{time}}</b>"
+    "returnInfo": "🔄 <b>Rückgabe:</b> {{date}} um <b>{{time}}</b> — <b>€{{price}}</b>",
+    "daysLabel": "Anzahl der Tage",
+    "daysCount": "{{n}} Tage"
   },
   "stepBike": {
-    "title": "Fahrrad wählen",
-    "subtitle": "3 E-Bike-Modelle — wählen Sie Ihr bevorzugtes",
-    "checking": "Verfügbarkeit wird geprüft...",
+    "title": "Modell wählen",
+    "subtitle": "Wählen Sie Ihr E-Bike",
+    "checking": "Verfügbarkeit prüfen...",
     "errorAvail": "Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.",
     "selected": "✓ Ausgewählt",
-    "unavailable": "Für dieses Datum nicht verfügbar",
-    "unavailableSub": "Kontaktieren Sie uns — wir finden eine Lösung",
+    "unavailable": "Nicht verfügbar",
+    "unavailableSub": "Kontaktieren Sie uns",
     "whatsapp": "WhatsApp",
-    "call": "Anrufen"
+    "call": "Anrufen",
+    "halfDay": "Halbtag",
+    "fullDay": "Ganzer Tag",
+    "multiFrom": "Mehrtägig ab"
   },
   "stepContact": {
     "title": "Ihre Kontaktdaten",
@@ -130,8 +148,11 @@
     },
     "types": {
       "4_ore": "4-Stunden-Miete",
-      "intera_giornata": "Tagesmiete",
-      "3_piu_giorni": "Mehrtagsmiete"
+      "intera_giornata": "Ganzer Tag",
+      "3_piu_giorni": "Mehrtagsmiete",
+      "mezza_mattina": "½ Tag Vormittag",
+      "mezza_pomeriggio": "½ Tag Nachmittag",
+      "multi_giorno": "Mehrtägig"
     },
     "paymentInfo": "💳 Die Zahlung erfolgt <b>100% im Voraus</b> über Stripe (Kredit-/Debitkarte). Sie erhalten sofort nach der Zahlung eine Bestätigungs-E-Mail.",
     "depositInfo": "🔒 <b>Kaution €1.000:</b> Der Betrag wird <b>2 Tage vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Der Betrag wird nicht abgebucht und nach Rückgabe des Fahrrads in einwandfreiem Zustand automatisch freigegeben. Bei unzureichenden Mitteln kann die Buchung storniert werden.",

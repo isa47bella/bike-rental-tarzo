@@ -252,4 +252,19 @@ router.post('/bookings/:id/send-email', async (req, res) => {
   }
 });
 
+// ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────
+
+function tipoShort(tipo) {
+  const m = {
+    mezza_mattina:    '½ Matt.',
+    mezza_pomeriggio: '½ Pom.',
+    intera_giornata:  'Giorn.',
+    multi_giorno:     'Multi',
+    // legacy
+    '4_ore': '4h', 'intera_giornata_old': 'Giorn.', '3_piu_giorni': 'Multi',
+  };
+  return m[tipo] || tipo;
+}
+
 module.exports = router;
+module.exports.tipoShort = tipoShort;

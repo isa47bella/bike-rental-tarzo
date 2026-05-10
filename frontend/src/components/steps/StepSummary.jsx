@@ -40,7 +40,7 @@ export default function StepSummary({ booking, onBack }) {
           <span className="label">{t('stepSummary.fields.type')}</span>
           <span className="value">{tipoLabel}</span>
         </div>
-        {booking.tipo_noleggio === '3_piu_giorni' && (
+        {booking.tipo_noleggio === 'multi_giorno' && (
           <div className="summary-row">
             <span className="label">{t('stepSummary.fields.days')}</span>
             <span className="value">{t('stepSummary.fields.daysValue', { n: booking.giorni })}</span>
@@ -64,7 +64,7 @@ export default function StepSummary({ booking, onBack }) {
         </div>
         <div className="summary-row">
           <span className="label">{t('stepSummary.fields.bike')}</span>
-          <span className="value">{booking.modello_nome || `#${booking.bicicletta_id}`}</span>
+          <span className="value">{booking.bike_nome || booking.modello_nome || `Bici #${booking.bicicletta_id}`}</span>
         </div>
         <div className="summary-row">
           <span className="label">{t('stepSummary.fields.customer')}</span>

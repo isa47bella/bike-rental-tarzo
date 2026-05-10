@@ -46,13 +46,13 @@ async function adminPost(path, body) {
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export const api = {
-  // Disponibilità bici per data+orario+tipo
-  getAvailability: (data_ritiro, orario_ritiro, tipo_noleggio, giorni = 1) =>
-    post('/availability', { data_ritiro, orario_ritiro, tipo_noleggio, giorni }),
+  // Disponibilità bici per data+tipo_noleggio
+  getAvailability: (data_ritiro, tipo_noleggio, giorni = 1) =>
+    post('/availability', { data_ritiro, tipo_noleggio, giorni }),
 
   // Calcola data/orario restituzione
-  calcolaRestituzione: (data_ritiro, orario_ritiro, tipo_noleggio, giorni = 1) =>
-    post('/availability/calcola-restituzione', { data_ritiro, orario_ritiro, tipo_noleggio, giorni }),
+  calcolaRestituzione: (data_ritiro, tipo_noleggio, giorni = 1) =>
+    post('/availability/calcola-restituzione', { data_ritiro, tipo_noleggio, giorni }),
 
   // Calendario mensile disponibilità
   getCalendario: (anno, mese) =>

@@ -9,6 +9,8 @@ export default function StepDate({ booking, onChange, onNext }) {
 
   const today = new Date();
   today.setHours(0,0,0,0);
+  const minDate = new Date(today);
+  minDate.setDate(minDate.getDate() + 2);
 
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
@@ -62,7 +64,7 @@ export default function StepDate({ booking, onChange, onNext }) {
     if (!day) return 'cal-day empty';
     const ds   = dateStr(day);
     const date = new Date(ds + 'T00:00:00');
-    if (date < today) return 'cal-day past';
+    if (date < minDate) return 'cal-day past';
     const avail = calendario[ds];
     if (!avail) return 'cal-day avail-full';
     if (avail.disponibili === 0) return 'cal-day avail-none';
@@ -74,7 +76,7 @@ export default function StepDate({ booking, onChange, onNext }) {
     if (!day) return;
     const ds   = dateStr(day);
     const date = new Date(ds + 'T00:00:00');
-    if (date < today) return;
+    if (date < minDate) return;
     const avail = calendario[ds];
     if (avail && avail.disponibili === 0) return;
     onChange({ data_ritiro: ds });

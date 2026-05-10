@@ -6,9 +6,8 @@
   "progress": {
     "steps": [
       "Data",
-      "Orario",
-      "Tipo",
       "Bici",
+      "Tipo",
       "Contatti",
       "Riepilogo"
     ]
@@ -48,7 +47,8 @@
       "Ven",
       "Sab",
       "Dom"
-    ]
+    ],
+    "minAdvance": "La prenotazione deve essere effettuata almeno 2 giorni prima"
   },
   "stepTime": {
     "title": "Orario di ritiro",
@@ -56,7 +56,7 @@
   },
   "stepRentalType": {
     "title": "Tipo di noleggio",
-    "subtitle": "Ritiro: <b>{{time}}</b> del <b>{{date}}</b>",
+    "subtitle": "E-bike: <b>{{bike}}</b> · Data: <b>{{date}}</b>",
     "types": {
       "4_ore": {
         "title": "Noleggio 4 Ore",
@@ -65,31 +65,49 @@
       },
       "intera_giornata": {
         "title": "Intera Giornata",
-        "detail": "Restituzione 16:00–18:00",
+        "detail": "09:00 – 18:00",
         "price": "€50"
       },
       "3_piu_giorni": {
         "title": "3+ Giorni",
         "detail": "Restituzione stesso orario",
         "price": "€45/giorno"
+      },
+      "mezza_mattina": {
+        "title": "½ Mattina",
+        "detail": "09:00 – 13:00"
+      },
+      "mezza_pomeriggio": {
+        "title": "½ Pomeriggio",
+        "detail": "14:00 – 18:00"
+      },
+      "multi_giorno": {
+        "title": "Multi-Giorno",
+        "detail": "Min. 2 giorni",
+        "price": "€{{price}}"
       }
     },
     "days": "giorni",
     "totalDays": "giorni — <b>€{{price}}</b>",
     "returnLabel": "Numero di giorni",
     "calculating": "Calcolo restituzione...",
-    "returnInfo": "🔄 <b>Restituzione:</b> {{date}} alle <b>{{time}}</b>"
+    "returnInfo": "🔄 <b>Restituzione:</b> {{date}} alle <b>{{time}}</b> — <b>€{{price}}</b>",
+    "daysLabel": "Numero di giorni",
+    "daysCount": "{{n}} giorni"
   },
   "stepBike": {
     "title": "Scegli il modello",
-    "subtitle": "3 modelli di e-bike — seleziona quello che preferisci",
+    "subtitle": "Seleziona la e-bike che preferisci",
     "checking": "Verifica disponibilità...",
     "errorAvail": "Impossibile verificare disponibilità. Riprova.",
-    "selected": "✓ Selezionata",
-    "unavailable": "Non disponibile per questa data",
+    "selected": "✓ Selezionato",
+    "unavailable": "Non disponibile",
     "unavailableSub": "Contattaci — possiamo trovare una soluzione",
     "whatsapp": "WhatsApp",
-    "call": "Chiama"
+    "call": "Chiama",
+    "halfDay": "giornata",
+    "fullDay": "Intera giornata",
+    "multiFrom": "Multi-giorno da"
   },
   "stepContact": {
     "title": "I tuoi contatti",
@@ -130,8 +148,11 @@
     },
     "types": {
       "4_ore": "Noleggio 4 Ore",
-      "intera_giornata": "Noleggio Intera Giornata",
-      "3_piu_giorni": "Noleggio Multi-Giorno"
+      "intera_giornata": "Giornata Intera",
+      "3_piu_giorni": "Noleggio Multi-Giorno",
+      "mezza_mattina": "½ Giornata Mattina",
+      "mezza_pomeriggio": "½ Giornata Pomeriggio",
+      "multi_giorno": "Multi-Giorno"
     },
     "paymentInfo": "💳 Il pagamento è <b>100% anticipato</b> tramite Stripe (carta di credito/debito). Riceverai conferma via email subito dopo il pagamento.",
     "depositInfo": "🔒 <b>Cauzione di €1.000:</b> il blocco viene eseguito sulla tua carta <b>2 giorni prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato automaticamente alla restituzione in buone condizioni. Se la carta non ha fondi sufficienti, la prenotazione potrebbe essere annullata.",

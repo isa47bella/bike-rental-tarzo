@@ -6,10 +6,9 @@
   "progress": {
     "steps": [
       "Fecha",
-      "Hora",
-      "Tipo",
       "Bici",
-      "Datos",
+      "Tipo",
+      "Contacto",
       "Resumen"
     ]
   },
@@ -48,7 +47,8 @@
       "Vie",
       "Sáb",
       "Dom"
-    ]
+    ],
+    "minAdvance": "La reserva debe hacerse con al menos 2 días de antelación"
   },
   "stepTime": {
     "title": "Hora de recogida",
@@ -56,7 +56,7 @@
   },
   "stepRentalType": {
     "title": "Tipo de alquiler",
-    "subtitle": "Recogida: <b>{{time}}</b> del <b>{{date}}</b>",
+    "subtitle": "E-bike: <b>{{bike}}</b> · Fecha: <b>{{date}}</b>",
     "types": {
       "4_ore": {
         "title": "Alquiler 4 Horas",
@@ -65,31 +65,49 @@
       },
       "intera_giornata": {
         "title": "Día completo",
-        "detail": "Devolución 16:00–18:00",
+        "detail": "09:00 – 18:00",
         "price": "€50"
       },
       "3_piu_giorni": {
         "title": "3+ Días",
         "detail": "Devolución a la misma hora",
         "price": "€45/día"
+      },
+      "mezza_mattina": {
+        "title": "½ Mañana",
+        "detail": "09:00 – 13:00"
+      },
+      "mezza_pomeriggio": {
+        "title": "½ Tarde",
+        "detail": "14:00 – 18:00"
+      },
+      "multi_giorno": {
+        "title": "Varios días",
+        "detail": "Mín. 2 días",
+        "price": "€{{price}}"
       }
     },
     "days": "días",
     "totalDays": "días — <b>€{{price}}</b>",
     "returnLabel": "Número de días",
     "calculating": "Calculando devolución...",
-    "returnInfo": "🔄 <b>Devolución:</b> {{date}} a las <b>{{time}}</b>"
+    "returnInfo": "🔄 <b>Devolución:</b> {{date}} a las <b>{{time}}</b> — <b>€{{price}}</b>",
+    "daysLabel": "Número de días",
+    "daysCount": "{{n}} días"
   },
   "stepBike": {
-    "title": "Elige tu bici",
-    "subtitle": "3 modelos de e-bike — selecciona el que prefieras",
-    "checking": "Verificando disponibilidad...",
+    "title": "Elige el modelo",
+    "subtitle": "Selecciona la e-bike que prefieras",
+    "checking": "Comprobando disponibilidad...",
     "errorAvail": "No se pudo verificar la disponibilidad. Inténtalo de nuevo.",
-    "selected": "✓ Seleccionada",
-    "unavailable": "No disponible para esta fecha",
-    "unavailableSub": "Contáctanos — podemos encontrar una solución",
+    "selected": "✓ Seleccionado",
+    "unavailable": "No disponible",
+    "unavailableSub": "Contáctanos — encontraremos una solución",
     "whatsapp": "WhatsApp",
-    "call": "Llamar"
+    "call": "Llamar",
+    "halfDay": "medio día",
+    "fullDay": "Día completo",
+    "multiFrom": "Varios días desde"
   },
   "stepContact": {
     "title": "Tus datos",
@@ -130,8 +148,11 @@
     },
     "types": {
       "4_ore": "Alquiler 4 Horas",
-      "intera_giornata": "Alquiler Día Completo",
-      "3_piu_giorni": "Alquiler Multidía"
+      "intera_giornata": "Día Completo",
+      "3_piu_giorni": "Alquiler Multidía",
+      "mezza_mattina": "½ Día Mañana",
+      "mezza_pomeriggio": "½ Día Tarde",
+      "multi_giorno": "Varios Días"
     },
     "paymentInfo": "💳 El pago es <b>100% anticipado</b> mediante Stripe (tarjeta de crédito/débito). Recibirás un email de confirmación inmediatamente después del pago.",
     "depositInfo": "🔒 <b>Depósito de €1.000:</b> el bloqueo se realiza en tu tarjeta <b>2 días antes de la recogida</b>, no en el momento del pago. El importe no se cobra y se liberará automáticamente al devolver la bici en buen estado. Si la tarjeta no tiene fondos suficientes, la reserva podría cancelarse.",

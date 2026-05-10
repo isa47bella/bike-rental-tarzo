@@ -6,10 +6,9 @@
   "progress": {
     "steps": [
       "Date",
-      "Time",
-      "Type",
       "Bike",
-      "Details",
+      "Type",
+      "Contact",
       "Summary"
     ]
   },
@@ -48,7 +47,8 @@
       "Fri",
       "Sat",
       "Sun"
-    ]
+    ],
+    "minAdvance": "Booking must be made at least 2 days in advance"
   },
   "stepTime": {
     "title": "Pick-up time",
@@ -56,7 +56,7 @@
   },
   "stepRentalType": {
     "title": "Rental type",
-    "subtitle": "Pick-up: <b>{{time}}</b> on <b>{{date}}</b>",
+    "subtitle": "E-bike: <b>{{bike}}</b> · Date: <b>{{date}}</b>",
     "types": {
       "4_ore": {
         "title": "4-Hour Rental",
@@ -65,31 +65,49 @@
       },
       "intera_giornata": {
         "title": "Full Day",
-        "detail": "Return by 16:00–18:00",
+        "detail": "09:00 – 18:00",
         "price": "€50"
       },
       "3_piu_giorni": {
         "title": "3+ Days",
         "detail": "Return at same time",
         "price": "€45/day"
+      },
+      "mezza_mattina": {
+        "title": "½ Morning",
+        "detail": "09:00 – 13:00"
+      },
+      "mezza_pomeriggio": {
+        "title": "½ Afternoon",
+        "detail": "14:00 – 18:00"
+      },
+      "multi_giorno": {
+        "title": "Multi-Day",
+        "detail": "Min. 2 days",
+        "price": "€{{price}}"
       }
     },
     "days": "days",
     "totalDays": "days — <b>€{{price}}</b>",
     "returnLabel": "Number of days",
     "calculating": "Calculating return...",
-    "returnInfo": "🔄 <b>Return:</b> {{date}} at <b>{{time}}</b>"
+    "returnInfo": "🔄 <b>Return:</b> {{date}} at <b>{{time}}</b> — <b>€{{price}}</b>",
+    "daysLabel": "Number of days",
+    "daysCount": "{{n}} days"
   },
   "stepBike": {
-    "title": "Choose your bike",
-    "subtitle": "3 e-bike models — select the one you prefer",
+    "title": "Choose your model",
+    "subtitle": "Select the e-bike you prefer",
     "checking": "Checking availability...",
     "errorAvail": "Unable to check availability. Please try again.",
     "selected": "✓ Selected",
-    "unavailable": "Not available for this date",
-    "unavailableSub": "Contact us — we can find a solution",
+    "unavailable": "Not available",
+    "unavailableSub": "Contact us — we'll find a solution",
     "whatsapp": "WhatsApp",
-    "call": "Call us"
+    "call": "Call",
+    "halfDay": "half day",
+    "fullDay": "Full day",
+    "multiFrom": "Multi-day from"
   },
   "stepContact": {
     "title": "Your details",
@@ -130,8 +148,11 @@
     },
     "types": {
       "4_ore": "4-Hour Rental",
-      "intera_giornata": "Full Day Rental",
-      "3_piu_giorni": "Multi-Day Rental"
+      "intera_giornata": "Full Day",
+      "3_piu_giorni": "Multi-Day Rental",
+      "mezza_mattina": "½ Day Morning",
+      "mezza_pomeriggio": "½ Day Afternoon",
+      "multi_giorno": "Multi-Day"
     },
     "paymentInfo": "💳 Payment is <b>100% upfront</b> via Stripe (credit/debit card). You'll receive a confirmation email right after payment.",
     "depositInfo": "🔒 <b>€1,000 security deposit:</b> the hold is placed on your card <b>2 days before pickup</b>, not at checkout. The amount is not charged and will be automatically released when the bike is returned in good condition. If your card has insufficient funds, your booking may be cancelled.",
