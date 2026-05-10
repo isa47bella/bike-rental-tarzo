@@ -55,15 +55,28 @@ export default function BookingWizard() {
   return (
     <div className="page-wrapper">
       <header className="header">
-        <div className="header-logo">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
-            <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
-          </svg>
-        </div>
-        <div style={{ flex: 1 }}>
-          <h1>Bike Rental Tarzo</h1>
-          <p>{t('header.subtitle')}</p>
+        <div className="header-brand">
+          <div className="header-logomark">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              {/* Sun / wheel arc */}
+              <path d="M3.5 12 A9.5 9.5 0 0 1 22.5 12" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity="0.75"/>
+              {/* Spokes */}
+              <line x1="13" y1="2.5" x2="13" y2="6.5" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
+              <line x1="20.7" y1="5.3" x2="17.8" y2="7.7" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
+              <line x1="5.3" y1="5.3" x2="8.2" y2="7.7" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
+              {/* Hub */}
+              <circle cx="13" cy="12" r="1.8" fill="white" opacity="0.9"/>
+              {/* Rolling hill silhouette — Prosecco hills */}
+              <path d="M0 25 L4 16 L8 20 L13 10 L18 17 L22 12.5 L26 25 Z" fill="white"/>
+              {/* Warm accent on highest peak */}
+              <path d="M13 10 L17 17 L9 17 Z" fill="#EA580C" opacity="0.75"/>
+            </svg>
+          </div>
+          <div className="header-wordmark">
+            <span className="header-label">BIKE RENTAL</span>
+            <span className="header-title">TARZO</span>
+            <span className="header-sub">{t('header.subtitle')}</span>
+          </div>
         </div>
         <LanguageSwitcher />
       </header>

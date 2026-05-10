@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 
 const LANGS = [
-  { code: 'it', flag: '🇮🇹' },
-  { code: 'en', flag: '🇬🇧' },
-  { code: 'de', flag: '🇩🇪' },
-  { code: 'es', flag: '🇪🇸' },
-  { code: 'fr', flag: '🇫🇷' },
+  { code: 'it', label: 'IT' },
+  { code: 'en', label: 'EN' },
+  { code: 'de', label: 'DE' },
+  { code: 'es', label: 'ES' },
+  { code: 'fr', label: 'FR' },
 ];
 
 export default function LanguageSwitcher() {
@@ -23,10 +23,10 @@ export default function LanguageSwitcher() {
           key={l.code}
           className={`lang-btn${i18n.language === l.code ? ' active' : ''}`}
           onClick={() => changeLang(l.code)}
-          aria-label={l.code.toUpperCase()}
-          title={l.code.toUpperCase()}
+          aria-label={l.label}
+          title={l.label}
         >
-          {l.flag}
+          {l.label}
         </button>
       ))}
     </div>
