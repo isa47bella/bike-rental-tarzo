@@ -4,7 +4,14 @@
     "subtitle": "Collines du Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "progress": {
-    "steps": ["Date", "Heure", "Type", "Vélo", "Coordonnées", "Récap"]
+    "steps": [
+      "Date",
+      "Heure",
+      "Type",
+      "Vélo",
+      "Coordonnées",
+      "Récap"
+    ]
   },
   "common": {
     "continue": "Continuer →",
@@ -19,8 +26,29 @@
       "partial": "Peu de places",
       "full": "Complet"
     },
-    "months": ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
-    "days": ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"]
+    "months": [
+      "Janvier",
+      "Février",
+      "Mars",
+      "Avril",
+      "Mai",
+      "Juin",
+      "Juillet",
+      "Août",
+      "Septembre",
+      "Octobre",
+      "Novembre",
+      "Décembre"
+    ],
+    "days": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Jeu",
+      "Ven",
+      "Sam",
+      "Dim"
+    ]
   },
   "stepTime": {
     "title": "Heure de retrait",
@@ -30,9 +58,21 @@
     "title": "Type de location",
     "subtitle": "Retrait : <b>{{time}}</b> le <b>{{date}}</b>",
     "types": {
-      "4_ore": { "title": "Location 4 Heures", "detail": "Matin — Retour 12:00–13:00", "price": "€30" },
-      "intera_giornata": { "title": "Journée complète", "detail": "Retour 16:00–18:00", "price": "€50" },
-      "3_piu_giorni": { "title": "3+ Jours", "detail": "Retour à la même heure", "price": "€45/jour" }
+      "4_ore": {
+        "title": "Location 4 Heures",
+        "detail": "Matin — Retour 12:00–13:00",
+        "price": "€30"
+      },
+      "intera_giornata": {
+        "title": "Journée complète",
+        "detail": "Retour 16:00–18:00",
+        "price": "€50"
+      },
+      "3_piu_giorni": {
+        "title": "3+ Jours",
+        "detail": "Retour à la même heure",
+        "price": "€45/jour"
+      }
     },
     "days": "jours",
     "totalDays": "jours — <b>€{{price}}</b>",
@@ -94,7 +134,7 @@
       "3_piu_giorni": "Location Multi-Jours"
     },
     "paymentInfo": "💳 Le paiement est <b>100% anticipé</b> via Stripe (carte de crédit/débit). Vous recevrez un email de confirmation immédiatement après le paiement.",
-    "depositInfo": "🔒 Au moment du paiement, <b>1 000 € seront retenus</b> sur votre carte en guise de caution. Le montant n'est pas débité : il sera libéré automatiquement à la restitution du vélo en bon état.",
+    "depositInfo": "🔒 <b>Caution de 1 000 € :</b> le blocage est effectué sur votre carte <b>2 jours avant le retrait</b>, pas au moment du paiement. Le montant n'est pas débité et sera libéré automatiquement à la restitution du vélo en bon état. En cas de fonds insuffisants, la réservation pourrait être annulée.",
     "modify": "← Modifier",
     "pay": "💳 Payer €{{amount}}",
     "processing": "⏳ Traitement...",

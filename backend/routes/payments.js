@@ -209,35 +209,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       }
     }
 
-    // ── Crea autorizzazione cauzione €1.000 (blocca senza addebitare) ──
-    if (paymentMethodId && session.customer && prenotazione) {
-      try {
-        const cauPI = await stripe.paymentIntents.create({
-          amount:         100000, // €1.000 in centesimi
-          currency:       'eur',
-          customer:       session.customer,
-          payment_method: paymentMethodId,
-          capture_method: 'manual',   // blocca ma NON addebita
-          confirm:        true,
-          off_session:    true,
-          description:    `Cauzione bici — ${prenotazione.cliente_nome} (${prenotazione.id.substring(0, 8)})`,
-        });
-        await supabase
-          .from('prenotazioni')
-          .update({
-            cauzione_pi_id:  cauPI.id,
-            cauzione_status: cauPI.status === 'requires_capture' ? 'authorized' : 'failed',
-          })
-          .eq('id', prenotazione.id);
-        console.log(`Cauzione autorizzata: ${cauPI.id} per prenotazione ${prenotazione.id}`);
-      } catch (cauErr) {
-        console.error('Errore creazione cauzione:', cauErr.message);
-        await supabase
-          .from('prenotazioni')
-          .update({ cauzione_status: 'failed' })
-          .eq('id', prenotazione.id);
-      }
-    }
+    // Cauzione: il blocco €1.000 avviene tramite cron job 2 giorni prima del ritiro
+    // (cauzione_status rimane 'pending' fino all'esecuzione del cron)
 
     // Invia email (non bloccante — ignora errori email)
     if (prenotazione) {

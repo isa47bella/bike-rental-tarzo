@@ -82,6 +82,10 @@ export default function AdminDashboard() {
   const [depositModal,   setDepositModal]   = useState(null); // { id, nome, action: 'release'|'capture' }
   const [depositAmount,  setDepositAmount]  = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
+  const [emailModal,     setEmailModal]     = useState(null); // { id, nome, email }
+  const [emailSubject,   setEmailSubject]   = useState('');
+  const [emailMessage,   setEmailMessage]   = useState('');
+  const [emailLoading,   setEmailLoading]   = useState(false);
 
   const loadBookings = useCallback(async (status) => {
     setFilter(status);
@@ -184,6 +188,41 @@ export default function AdminDashboard() {
       alert('Errore: ' + e.message);
     } finally {
       setDepositLoading(false);
+    }
+  }
+
+  const EMAIL_TEMPLATES = [
+    {
+      label: 'Cauzione non autorizzata',
+      subject: 'Importante: cauzione non autorizzata — Bike Rental Tarzo',
+      message: `Abbiamo tentato di bloccare la cauzione di €1.000 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine (fondi insufficienti o carta non supportata).\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email per trovare una soluzione.\n\nGrazie per la comprensione.`,
+    },
+    {
+      label: 'Promemoria ritiro',
+      subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
+      message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
+    },
+    {
+      label: 'Richiesta modifica',
+      subject: 'Modifica prenotazione — Bike Rental Tarzo',
+      message: `In merito alla tua prenotazione, vorremmo chiederti di contattarci per definire alcuni dettagli.\n\nPuoi raggiungerci via WhatsApp al +39 392 8614635 oppure rispondendo a questa email.\n\nGrazie.`,
+    },
+    { label: 'Messaggio libero', subject: '', message: '' },
+  ];
+
+  async function handleSendEmail() {
+    if (!emailSubject.trim() || !emailMessage.trim()) return;
+    setEmailLoading(true);
+    try {
+      await adminApi.sendEmail(emailModal.id, emailSubject, emailMessage);
+      alert(`Email inviata a ${emailModal.email}`);
+      setEmailModal(null);
+      setEmailSubject('');
+      setEmailMessage('');
+    } catch (e) {
+      alert('Errore invio email: ' + e.message);
+    } finally {
+      setEmailLoading(false);
     }
   }
 
@@ -452,6 +491,17 @@ export default function AdminDashboard() {
                             </button>
                           )}
                           <button
+                            className="admin-action-btn email"
+                            onClick={() => {
+                              setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email });
+                              setEmailSubject('');
+                              setEmailMessage('');
+                            }}
+                            title={`Invia email a ${b.cliente_email}`}
+                          >
+                            ✉ Email
+                          </button>
+                          <button
                             className="admin-action-btn cancel"
                             onClick={() => cancelBooking(b.id)}
                           >
@@ -519,6 +569,75 @@ export default function AdminDashboard() {
                 className="admin-modal-btn cancel-btn"
                 onClick={() => { setDepositModal(null); setDepositAmount(''); }}
                 disabled={depositLoading}
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Modal */}
+      {emailModal && (
+        <div className="admin-modal-overlay" onClick={e => e.target === e.currentTarget && setEmailModal(null)}>
+          <div className="admin-modal" style={{ maxWidth: 520 }}>
+            <h2>✉ Invia Email</h2>
+            <div className="admin-modal-sub">
+              A: <strong>{emailModal.nome}</strong> &lt;{emailModal.email}&gt;
+            </div>
+
+            <div className="admin-form-group" style={{ marginTop: 12 }}>
+              <label>Template rapido</label>
+              <select
+                style={{ background: '#1E293B', color: '#F1F5F9', border: '1px solid #334155',
+                         borderRadius: 6, padding: '8px 10px', width: '100%', fontSize: '0.88rem' }}
+                onChange={e => {
+                  const tpl = EMAIL_TEMPLATES[parseInt(e.target.value)];
+                  if (tpl) { setEmailSubject(tpl.subject); setEmailMessage(tpl.message); }
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>Scegli un template…</option>
+                {EMAIL_TEMPLATES.map((tpl, i) => (
+                  <option key={i} value={i}>{tpl.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="admin-form-group">
+              <label>Oggetto</label>
+              <input
+                type="text"
+                placeholder="Oggetto dell'email"
+                value={emailSubject}
+                onChange={e => setEmailSubject(e.target.value)}
+              />
+            </div>
+            <div className="admin-form-group">
+              <label>Messaggio</label>
+              <textarea
+                rows={7}
+                placeholder="Testo del messaggio…"
+                value={emailMessage}
+                onChange={e => setEmailMessage(e.target.value)}
+                style={{ resize: 'vertical', background: '#1E293B', color: '#F1F5F9',
+                         border: '1px solid #334155', borderRadius: 6, padding: '8px 10px',
+                         width: '100%', fontSize: '0.88rem', fontFamily: 'inherit' }}
+              />
+            </div>
+
+            <div className="admin-modal-actions">
+              <button
+                className="admin-modal-btn confirm"
+                onClick={handleSendEmail}
+                disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
+              >
+                {emailLoading ? 'Invio…' : '✉ Invia'}
+              </button>
+              <button
+                className="admin-modal-btn cancel-btn"
+                onClick={() => setEmailModal(null)}
+                disabled={emailLoading}
               >
                 Annulla
               </button>

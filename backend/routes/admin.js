@@ -10,6 +10,7 @@ const express  = require('express');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
+const { sendAdminEmail } = require('../lib/email');
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
@@ -37,7 +38,8 @@ router.get('/bookings', async (req, res) => {
       bicicletta_id, tipo_noleggio, giorni,
       data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
       prezzo_totale, pagamento_status, created_at,
-      stripe_payment_method_id, danno_status, danno_amount
+      stripe_payment_method_id, danno_status, danno_amount,
+      cauzione_status, cauzione_captured_amount
     `)
     .order('data_ritiro', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -218,6 +220,35 @@ router.post('/bookings/:id/capture-deposit', async (req, res) => {
   } catch (e) {
     console.error('Errore capture deposit:', e);
     return res.status(402).json({ error: e.message || 'Errore Stripe' });
+  }
+});
+
+// ─── POST /api/admin/bookings/:id/send-email ──────────────────────────────────
+// Invia email personalizzata al cliente dall'admin panel
+
+router.post('/bookings/:id/send-email', async (req, res) => {
+  const { subject, message } = req.body;
+  if (!subject?.trim() || !message?.trim()) {
+    return res.status(400).json({ error: 'Oggetto e messaggio sono obbligatori' });
+  }
+
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, data_ritiro')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !prenotazione) {
+    return res.status(404).json({ error: 'Prenotazione non trovata' });
+  }
+
+  try {
+    await sendAdminEmail(prenotazione, subject.trim(), message.trim());
+    console.log(`[admin send-email] Email inviata a ${prenotazione.cliente_email} — "${subject}"`);
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('[admin send-email] Errore:', e.message);
+    return res.status(500).json({ error: 'Errore invio email: ' + e.message });
   }
 });
 

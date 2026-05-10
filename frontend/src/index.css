@@ -925,6 +925,13 @@ body {
   margin-right: 4px;
 }
 .admin-action-btn.deposit-capture:hover { background: rgba(251,191,36,0.18); }
+.admin-action-btn.email {
+  border-color: rgba(99,102,241,0.35);
+  color: #818CF8;
+  background: rgba(99,102,241,0.08);
+  margin-right: 4px;
+}
+.admin-action-btn.email:hover { background: rgba(99,102,241,0.18); }
 
 /* Empty state */
 .admin-empty {

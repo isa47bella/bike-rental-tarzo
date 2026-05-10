@@ -4,7 +4,14 @@
     "subtitle": "Prosecco UNESCO Hills · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "progress": {
-    "steps": ["Date", "Time", "Type", "Bike", "Details", "Summary"]
+    "steps": [
+      "Date",
+      "Time",
+      "Type",
+      "Bike",
+      "Details",
+      "Summary"
+    ]
   },
   "common": {
     "continue": "Continue →",
@@ -19,8 +26,29 @@
       "partial": "Few spots",
       "full": "Fully booked"
     },
-    "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
-    "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "days": [
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat",
+      "Sun"
+    ]
   },
   "stepTime": {
     "title": "Pick-up time",
@@ -30,9 +58,21 @@
     "title": "Rental type",
     "subtitle": "Pick-up: <b>{{time}}</b> on <b>{{date}}</b>",
     "types": {
-      "4_ore": { "title": "4-Hour Rental", "detail": "Morning — Return by 12:00–13:00", "price": "€30" },
-      "intera_giornata": { "title": "Full Day", "detail": "Return by 16:00–18:00", "price": "€50" },
-      "3_piu_giorni": { "title": "3+ Days", "detail": "Return at same time", "price": "€45/day" }
+      "4_ore": {
+        "title": "4-Hour Rental",
+        "detail": "Morning — Return by 12:00–13:00",
+        "price": "€30"
+      },
+      "intera_giornata": {
+        "title": "Full Day",
+        "detail": "Return by 16:00–18:00",
+        "price": "€50"
+      },
+      "3_piu_giorni": {
+        "title": "3+ Days",
+        "detail": "Return at same time",
+        "price": "€45/day"
+      }
     },
     "days": "days",
     "totalDays": "days — <b>€{{price}}</b>",
@@ -94,7 +134,7 @@
       "3_piu_giorni": "Multi-Day Rental"
     },
     "paymentInfo": "💳 Payment is <b>100% upfront</b> via Stripe (credit/debit card). You'll receive a confirmation email right after payment.",
-    "depositInfo": "🔒 At the time of payment, <b>€1,000 will be held</b> on your card as a security deposit. The amount is not charged: it will be automatically released when the bike is returned in good condition.",
+    "depositInfo": "🔒 <b>€1,000 security deposit:</b> the hold is placed on your card <b>2 days before pickup</b>, not at checkout. The amount is not charged and will be automatically released when the bike is returned in good condition. If your card has insufficient funds, your booking may be cancelled.",
     "modify": "← Edit",
     "pay": "💳 Pay €{{amount}}",
     "processing": "⏳ Processing...",

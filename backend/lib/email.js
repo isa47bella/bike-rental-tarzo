@@ -179,4 +179,37 @@ async function sendNotificationToGestore(prenotazione) {
   });
 }
 
-module.exports = { sendConfirmationToCliente, sendNotificationToGestore };
+// ─── Email manuale dall'admin panel ──────────────────────────────────────────
+
+async function sendAdminEmail(prenotazione, subject, messageText) {
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
+  <div style="background:#fff;border-radius:8px;padding:24px;max-width:560px;margin:0 auto;">
+    <div style="background:#2D8659;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;margin:-24px -24px 20px;">
+      <h2 style="margin:0;font-size:18px;">🚲 Bike Rental Tarzo</h2>
+    </div>
+    <p style="font-size:16px;color:#333;margin:0 0 16px;">
+      Gentile <strong>${prenotazione.cliente_nome}</strong>,
+    </p>
+    <div style="background:#f8f8f8;border-radius:8px;padding:16px 20px;font-size:15px;color:#444;line-height:1.65;">
+      ${messageText.replace(/\n/g, '<br>')}
+    </div>
+    <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+    <p style="font-size:12px;color:#aaa;margin:0;">
+      Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV)<br>
+      Per risposta: <a href="mailto:arfantabikerental@gmail.com" style="color:#2D8659;">arfantabikerental@gmail.com</a>
+      · WhatsApp: <a href="https://wa.me/393928614635" style="color:#2D8659;">+39 392 8614635</a>
+    </p>
+  </div>
+</body></html>`;
+
+  await transporter.sendMail({
+    from:    process.env.EMAIL_FROM,
+    to:      prenotazione.cliente_email,
+    subject: subject,
+    html:    html,
+  });
+}
+
+module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail };

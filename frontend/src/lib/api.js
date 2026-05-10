@@ -87,4 +87,7 @@ export const adminApi = {
 
   captureDeposit: (id, amount, motivo = '') =>
     adminPost(`/admin/bookings/${id}/capture-deposit`, { amount, motivo }),
+
+  sendEmail: (id, subject, message) =>
+    adminPost(`/admin/bookings/${id}/send-email`, { subject, message }),
 };

@@ -94,7 +94,7 @@
       "3_piu_giorni": "Noleggio Multi-Giorno"
     },
     "paymentInfo": "💳 Il pagamento è <b>100% anticipato</b> tramite Stripe (carta di credito/debito). Riceverai conferma via email subito dopo il pagamento.",
-    "depositInfo": "🔒 Al momento del pagamento verranno <b>bloccati €1.000</b> sulla tua carta come cauzione. L'importo non viene addebitato: sarà sbloccato automaticamente alla restituzione della bici in buone condizioni.",
+    "depositInfo": "🔒 <b>Cauzione di €1.000:</b> il blocco viene eseguito sulla tua carta <b>2 giorni prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato automaticamente alla restituzione in buone condizioni. Se la carta non ha fondi sufficienti, la prenotazione potrebbe essere annullata.",
     "modify": "← Modifica",
     "pay": "💳 Paga €{{amount}}",
     "processing": "⏳ Elaborazione...",

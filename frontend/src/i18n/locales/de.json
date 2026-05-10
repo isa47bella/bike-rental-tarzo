@@ -4,7 +4,14 @@
     "subtitle": "Prosecco UNESCO-Hügel · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "progress": {
-    "steps": ["Datum", "Uhrzeit", "Typ", "Fahrrad", "Kontakt", "Überblick"]
+    "steps": [
+      "Datum",
+      "Uhrzeit",
+      "Typ",
+      "Fahrrad",
+      "Kontakt",
+      "Überblick"
+    ]
   },
   "common": {
     "continue": "Weiter →",
@@ -19,8 +26,29 @@
       "partial": "Wenige Plätze",
       "full": "Ausgebucht"
     },
-    "months": ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
-    "days": ["Mo","Di","Mi","Do","Fr","Sa","So"]
+    "months": [
+      "Januar",
+      "Februar",
+      "März",
+      "April",
+      "Mai",
+      "Juni",
+      "Juli",
+      "August",
+      "September",
+      "Oktober",
+      "November",
+      "Dezember"
+    ],
+    "days": [
+      "Mo",
+      "Di",
+      "Mi",
+      "Do",
+      "Fr",
+      "Sa",
+      "So"
+    ]
   },
   "stepTime": {
     "title": "Abholzeit",
@@ -30,9 +58,21 @@
     "title": "Mietart",
     "subtitle": "Abholung: <b>{{time}}</b> am <b>{{date}}</b>",
     "types": {
-      "4_ore": { "title": "4-Stunden-Miete", "detail": "Morgens — Rückgabe 12:00–13:00", "price": "€30" },
-      "intera_giornata": { "title": "Ganzer Tag", "detail": "Rückgabe 16:00–18:00", "price": "€50" },
-      "3_piu_giorni": { "title": "3+ Tage", "detail": "Rückgabe zur selben Zeit", "price": "€45/Tag" }
+      "4_ore": {
+        "title": "4-Stunden-Miete",
+        "detail": "Morgens — Rückgabe 12:00–13:00",
+        "price": "€30"
+      },
+      "intera_giornata": {
+        "title": "Ganzer Tag",
+        "detail": "Rückgabe 16:00–18:00",
+        "price": "€50"
+      },
+      "3_piu_giorni": {
+        "title": "3+ Tage",
+        "detail": "Rückgabe zur selben Zeit",
+        "price": "€45/Tag"
+      }
     },
     "days": "Tage",
     "totalDays": "Tage — <b>€{{price}}</b>",
@@ -94,7 +134,7 @@
       "3_piu_giorni": "Mehrtagsmiete"
     },
     "paymentInfo": "💳 Die Zahlung erfolgt <b>100% im Voraus</b> über Stripe (Kredit-/Debitkarte). Sie erhalten sofort nach der Zahlung eine Bestätigungs-E-Mail.",
-    "depositInfo": "🔒 Bei der Zahlung werden <b>€1.000 als Kaution</b> auf Ihrer Karte reserviert. Der Betrag wird nicht abgebucht: Er wird automatisch freigegeben, wenn das Fahrrad in einwandfreiem Zustand zurückgegeben wird.",
+    "depositInfo": "🔒 <b>Kaution €1.000:</b> Der Betrag wird <b>2 Tage vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Der Betrag wird nicht abgebucht und nach Rückgabe des Fahrrads in einwandfreiem Zustand automatisch freigegeben. Bei unzureichenden Mitteln kann die Buchung storniert werden.",
     "modify": "← Bearbeiten",
     "pay": "💳 Zahlen €{{amount}}",
     "processing": "⏳ Wird bearbeitet...",

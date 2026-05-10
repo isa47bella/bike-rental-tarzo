@@ -4,7 +4,14 @@
     "subtitle": "Colinas del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "progress": {
-    "steps": ["Fecha", "Hora", "Tipo", "Bici", "Datos", "Resumen"]
+    "steps": [
+      "Fecha",
+      "Hora",
+      "Tipo",
+      "Bici",
+      "Datos",
+      "Resumen"
+    ]
   },
   "common": {
     "continue": "Continuar →",
@@ -19,8 +26,29 @@
       "partial": "Pocas plazas",
       "full": "Completo"
     },
-    "months": ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],
-    "days": ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"]
+    "months": [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre"
+    ],
+    "days": [
+      "Lun",
+      "Mar",
+      "Mié",
+      "Jue",
+      "Vie",
+      "Sáb",
+      "Dom"
+    ]
   },
   "stepTime": {
     "title": "Hora de recogida",
@@ -30,9 +58,21 @@
     "title": "Tipo de alquiler",
     "subtitle": "Recogida: <b>{{time}}</b> del <b>{{date}}</b>",
     "types": {
-      "4_ore": { "title": "Alquiler 4 Horas", "detail": "Mañana — Devolución 12:00–13:00", "price": "€30" },
-      "intera_giornata": { "title": "Día completo", "detail": "Devolución 16:00–18:00", "price": "€50" },
-      "3_piu_giorni": { "title": "3+ Días", "detail": "Devolución a la misma hora", "price": "€45/día" }
+      "4_ore": {
+        "title": "Alquiler 4 Horas",
+        "detail": "Mañana — Devolución 12:00–13:00",
+        "price": "€30"
+      },
+      "intera_giornata": {
+        "title": "Día completo",
+        "detail": "Devolución 16:00–18:00",
+        "price": "€50"
+      },
+      "3_piu_giorni": {
+        "title": "3+ Días",
+        "detail": "Devolución a la misma hora",
+        "price": "€45/día"
+      }
     },
     "days": "días",
     "totalDays": "días — <b>€{{price}}</b>",
@@ -94,7 +134,7 @@
       "3_piu_giorni": "Alquiler Multidía"
     },
     "paymentInfo": "💳 El pago es <b>100% anticipado</b> mediante Stripe (tarjeta de crédito/débito). Recibirás un email de confirmación inmediatamente después del pago.",
-    "depositInfo": "🔒 En el momento del pago se <b>retendrán €1.000</b> en tu tarjeta como depósito de seguridad. El importe no se cobra: se liberará automáticamente cuando la bici sea devuelta en buen estado.",
+    "depositInfo": "🔒 <b>Depósito de €1.000:</b> el bloqueo se realiza en tu tarjeta <b>2 días antes de la recogida</b>, no en el momento del pago. El importe no se cobra y se liberará automáticamente al devolver la bici en buen estado. Si la tarjeta no tiene fondos suficientes, la reserva podría cancelarse.",
     "modify": "← Modificar",
     "pay": "💳 Pagar €{{amount}}",
     "processing": "⏳ Procesando...",
