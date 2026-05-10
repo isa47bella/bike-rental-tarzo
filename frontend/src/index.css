@@ -431,7 +431,11 @@ body {
   background: var(--primary-pale);
   box-shadow: 0 4px 16px rgba(234,88,12,0.18);
 }
-.model-card.unavailable { opacity: 0.45; cursor: not-allowed; }
+.model-card.unavailable {
+  cursor: default;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
 .model-tag {
   font-size: 0.62rem;
   font-weight: 700;
@@ -467,27 +471,74 @@ body {
   color: var(--text-muted);
   line-height: 1.4;
 }
-.model-avail {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  margin-top: 4px;
-}
-.model-avail.ok   { background: #e8f5e9; color: #2e7d32; }
-.model-avail.low  { background: #fff8e1; color: #f57f17; }
-.model-avail.zero { background: #fce4e4; color: #c0392b; }
 .model-check {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--primary);
-  margin-top: 2px;
+  margin-top: 4px;
 }
+
+/* ─── Pannello contatto per modelli non disponibili ─── */
+.model-contact-panel {
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.model-contact-msg {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.model-contact-sub {
+  font-size: 0.71rem;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  line-height: 1.3;
+  text-align: center;
+}
+.model-contact-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.contact-btn.whatsapp {
+  background: #25D366;
+  color: white;
+}
+.contact-btn.whatsapp:hover { background: #1ebe5d; }
+.contact-btn.phone {
+  background: white;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+}
+.contact-btn.phone:hover { border-color: #94a3b8; color: #1e293b; }
 @media (max-width: 600px) {
   .model-grid { grid-template-columns: 1fr; }
-  .model-card { flex-direction: row; text-align: left; gap: 12px; padding: 14px; }
+  .model-card { flex-direction: row; flex-wrap: wrap; text-align: left; gap: 12px; padding: 14px; }
   .model-icon { width: 48px; height: 48px; flex-shrink: 0; }
-  .model-card > *:not(.model-icon) { align-self: flex-start; }
+  .model-card > *:not(.model-icon):not(.model-contact-panel) { align-self: flex-start; }
+  .model-contact-panel { margin-top: 4px; padding-top: 8px; align-items: flex-start; }
+  .model-contact-btns { justify-content: flex-start; }
 }
 
 /* ─── Summary box ────────────────────────────────────────── */

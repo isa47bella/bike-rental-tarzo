@@ -151,6 +151,22 @@ const ICONS = {
   ),
 };
 
+const WHATSAPP_URL = 'https://wa.me/393917563277';
+const PHONE_URL    = 'tel:+393917563277';
+
+const IconWhatsApp = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.524 5.847L.057 23.882l6.19-1.624A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.808 9.808 0 01-5.004-1.369l-.36-.214-3.724.977.995-3.63-.235-.373A9.77 9.77 0 012.182 12C2.182 6.578 6.578 2.182 12 2.182S21.818 6.578 21.818 12 17.422 21.818 12 21.818z"/>
+  </svg>
+);
+
+const IconPhone = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92v2z"/>
+  </svg>
+);
+
 export default function StepBike({ booking, onChange, onNext, onBack }) {
   const [disponibili, setDisponibili] = useState(null);
   const [loading,     setLoading]     = useState(false);
@@ -174,7 +190,6 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
       );
       const ids = res.bici_ids || [];
       setDisponibili(ids);
-      // Se il modello scelto non ha più bici disponibili, deseleziona
       if (booking.bicicletta_id && !ids.includes(booking.bicicletta_id)) {
         onChange({ bicicletta_id: null, modello_nome: '' });
       }
@@ -192,9 +207,9 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
     onChange({ bicicletta_id: availForModel[0], modello_nome: model.nome });
   }
 
-  function availCount(model) {
-    if (!disponibili) return 0;
-    return model.ids.filter(id => disponibili.includes(id)).length;
+  function isModelAvail(model) {
+    if (!disponibili) return false;
+    return model.ids.some(id => disponibili.includes(id));
   }
 
   const selectedModel = BIKE_MODELS.find(m => m.ids.includes(booking.bicicletta_id));
@@ -220,27 +235,57 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
       {!loading && disponibili !== null && (
         <div className="model-grid">
           {BIKE_MODELS.map(model => {
-            const avail      = availCount(model);
-            const isAvail    = avail > 0;
+            const isAvail    = isModelAvail(model);
             const isSelected = selectedModel?.key === model.key;
+
+            if (!isAvail) {
+              return (
+                <div
+                  key={model.key}
+                  className="model-card unavailable"
+                  aria-label={`${model.nome} — non disponibile`}
+                >
+                  <div className="model-tag">{model.tag}</div>
+                  <div className="model-icon">{ICONS[model.key]}</div>
+                  <div className="model-nome">{model.nome}</div>
+                  <div className="model-specs">{model.specs}</div>
+                  <div className="model-contact-panel">
+                    <div className="model-contact-msg">Non disponibile per questa data</div>
+                    <div className="model-contact-sub">Contattaci — possiamo trovare una soluzione</div>
+                    <div className="model-contact-btns">
+                      <a
+                        href={WHATSAPP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="contact-btn whatsapp"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <IconWhatsApp /> WhatsApp
+                      </a>
+                      <a
+                        href={PHONE_URL}
+                        className="contact-btn phone"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <IconPhone /> Chiama
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <button
                 key={model.key}
-                className={`model-card${isSelected ? ' selected' : ''}${!isAvail ? ' unavailable' : ''}`}
+                className={`model-card${isSelected ? ' selected' : ''}`}
                 onClick={() => selectModel(model)}
-                disabled={!isAvail}
               >
                 <div className="model-tag">{model.tag}</div>
                 <div className="model-icon">{ICONS[model.key]}</div>
                 <div className="model-nome">{model.nome}</div>
                 <div className="model-specs">{model.specs}</div>
                 <div className="model-desc">{model.descrizione}</div>
-                <div className={`model-avail ${isAvail ? (avail === 1 ? 'low' : 'ok') : 'zero'}`}>
-                  {isAvail
-                    ? `${avail} ${avail === 1 ? 'disponibile' : 'disponibili'}`
-                    : 'Non disponibile'}
-                </div>
                 {isSelected && (
                   <div className="model-check">✓ Selezionata</div>
                 )}
