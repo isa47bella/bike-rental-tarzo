@@ -167,5 +167,18 @@
     "problems": "Need help? Message us on WhatsApp 📱",
     "totalLabel": "Booking total",
     "payAt": "Pay at checkout"
+  },
+  "customExp": {
+    "title": "Looking for something special?",
+    "subtitle": "Longer tours, group rides, family adventures, corporate events — contact us on WhatsApp and we'll create the perfect experience for you.",
+    "cta": "Chat on WhatsApp",
+    "tags": [
+      "🚴 Longer rides",
+      "👨‍👩‍👧 Families",
+      "👥 Groups",
+      "🏢 Corporate",
+      "🌄 Multi-day"
+    ],
+    "note": "Reply within a few hours · No commitment"
   }
 }

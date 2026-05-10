@@ -4,7 +4,14 @@
     "subtitle": "Colline del Prosecco UNESCO · Via Pecol 22, Arfanta di Tarzo (TV)"
   },
   "progress": {
-    "steps": ["Data", "Orario", "Tipo", "Bici", "Contatti", "Riepilogo"]
+    "steps": [
+      "Data",
+      "Orario",
+      "Tipo",
+      "Bici",
+      "Contatti",
+      "Riepilogo"
+    ]
   },
   "common": {
     "continue": "Continua →",
@@ -19,8 +26,29 @@
       "partial": "Pochi posti",
       "full": "Completo"
     },
-    "months": ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"],
-    "days": ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"]
+    "months": [
+      "Gennaio",
+      "Febbraio",
+      "Marzo",
+      "Aprile",
+      "Maggio",
+      "Giugno",
+      "Luglio",
+      "Agosto",
+      "Settembre",
+      "Ottobre",
+      "Novembre",
+      "Dicembre"
+    ],
+    "days": [
+      "Lun",
+      "Mar",
+      "Mer",
+      "Gio",
+      "Ven",
+      "Sab",
+      "Dom"
+    ]
   },
   "stepTime": {
     "title": "Orario di ritiro",
@@ -30,9 +58,21 @@
     "title": "Tipo di noleggio",
     "subtitle": "Ritiro: <b>{{time}}</b> del <b>{{date}}</b>",
     "types": {
-      "4_ore": { "title": "Noleggio 4 Ore", "detail": "Mattina — Restituzione 12:00–13:00", "price": "€30" },
-      "intera_giornata": { "title": "Intera Giornata", "detail": "Restituzione 16:00–18:00", "price": "€50" },
-      "3_piu_giorni": { "title": "3+ Giorni", "detail": "Restituzione stesso orario", "price": "€45/giorno" }
+      "4_ore": {
+        "title": "Noleggio 4 Ore",
+        "detail": "Mattina — Restituzione 12:00–13:00",
+        "price": "€30"
+      },
+      "intera_giornata": {
+        "title": "Intera Giornata",
+        "detail": "Restituzione 16:00–18:00",
+        "price": "€50"
+      },
+      "3_piu_giorni": {
+        "title": "3+ Giorni",
+        "detail": "Restituzione stesso orario",
+        "price": "€45/giorno"
+      }
     },
     "days": "giorni",
     "totalDays": "giorni — <b>€{{price}}</b>",
@@ -127,5 +167,18 @@
     "problems": "Problemi? Scrivici su WhatsApp 📱",
     "totalLabel": "Totale prenotazione",
     "payAt": "Paga solo al checkout"
+  },
+  "customExp": {
+    "title": "Vuoi qualcosa di speciale?",
+    "subtitle": "Tour più lunghi, gruppi, famiglie, eventi aziendali — contattaci su WhatsApp e costruiamo insieme l'esperienza perfetta per te.",
+    "cta": "Scrivici su WhatsApp",
+    "tags": [
+      "🚴 Giri lunghi",
+      "👨‍👩‍👧 Famiglie",
+      "👥 Gruppi",
+      "🏢 Team & Aziende",
+      "🌄 Multi-giorno"
+    ],
+    "note": "Risposta entro poche ore · Nessun impegno"
   }
 }

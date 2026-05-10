@@ -167,5 +167,18 @@
     "problems": "Probleme? Schreiben Sie uns auf WhatsApp 📱",
     "totalLabel": "Buchungsgesamt",
     "payAt": "Zahlung beim Checkout"
+  },
+  "customExp": {
+    "title": "Etwas Besonderes gewünscht?",
+    "subtitle": "Längere Touren, Gruppenfahrten, Familienausflüge, Firmenevents — schreib uns auf WhatsApp und wir planen das perfekte Erlebnis für euch.",
+    "cta": "WhatsApp schreiben",
+    "tags": [
+      "🚴 Längere Touren",
+      "👨‍👩‍👧 Familien",
+      "👥 Gruppen",
+      "🏢 Firmen",
+      "🌄 Mehrtägig"
+    ],
+    "note": "Antwort in wenigen Stunden · Keine Verpflichtung"
   }
 }

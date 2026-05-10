@@ -167,5 +167,18 @@
     "problems": "¿Problemas? Escríbenos por WhatsApp 📱",
     "totalLabel": "Total reserva",
     "payAt": "Pagar en checkout"
+  },
+  "customExp": {
+    "title": "¿Buscas algo especial?",
+    "subtitle": "Rutas más largas, grupos, familias, eventos de empresa — escríbenos por WhatsApp y crearemos juntos la experiencia perfecta para ti.",
+    "cta": "Escríbenos en WhatsApp",
+    "tags": [
+      "🚴 Rutas largas",
+      "👨‍👩‍👧 Familias",
+      "👥 Grupos",
+      "🏢 Empresas",
+      "🌄 Varios días"
+    ],
+    "note": "Respuesta en pocas horas · Sin compromiso"
   }
 }

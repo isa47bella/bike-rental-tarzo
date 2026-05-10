@@ -167,5 +167,18 @@
     "problems": "Problèmes ? Écrivez-nous sur WhatsApp 📱",
     "totalLabel": "Total réservation",
     "payAt": "Payer au checkout"
+  },
+  "customExp": {
+    "title": "Vous cherchez quelque chose de spécial?",
+    "subtitle": "Sorties longues, groupes, familles, événements d'entreprise — contactez-nous sur WhatsApp et nous créerons ensemble l'expérience parfaite.",
+    "cta": "Écrire sur WhatsApp",
+    "tags": [
+      "🚴 Longues sorties",
+      "👨‍👩‍👧 Familles",
+      "👥 Groupes",
+      "🏢 Entreprises",
+      "🌄 Multi-jours"
+    ],
+    "note": "Réponse en quelques heures · Sans engagement"
   }
 }

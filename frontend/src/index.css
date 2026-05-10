@@ -1228,7 +1228,97 @@ body {
 .lang-btn:hover { opacity: 0.8; transform: scale(1.1); }
 .lang-btn.active { opacity: 1; }
 
+/* ── Esperienze Personalizzate ─────────────────────────────── */
+.custom-exp-card {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #0f2417 0%, #1a3d28 60%, #0f2417 100%);
+  border: 1px solid rgba(45, 134, 89, 0.35);
+  border-radius: var(--radius);
+  padding: 24px 24px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.custom-exp-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45,134,89,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.custom-exp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.custom-exp-icon {
+  width: 38px; height: 38px;
+  background: rgba(45,134,89,0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+.custom-exp-title {
+  margin: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+.custom-exp-subtitle {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.55;
+}
+.custom-exp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.custom-exp-tag {
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #4ade80;
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 20px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.custom-exp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25D366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  transition: background 0.15s, transform 0.1s;
+}
+.custom-exp-btn:hover {
+  background: #1da851;
+  transform: translateY(-1px);
+}
+.custom-exp-note {
+  margin: 12px 0 0;
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.35);
+}
+
 @media (max-width: 480px) {
   .site-footer { flex-direction: column; gap: 8px; }
   .footer-divider { display: none; }
+  .custom-exp-card { padding: 20px 16px 16px; }
 }
