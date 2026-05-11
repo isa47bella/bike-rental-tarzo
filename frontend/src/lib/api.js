@@ -31,6 +31,18 @@ async function adminGet(path, params = {}) {
   return data;
 }
 
+async function adminPatch(path, body) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const res = await fetch(`${BASE}${path}`, {
+    method:  'PATCH',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+    body:    JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+  return data;
+}
+
 async function adminPost(path, body) {
   const token = sessionStorage.getItem('admin_token') || '';
   const res = await fetch(`${BASE}${path}`, {
@@ -90,4 +102,22 @@ export const adminApi = {
 
   sendEmail: (id, subject, message) =>
     adminPost(`/admin/bookings/${id}/send-email`, { subject, message }),
+
+  getOggi: () =>
+    adminGet('/admin/oggi'),
+
+  getFlotta: () =>
+    adminGet('/admin/flotta'),
+
+  updateFlotta: (id, data) =>
+    adminPatch(`/admin/flotta/${id}`, data),
+
+  checkin: (id, data) =>
+    adminPost(`/admin/bookings/${id}/checkin`, data),
+
+  checkout: (id, data) =>
+    adminPost(`/admin/bookings/${id}/checkout`, data),
+
+  getReport: () =>
+    adminGet('/admin/report'),
 };

@@ -16,7 +16,7 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:4173',
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
 }));
 
@@ -24,7 +24,7 @@ app.use(cors({
 // IMPORTANTE: la rotta /webhook nel router payments usa express.raw()
 // internamente, quindi viene registrata DOPO express.json() ma il suo
 // middleware raw() sovrascrive il body per quella singola rotta.
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/availability', availabilityRoutes);

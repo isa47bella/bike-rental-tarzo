@@ -252,6 +252,122 @@ router.post('/bookings/:id/send-email', async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/oggi ──────────────────────────────────────────────────────
+
+router.get('/oggi', async (req, res) => {
+  const oggi = new Date().toISOString().substring(0, 10);
+  const fields = `id, cliente_nome, cliente_email, cliente_telefono, bicicletta_id,
+    tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione,
+    orario_restituzione, prezzo_totale, pagamento_status, cauzione_status,
+    checkin_at, checkout_at, accessori`;
+
+  const [
+    { data: ritiri },
+    { data: restituzioni },
+    { data: inRitardo },
+  ] = await Promise.all([
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_ritiro', oggi).order('orario_ritiro'),
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_restituzione', oggi).order('orario_restituzione'),
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').lt('data_restituzione', oggi).is('checkout_at', null),
+  ]);
+
+  return res.json({
+    ritiri:       ritiri       || [],
+    restituzioni: restituzioni || [],
+    inRitardo:    inRitardo    || [],
+    data:         oggi,
+  });
+});
+
+// ─── GET /api/admin/flotta ────────────────────────────────────────────────────
+
+router.get('/flotta', async (req, res) => {
+  const { data, error } = await supabase.from('biciclette').select('*').order('id');
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ bici: data || [] });
+});
+
+// ─── PATCH /api/admin/flotta/:id ─────────────────────────────────────────────
+
+router.patch('/flotta/:id', async (req, res) => {
+  const allowed = ['stato', 'batteria_pct', 'note_admin', 'ultima_manutenzione', 'prossima_manutenzione'];
+  const update = {};
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      update[key] = req.body[key] === '' ? null : req.body[key];
+    }
+  }
+  if (update.batteria_pct !== null && update.batteria_pct !== undefined) {
+    update.batteria_pct = parseInt(update.batteria_pct, 10);
+  }
+  const { data, error } = await supabase.from('biciclette').update(update).eq('id', req.params.id).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json(data);
+});
+
+// ─── POST /api/admin/bookings/:id/checkin ────────────────────────────────────
+
+router.post('/bookings/:id/checkin', async (req, res) => {
+  const { checkin_note, documento_foto, bici_foto_consegna } = req.body;
+  const update = { checkin_at: new Date().toISOString() };
+  if (checkin_note)      update.checkin_note      = checkin_note;
+  if (documento_foto)    update.documento_foto    = documento_foto;
+  if (bici_foto_consegna) update.bici_foto_consegna = bici_foto_consegna;
+
+  const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json(data);
+});
+
+// ─── POST /api/admin/bookings/:id/checkout ───────────────────────────────────
+
+router.post('/bookings/:id/checkout', async (req, res) => {
+  const { checkout_note, bici_foto_rientro } = req.body;
+  const update = { checkout_at: new Date().toISOString() };
+  if (checkout_note)   update.checkout_note   = checkout_note;
+  if (bici_foto_rientro) update.bici_foto_rientro = bici_foto_rientro;
+
+  const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json(data);
+});
+
+// ─── GET /api/admin/report ────────────────────────────────────────────────────
+
+router.get('/report', async (req, res) => {
+  const { data: all, error } = await supabase
+    .from('prenotazioni')
+    .select('prezzo_totale, tipo_noleggio, giorni, data_ritiro')
+    .eq('pagamento_status', 'paid');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const byMonth = {};
+  const byType  = {};
+  let total = 0;
+
+  (all || []).forEach(b => {
+    const n = Number(b.prezzo_totale);
+    total += n;
+    const month = b.data_ritiro ? b.data_ritiro.substring(0, 7) : 'unknown';
+    byMonth[month] = (byMonth[month] || 0) + n;
+    byType[b.tipo_noleggio] = (byType[b.tipo_noleggio] || 0) + n;
+  });
+
+  const months = Object.entries(byMonth)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([m, v]) => ({ month: m, revenue: parseFloat(v.toFixed(2)) }));
+
+  return res.json({
+    total_revenue:  total.toFixed(2),
+    total_bookings: (all || []).length,
+    avg_booking:    all?.length ? (total / all.length).toFixed(2) : '0',
+    by_month:       months,
+    by_type:        byType,
+  });
+});
+
 // ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────
 
 function tipoShort(tipo) {

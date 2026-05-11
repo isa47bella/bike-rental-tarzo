@@ -15,13 +15,13 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:4173',
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-token'],
 }));
 
 // Webhook Stripe: body RAW obbligatorio per la verifica firma — deve stare PRIMA di express.json()
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/payments',     paymentsRoutes);

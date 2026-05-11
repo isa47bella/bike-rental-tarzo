@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApi } from '../lib/api.js';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Utilities ────────────────────────────────────────────────────────────────
 
 function formatDateIT(dateStr) {
   if (!dateStr) return '—';
@@ -9,83 +9,218 @@ function formatDateIT(dateStr) {
   return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' });
 }
 
-function tipoShort(tipo) {
-  const m = { '4_ore': '4h', 'intera_giornata': 'Giorn.', '3_piu_giorni': 'Multi' };
+function formatDateLong(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'long' });
+}
+
+function formatDateTime(isoStr) {
+  if (!isoStr) return '—';
+  const d = new Date(isoStr);
+  return d.toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatMonth(ym) {
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const months = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  return `${months[parseInt(m, 10) - 1]} ${y}`;
+}
+
+function todayIT() {
+  return new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function tipoLabel(tipo) {
+  const m = {
+    mezza_mattina:    '½ Mattina',
+    mezza_pomeriggio: '½ Pomeriggio',
+    intera_giornata:  'Giornata intera',
+    multi_giorno:     'Multi-giorno',
+    '4_ore':          '4 Ore',
+    '3_piu_giorni':   '3+ Giorni',
+  };
   return m[tipo] || tipo;
 }
 
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
+function tipoShort(tipo) {
+  const m = {
+    mezza_mattina: '½M', mezza_pomeriggio: '½P',
+    intera_giornata: 'Giorn.', multi_giorno: 'Multi',
+    '4_ore': '4h', '3_piu_giorni': 'Multi',
+  };
+  return m[tipo] || tipo;
+}
 
-const IconBike = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
-    <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
+function parseAccessori(raw) {
+  if (!raw) return [];
+  const labels = { casco: 'Casco', lucchetto: 'Lucchetto', kit_foro: 'Kit Foratura' };
+  return raw.split(',').filter(Boolean).map(k => labels[k] || k);
+}
+
+async function compressImage(file, maxDim = 900, quality = 0.72) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+const IC = (d, vb = '0 0 24 24') => () => (
+  <svg width="18" height="18" viewBox={vb} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {d}
   </svg>
 );
 
-const IconEuro = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 10h12M4 14h12M19 6a7 7 0 100 12"/>
-  </svg>
-);
+const IconDashboard    = IC(<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>);
+const IconOggi         = IC(<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="8" cy="16" r="1" fill="currentColor"/><circle cx="12" cy="16" r="1" fill="currentColor"/></>);
+const IconBookings     = IC(<><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></>);
+const IconFlotta       = IC(<><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/></>);
+const IconReport       = IC(<><path d="M3 3v18h18"/><path d="M7 16l4-7 4 4 4-8"/></>);
+const IconLogout       = IC(<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>);
+const IconRefresh      = IC(<><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></>);
+const IconEuro         = IC(<><path d="M4 10h12M4 14h12M19 6a7 7 0 100 12"/></>);
+const IconCalendar     = IC(<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>);
+const IconClock        = IC(<><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></>);
+const IconAlert        = IC(<><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></>);
+const IconCheck        = IC(<><polyline points="20 6 9 17 4 12"/></>);
+const IconCamera       = IC(<><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></>);
+const IconBike         = IC(<><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/></>);
+const IconTool         = IC(<><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></>);
+const IconMail         = IC(<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>);
+const IconCard         = IC(<><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></>);
+const IconX            = IC(<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
+const IconEdit         = IC(<><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>);
+const IconBattery      = IC(<><rect x="1" y="6" width="18" height="12" rx="2"/><path d="M23 13v-2"/></>);
 
-const IconCalendar = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
-  </svg>
-);
+// ─── Nav items ────────────────────────────────────────────────────────────────
 
-const IconClock = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-  </svg>
-);
+const NAV = [
+  { id: 'dashboard',    label: 'Dashboard',    Icon: IconDashboard  },
+  { id: 'oggi',         label: 'Oggi',          Icon: IconOggi       },
+  { id: 'prenotazioni', label: 'Prenotazioni',  Icon: IconBookings   },
+  { id: 'flotta',       label: 'Flotta',        Icon: IconFlotta     },
+  { id: 'report',       label: 'Report',        Icon: IconReport     },
+];
 
-const IconRefresh = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>
-  </svg>
-);
+const VIEW_TITLES = {
+  dashboard:    'Dashboard',
+  oggi:         'Operazioni di Oggi',
+  prenotazioni: 'Prenotazioni',
+  flotta:       'Gestione Flotta',
+  report:       'Report Finanziario',
+};
 
-const IconLogout = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
-  </svg>
-);
+// ─── Email templates ──────────────────────────────────────────────────────────
 
-const IconCard = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/>
-  </svg>
-);
-
-const IconAlert = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-  </svg>
-);
+const EMAIL_TEMPLATES = [
+  {
+    label: 'Cauzione non autorizzata',
+    subject: 'Importante: cauzione non autorizzata — Bike Rental Tarzo',
+    message: `Abbiamo tentato di bloccare la cauzione di €1.000 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine.\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email.\n\nGrazie per la comprensione.`,
+  },
+  {
+    label: 'Promemoria ritiro',
+    subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
+    message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
+  },
+  {
+    label: 'Richiesta modifica',
+    subject: 'Modifica prenotazione — Bike Rental Tarzo',
+    message: `In merito alla tua prenotazione, vorremmo chiederti di contattarci per definire alcuni dettagli.\n\nPuoi raggiungerci via WhatsApp al +39 392 8614635 oppure rispondendo a questa email.\n\nGrazie.`,
+  },
+  { label: 'Messaggio libero', subject: '', message: '' },
+];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
-  const [token,        setToken]        = useState(sessionStorage.getItem('admin_token') || '');
-  const [authed,       setAuthed]       = useState(false);
-  const [stats,        setStats]        = useState(null);
-  const [bookings,     setBookings]     = useState([]);
-  const [filter,       setFilter]       = useState('paid');
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState(null);
-  const [damageModal,    setDamageModal]    = useState(null); // { id, nome }
-  const [damageAmount,   setDamageAmount]   = useState('');
-  const [damageMotivo,   setDamageMotivo]   = useState('');
-  const [damageLoading,  setDamageLoading]  = useState(false);
-  const [depositModal,   setDepositModal]   = useState(null); // { id, nome, action: 'release'|'capture' }
+  const [token,    setToken]    = useState(sessionStorage.getItem('admin_token') || '');
+  const [authed,   setAuthed]   = useState(false);
+  const [activeView, setActiveView] = useState('dashboard');
+
+  // Stats + oggi (loaded at login)
+  const [stats,      setStats]      = useState(null);
+  const [oggiData,   setOggiData]   = useState(null);
+  const [oggiLoading, setOggiLoading] = useState(false);
+
+  // Prenotazioni
+  const [bookings,  setBookings]  = useState([]);
+  const [filter,    setFilter]    = useState('paid');
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState(null);
+
+  // Flotta
+  const [flotta,        setFlotta]        = useState([]);
+  const [flottaLoading, setFlottaLoading] = useState(false);
+
+  // Report
+  const [report,        setReport]        = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+
+  // Check-in modal
+  const [checkinModal,   setCheckinModal]   = useState(null);
+  const [checkinNote,    setCheckinNote]    = useState('');
+  const [docFoto,        setDocFoto]        = useState(null);
+  const [biciFotoOut,    setBiciFotoOut]    = useState(null);
+  const [checkinLoading, setCheckinLoading] = useState(false);
+  const docFotoRef  = useRef();
+  const bikeOutRef  = useRef();
+
+  // Checkout modal
+  const [checkoutModal,   setCheckoutModal]   = useState(null);
+  const [checkoutNote,    setCheckoutNote]    = useState('');
+  const [biciFotoIn,      setBiciFotoIn]      = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const bikeInRef = useRef();
+
+  // Fleet edit modal
+  const [fleetModal,   setFleetModal]   = useState(null);
+  const [fleetEdit,    setFleetEdit]    = useState({});
+  const [fleetLoading, setFleetLoading] = useState(false);
+
+  // Deposit modal
+  const [depositModal,   setDepositModal]   = useState(null);
   const [depositAmount,  setDepositAmount]  = useState('');
   const [depositLoading, setDepositLoading] = useState(false);
-  const [emailModal,     setEmailModal]     = useState(null); // { id, nome, email }
-  const [emailSubject,   setEmailSubject]   = useState('');
-  const [emailMessage,   setEmailMessage]   = useState('');
-  const [emailLoading,   setEmailLoading]   = useState(false);
+
+  // Email modal
+  const [emailModal,   setEmailModal]   = useState(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  // Damage modal
+  const [damageModal,   setDamageModal]   = useState(null);
+  const [damageAmount,  setDamageAmount]  = useState('');
+  const [damageMotivo,  setDamageMotivo]  = useState('');
+  const [damageLoading, setDamageLoading] = useState(false);
+
+  // ─── Data loaders ───────────────────────────────────────────────────────────
+
+  const loadStats = useCallback(async () => {
+    try { setStats(await adminApi.getStats()); } catch (_) {}
+  }, []);
+
+  const loadOggi = useCallback(async () => {
+    setOggiLoading(true);
+    try { setOggiData(await adminApi.getOggi()); } catch (_) {}
+    finally { setOggiLoading(false); }
+  }, []);
 
   const loadBookings = useCallback(async (status) => {
     setFilter(status);
@@ -101,34 +236,42 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [s, b] = await Promise.all([
-        adminApi.getStats(),
-        adminApi.getBookings({ status: filter }),
-      ]);
-      setStats(s);
-      setBookings(b.bookings || []);
-      setError(null);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [filter]);
+  const loadFlotta = useCallback(async () => {
+    setFlottaLoading(true);
+    try { const d = await adminApi.getFlotta(); setFlotta(d.bici || []); } catch (_) {}
+    finally { setFlottaLoading(false); }
+  }, []);
+
+  const loadReport = useCallback(async () => {
+    setReportLoading(true);
+    try { setReport(await adminApi.getReport()); } catch (_) {}
+    finally { setReportLoading(false); }
+  }, []);
+
+  // Load data when switching views
+  useEffect(() => {
+    if (!authed) return;
+    if (activeView === 'oggi') loadOggi();
+    if (activeView === 'prenotazioni' && bookings.length === 0) loadBookings('paid');
+    if (activeView === 'flotta' && flotta.length === 0) loadFlotta();
+    if (activeView === 'report' && !report) loadReport();
+  }, [activeView, authed]); // eslint-disable-line
+
+  // ─── Login ──────────────────────────────────────────────────────────────────
 
   async function login() {
     sessionStorage.setItem('admin_token', token);
     setLoading(true);
     setError(null);
     try {
-      const [s, b] = await Promise.all([
+      const [s, b, o] = await Promise.all([
         adminApi.getStats(),
-        adminApi.getBookings({ status: filter }),
+        adminApi.getBookings({ status: 'paid' }),
+        adminApi.getOggi(),
       ]);
       setStats(s);
       setBookings(b.bookings || []);
+      setOggiData(o);
       setAuthed(true);
     } catch (e) {
       setError(e.message || 'Token non valido');
@@ -138,14 +281,76 @@ export default function AdminDashboard() {
     }
   }
 
+  function logout() {
+    setAuthed(false);
+    sessionStorage.removeItem('admin_token');
+  }
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [s, b, o] = await Promise.all([
+        adminApi.getStats(),
+        adminApi.getBookings({ status: filter }),
+        adminApi.getOggi(),
+      ]);
+      setStats(s);
+      setBookings(b.bookings || []);
+      setOggiData(o);
+      setError(null);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  }, [filter]);
+
+  // ─── Check-in ───────────────────────────────────────────────────────────────
+
+  async function handleCheckin() {
+    setCheckinLoading(true);
+    try {
+      await adminApi.checkin(checkinModal.id, {
+        checkin_note:      checkinNote  || undefined,
+        documento_foto:    docFoto      || undefined,
+        bici_foto_consegna: biciFotoOut || undefined,
+      });
+      setCheckinModal(null); setCheckinNote(''); setDocFoto(null); setBiciFotoOut(null);
+      await loadOggi();
+    } catch (e) { alert('Errore check-in: ' + e.message); }
+    finally { setCheckinLoading(false); }
+  }
+
+  // ─── Checkout ───────────────────────────────────────────────────────────────
+
+  async function handleCheckout() {
+    setCheckoutLoading(true);
+    try {
+      await adminApi.checkout(checkoutModal.id, {
+        checkout_note:   checkoutNote || undefined,
+        bici_foto_rientro: biciFotoIn || undefined,
+      });
+      setCheckoutModal(null); setCheckoutNote(''); setBiciFotoIn(null);
+      await loadOggi();
+    } catch (e) { alert('Errore checkout: ' + e.message); }
+    finally { setCheckoutLoading(false); }
+  }
+
+  // ─── Fleet save ─────────────────────────────────────────────────────────────
+
+  async function handleFleetSave() {
+    setFleetLoading(true);
+    try {
+      await adminApi.updateFlotta(fleetModal.id, fleetEdit);
+      setFleetModal(null);
+      await loadFlotta();
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setFleetLoading(false); }
+  }
+
+  // ─── Existing booking actions ────────────────────────────────────────────────
+
   async function cancelBooking(id) {
     if (!confirm('Cancellare questa prenotazione?')) return;
-    try {
-      await adminApi.cancelBooking(id);
-      await loadBookings(filter);
-    } catch (e) {
-      alert('Errore: ' + e.message);
-    }
+    try { await adminApi.cancelBooking(id); await loadBookings(filter); }
+    catch (e) { alert('Errore: ' + e.message); }
   }
 
   async function chargeDamage() {
@@ -156,15 +361,10 @@ export default function AdminDashboard() {
     try {
       await adminApi.chargeDamage(damageModal.id, amount, damageMotivo);
       alert('Addebito effettuato con successo');
-      setDamageModal(null);
-      setDamageAmount('');
-      setDamageMotivo('');
+      setDamageModal(null); setDamageAmount(''); setDamageMotivo('');
       await loadBookings(filter);
-    } catch (e) {
-      alert('Errore: ' + e.message);
-    } finally {
-      setDamageLoading(false);
-    }
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setDamageLoading(false); }
   }
 
   async function handleDeposit() {
@@ -173,42 +373,19 @@ export default function AdminDashboard() {
       if (depositModal.action === 'release') {
         if (!confirm(`Rilasciare la cauzione di €1.000 a ${depositModal.nome}?`)) return;
         await adminApi.releaseDeposit(depositModal.id);
-        alert('Cauzione rilasciata — €1.000 sbloccati sulla carta del cliente');
+        alert('Cauzione rilasciata — €1.000 sbloccati');
       } else {
         const amount = parseFloat(depositAmount);
-        if (!amount || amount <= 0 || amount > 1000) return alert('Inserisci un importo valido (max €1.000)');
+        if (!amount || amount <= 0 || amount > 1000) return alert('Importo non valido (max €1.000)');
         if (!confirm(`Incassare €${amount.toFixed(2)} dalla cauzione di ${depositModal.nome}?`)) return;
         await adminApi.captureDeposit(depositModal.id, amount);
         alert(`€${amount.toFixed(2)} addebitati dalla cauzione`);
       }
-      setDepositModal(null);
-      setDepositAmount('');
+      setDepositModal(null); setDepositAmount('');
       await loadBookings(filter);
-    } catch (e) {
-      alert('Errore: ' + e.message);
-    } finally {
-      setDepositLoading(false);
-    }
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setDepositLoading(false); }
   }
-
-  const EMAIL_TEMPLATES = [
-    {
-      label: 'Cauzione non autorizzata',
-      subject: 'Importante: cauzione non autorizzata — Bike Rental Tarzo',
-      message: `Abbiamo tentato di bloccare la cauzione di €1.000 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine (fondi insufficienti o carta non supportata).\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email per trovare una soluzione.\n\nGrazie per la comprensione.`,
-    },
-    {
-      label: 'Promemoria ritiro',
-      subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
-      message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
-    },
-    {
-      label: 'Richiesta modifica',
-      subject: 'Modifica prenotazione — Bike Rental Tarzo',
-      message: `In merito alla tua prenotazione, vorremmo chiederti di contattarci per definire alcuni dettagli.\n\nPuoi raggiungerci via WhatsApp al +39 392 8614635 oppure rispondendo a questa email.\n\nGrazie.`,
-    },
-    { label: 'Messaggio libero', subject: '', message: '' },
-  ];
 
   async function handleSendEmail() {
     if (!emailSubject.trim() || !emailMessage.trim()) return;
@@ -216,33 +393,71 @@ export default function AdminDashboard() {
     try {
       await adminApi.sendEmail(emailModal.id, emailSubject, emailMessage);
       alert(`Email inviata a ${emailModal.email}`);
-      setEmailModal(null);
-      setEmailSubject('');
-      setEmailMessage('');
-    } catch (e) {
-      alert('Errore invio email: ' + e.message);
-    } finally {
-      setEmailLoading(false);
-    }
+      setEmailModal(null); setEmailSubject(''); setEmailMessage('');
+    } catch (e) { alert('Errore invio email: ' + e.message); }
+    finally { setEmailLoading(false); }
   }
 
-  // ─── Login ─────────────────────────────────────────────────────────────────
+  // ─── Photo upload helper ─────────────────────────────────────────────────────
+
+  async function handlePhotoFile(file, setter) {
+    if (!file) return;
+    try { setter(await compressImage(file)); } catch (_) {}
+  }
+
+  function PhotoUpload({ label, value, onChange, inputRef }) {
+    return (
+      <div className="ac-photo-field">
+        <span className="ac-label">{label}</span>
+        <div
+          className={`ac-photo-upload${value ? ' has-photo' : ''}`}
+          onClick={() => inputRef.current?.click()}
+        >
+          {value ? (
+            <img src={value} alt={label} className="ac-photo-img" />
+          ) : (
+            <div className="ac-photo-empty">
+              <IconCamera />
+              <span>Tocca per scattare / caricare</span>
+            </div>
+          )}
+          <input
+            type="file"
+            ref={inputRef}
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={e => handlePhotoFile(e.target.files[0], onChange)}
+          />
+        </div>
+        {value && (
+          <button className="ac-photo-remove" onClick={() => onChange(null)}>
+            Rimuovi foto
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ─── LOGIN SCREEN ────────────────────────────────────────────────────────────
 
   if (!authed) {
     return (
-      <div className="admin-login">
-        <div className="admin-login-card">
-          <div className="admin-login-logo">
-            <IconBike />
+      <div className="ac-login">
+        <div className="ac-login-card">
+          <div className="ac-login-logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
+              <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
+            </svg>
           </div>
-          <h1>Admin Panel</h1>
-          <p>Accedi con il token amministratore</p>
-
-          {error && <div className="admin-error">{error}</div>}
-
-          <div className="admin-form-group">
-            <label>Token</label>
+          <h1 className="ac-login-title">Admin Panel</h1>
+          <p className="ac-login-sub">Bike Rental Tarzo</p>
+          {error && <div className="ac-error-banner">{error}</div>}
+          <div className="ac-field">
+            <label className="ac-label">Token amministratore</label>
             <input
+              className="ac-input"
               type="password"
               placeholder="••••••••••••"
               value={token}
@@ -251,127 +466,384 @@ export default function AdminDashboard() {
               autoFocus
             />
           </div>
-          <button className="admin-btn" onClick={login} disabled={loading || !token}>
-            {loading ? 'Accesso in corso…' : 'Accedi'}
+          <button className="ac-btn primary full" onClick={login} disabled={loading || !token}>
+            {loading ? 'Accesso…' : 'Accedi →'}
           </button>
         </div>
       </div>
     );
   }
 
-  // ─── Dashboard ─────────────────────────────────────────────────────────────
+  // ─── MAIN LAYOUT ─────────────────────────────────────────────────────────────
 
-  const FILTERS = [
-    { key: 'paid',      label: 'Confermate' },
-    { key: 'pending',   label: 'In Attesa'  },
-    { key: 'cancelled', label: 'Cancellate' },
-  ];
+  // Late returns count for badge
+  const lateCount = oggiData?.inRitardo?.length || 0;
 
   return (
-    <div className="admin-layout">
-      {/* Topbar */}
-      <div className="admin-topbar">
-        <div className="admin-topbar-brand">
-          <div className="admin-topbar-logo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="ac-layout">
+
+      {/* ── Sidebar ── */}
+      <aside className="ac-sidebar">
+        <div className="ac-sidebar-brand">
+          <div className="ac-sidebar-logomark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/>
               <path d="M15 6a1 1 0 000-2h-3l-3 9 2 1"/><path d="M9 6l1 4h7l-2-4H9z"/>
             </svg>
           </div>
-          <h1>Bike Rental Tarzo</h1>
+          <div>
+            <div className="ac-sidebar-title">BIKE RENTAL</div>
+            <div className="ac-sidebar-subtitle">TARZO</div>
+          </div>
         </div>
-        <div className="admin-topbar-actions">
-          <button className="admin-logout-btn" onClick={() => {
-            setAuthed(false);
-            sessionStorage.removeItem('admin_token');
-          }}>
-            <IconLogout /> Esci
-          </button>
+
+        <nav className="ac-nav">
+          {NAV.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              className={`ac-nav-item${activeView === id ? ' active' : ''}`}
+              onClick={() => setActiveView(id)}
+            >
+              <Icon />
+              <span>{label}</span>
+              {id === 'oggi' && lateCount > 0 && (
+                <span className="ac-nav-badge">{lateCount}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <button className="ac-logout-btn" onClick={logout}>
+          <IconLogout />
+          <span>Esci</span>
+        </button>
+      </aside>
+
+      {/* ── Main ── */}
+      <div className="ac-main">
+        <header className="ac-topbar">
+          <h2 className="ac-topbar-title">{VIEW_TITLES[activeView]}</h2>
+          <div className="ac-topbar-right">
+            <span className="ac-topbar-date">{todayIT()}</span>
+            <button className="ac-icon-btn" onClick={refresh} title="Aggiorna">
+              <IconRefresh />
+            </button>
+          </div>
+        </header>
+
+        <div className="ac-content">
+          {activeView === 'dashboard'    && renderDashboard()}
+          {activeView === 'oggi'         && renderOggi()}
+          {activeView === 'prenotazioni' && renderPrenotazioni()}
+          {activeView === 'flotta'       && renderFlotta()}
+          {activeView === 'report'       && renderReport()}
         </div>
       </div>
 
-      <div className="admin-body">
+      {/* ── Modals ── */}
+      {checkinModal  && renderCheckinModal()}
+      {checkoutModal && renderCheckoutModal()}
+      {fleetModal    && renderFleetModal()}
+      {depositModal  && renderDepositModal()}
+      {emailModal    && renderEmailModal()}
+      {damageModal   && renderDamageModal()}
+    </div>
+  );
+
+  // ─── DASHBOARD VIEW ───────────────────────────────────────────────────────────
+
+  function renderDashboard() {
+    const late = oggiData?.inRitardo || [];
+    const todayPickups  = (oggiData?.ritiri       || []).length;
+    const todayReturns  = (oggiData?.restituzioni  || []).length;
+
+    return (
+      <div className="ac-dashboard">
         {/* Stats */}
         {stats && (
-          <div className="admin-stats">
-            <div className="admin-stat">
-              <div className="admin-stat-icon" style={{ background: 'rgba(234,88,12,0.15)', color: '#FB923C' }}>
-                <IconBike />
-              </div>
-              <div className="admin-stat-body">
-                <div className="admin-stat-value">{stats.prenotazioni_totali}</div>
-                <div className="admin-stat-label">Totali</div>
+          <div className="ac-stats-grid">
+            <div className="ac-stat-card">
+              <div className="ac-stat-icon orange"><IconBike /></div>
+              <div>
+                <div className="ac-stat-value">{stats.prenotazioni_totali}</div>
+                <div className="ac-stat-label">Prenotazioni totali</div>
               </div>
             </div>
-            <div className="admin-stat">
-              <div className="admin-stat-icon" style={{ background: 'rgba(74,222,128,0.12)', color: '#4ADE80' }}>
-                <IconEuro />
-              </div>
-              <div className="admin-stat-body">
-                <div className="admin-stat-value">€{stats.incasso_totale}</div>
-                <div className="admin-stat-label">Incasso</div>
+            <div className="ac-stat-card">
+              <div className="ac-stat-icon green"><IconEuro /></div>
+              <div>
+                <div className="ac-stat-value">€{Number(stats.incasso_totale).toFixed(0)}</div>
+                <div className="ac-stat-label">Incasso totale</div>
               </div>
             </div>
-            <div className="admin-stat">
-              <div className="admin-stat-icon" style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8' }}>
-                <IconCalendar />
-              </div>
-              <div className="admin-stat-body">
-                <div className="admin-stat-value">{stats.prenotazioni_oggi}</div>
-                <div className="admin-stat-label">Oggi</div>
+            <div className="ac-stat-card">
+              <div className="ac-stat-icon indigo"><IconCalendar /></div>
+              <div>
+                <div className="ac-stat-value">{stats.prenotazioni_oggi}</div>
+                <div className="ac-stat-label">Ritiri oggi</div>
               </div>
             </div>
-            <div className="admin-stat">
-              <div className="admin-stat-icon" style={{ background: 'rgba(251,191,36,0.12)', color: '#FBB024' }}>
-                <IconClock />
-              </div>
-              <div className="admin-stat-body">
-                <div className="admin-stat-value">{stats.prenotazioni_future}</div>
-                <div className="admin-stat-label">Future</div>
+            <div className="ac-stat-card">
+              <div className="ac-stat-icon yellow"><IconClock /></div>
+              <div>
+                <div className="ac-stat-value">{stats.prenotazioni_future}</div>
+                <div className="ac-stat-label">Prenotazioni future</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Controls */}
-        <div className="admin-controls">
+        {/* Late returns alert */}
+        {late.length > 0 && (
+          <div className="ac-alert-banner">
+            <IconAlert />
+            <div>
+              <strong>{late.length} {late.length === 1 ? 'bici in ritardo' : 'bici in ritardo'}!</strong>
+              <span> — Restituzione scaduta senza checkout registrato.</span>
+            </div>
+            <button className="ac-btn sm ghost" onClick={() => setActiveView('oggi')}>
+              Gestisci →
+            </button>
+          </div>
+        )}
+
+        {/* Today overview */}
+        <div className="ac-today-grid">
+          <div className="ac-today-card">
+            <div className="ac-today-card-header">
+              <span className="ac-today-card-title">Ritiri di oggi</span>
+              <span className="ac-badge indigo">{todayPickups}</span>
+            </div>
+            {(oggiData?.ritiri || []).length === 0 ? (
+              <p className="ac-empty-sm">Nessun ritiro previsto oggi</p>
+            ) : (
+              <div className="ac-today-list">
+                {(oggiData.ritiri).slice(0, 4).map(b => (
+                  <div key={b.id} className="ac-today-row">
+                    <span className="ac-today-time">{b.orario_ritiro?.substring(0,5)}</span>
+                    <span className="ac-today-name">{b.cliente_nome}</span>
+                    <span className="ac-today-bike">#{b.bicicletta_id}</span>
+                    {b.checkin_at
+                      ? <span className="ac-badge sm green">✓</span>
+                      : <span className="ac-badge sm yellow">Attesa</span>}
+                  </div>
+                ))}
+                {oggiData.ritiri.length > 4 && (
+                  <div className="ac-today-more" onClick={() => setActiveView('oggi')}>
+                    +{oggiData.ritiri.length - 4} altri →
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="ac-today-card">
+            <div className="ac-today-card-header">
+              <span className="ac-today-card-title">Restituzioni di oggi</span>
+              <span className="ac-badge green">{todayReturns}</span>
+            </div>
+            {(oggiData?.restituzioni || []).length === 0 ? (
+              <p className="ac-empty-sm">Nessuna restituzione prevista oggi</p>
+            ) : (
+              <div className="ac-today-list">
+                {(oggiData.restituzioni).slice(0, 4).map(b => (
+                  <div key={b.id} className="ac-today-row">
+                    <span className="ac-today-time">{b.orario_restituzione?.substring(0,5)}</span>
+                    <span className="ac-today-name">{b.cliente_nome}</span>
+                    <span className="ac-today-bike">#{b.bicicletta_id}</span>
+                    {b.checkout_at
+                      ? <span className="ac-badge sm green">✓</span>
+                      : <span className="ac-badge sm orange">Attesa</span>}
+                  </div>
+                ))}
+                {oggiData.restituzioni.length > 4 && (
+                  <div className="ac-today-more" onClick={() => setActiveView('oggi')}>
+                    +{oggiData.restituzioni.length - 4} altri →
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="ac-quick-actions">
+          <button className="ac-quick-btn" onClick={() => setActiveView('oggi')}>
+            <IconOggi /> Gestisci Oggi
+          </button>
+          <button className="ac-quick-btn" onClick={() => { setActiveView('prenotazioni'); loadBookings('paid'); }}>
+            <IconBookings /> Tutte le Prenotazioni
+          </button>
+          <button className="ac-quick-btn" onClick={() => { setActiveView('flotta'); loadFlotta(); }}>
+            <IconFlotta /> Stato Flotta
+          </button>
+          <button className="ac-quick-btn" onClick={() => { setActiveView('report'); loadReport(); }}>
+            <IconReport /> Report Finanziario
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── OGGI VIEW ────────────────────────────────────────────────────────────────
+
+  function renderOggi() {
+    if (oggiLoading) return <div className="ac-spinner-center"><div className="ac-spinner" /></div>;
+
+    const ritiri      = oggiData?.ritiri      || [];
+    const restituzioni = oggiData?.restituzioni || [];
+    const inRitardo   = oggiData?.inRitardo   || [];
+
+    return (
+      <div className="ac-oggi">
+        {inRitardo.length > 0 && (
+          <div className="ac-alert-banner" style={{ marginBottom: 24 }}>
+            <IconAlert />
+            <strong>{inRitardo.length} {inRitardo.length === 1 ? 'bici' : 'bici'} in ritardo — restituzione scaduta!</strong>
+          </div>
+        )}
+
+        <div className="ac-oggi-cols">
+          {/* Ritiri */}
+          <div className="ac-oggi-col">
+            <div className="ac-col-header">
+              <div className="ac-col-dot indigo" />
+              <h3>Ritiri di oggi <span className="ac-col-count">{ritiri.length}</span></h3>
+            </div>
+            {ritiri.length === 0
+              ? <div className="ac-empty-card">Nessun ritiro previsto oggi</div>
+              : ritiri.map(b => (
+                <div key={b.id} className={`ac-op-card${b.checkin_at ? ' done' : ''}`}>
+                  <div className="ac-op-card-top">
+                    <div className="ac-op-time">{b.orario_ritiro?.substring(0,5)}</div>
+                    <div className="ac-op-bike">Bici #{b.bicicletta_id}</div>
+                    {b.checkin_at
+                      ? <span className="ac-badge green sm">✓ Check-in {formatDateTime(b.checkin_at)}</span>
+                      : <span className="ac-badge yellow sm">In attesa</span>}
+                  </div>
+                  <div className="ac-op-name">{b.cliente_nome}</div>
+                  <div className="ac-op-meta">
+                    {b.cliente_telefono} · {tipoLabel(b.tipo_noleggio)}
+                    {b.giorni > 1 && ` · ${b.giorni} giorni`}
+                  </div>
+                  {parseAccessori(b.accessori).length > 0 && (
+                    <div className="ac-op-acc">🎒 {parseAccessori(b.accessori).join(', ')}</div>
+                  )}
+                  {!b.checkin_at && (
+                    <button
+                      className="ac-btn primary sm"
+                      onClick={() => { setCheckinModal(b); setCheckinNote(''); setDocFoto(null); setBiciFotoOut(null); }}
+                    >
+                      Check-in →
+                    </button>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+
+          {/* Restituzioni */}
+          <div className="ac-oggi-col">
+            <div className="ac-col-header">
+              <div className="ac-col-dot green" />
+              <h3>Restituzioni di oggi <span className="ac-col-count">{restituzioni.length}</span></h3>
+            </div>
+            {restituzioni.length === 0
+              ? <div className="ac-empty-card">Nessuna restituzione prevista oggi</div>
+              : restituzioni.map(b => (
+                <div key={b.id} className={`ac-op-card${b.checkout_at ? ' done' : ''}`}>
+                  <div className="ac-op-card-top">
+                    <div className="ac-op-time">{b.orario_restituzione?.substring(0,5)}</div>
+                    <div className="ac-op-bike">Bici #{b.bicicletta_id}</div>
+                    {b.checkout_at
+                      ? <span className="ac-badge green sm">✓ Checkout {formatDateTime(b.checkout_at)}</span>
+                      : <span className="ac-badge orange sm">Da restituire</span>}
+                  </div>
+                  <div className="ac-op-name">{b.cliente_nome}</div>
+                  <div className="ac-op-meta">
+                    {b.cliente_telefono} · Partito: {formatDateIT(b.data_ritiro)}
+                  </div>
+                  {parseAccessori(b.accessori).length > 0 && (
+                    <div className="ac-op-acc">🎒 {parseAccessori(b.accessori).join(', ')}</div>
+                  )}
+                  {!b.checkout_at && (
+                    <button
+                      className="ac-btn green sm"
+                      onClick={() => { setCheckoutModal(b); setCheckoutNote(''); setBiciFotoIn(null); }}
+                    >
+                      Registra Checkout →
+                    </button>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+
+          {/* In ritardo */}
+          {inRitardo.length > 0 && (
+            <div className="ac-oggi-col">
+              <div className="ac-col-header">
+                <div className="ac-col-dot red" />
+                <h3>In ritardo <span className="ac-col-count red">{inRitardo.length}</span></h3>
+              </div>
+              {inRitardo.map(b => (
+                <div key={b.id} className="ac-op-card late">
+                  <div className="ac-op-card-top">
+                    <div className="ac-op-time red">Scad. {formatDateIT(b.data_restituzione)}</div>
+                    <div className="ac-op-bike">Bici #{b.bicicletta_id}</div>
+                    <span className="ac-badge red sm">In ritardo</span>
+                  </div>
+                  <div className="ac-op-name">{b.cliente_nome}</div>
+                  <div className="ac-op-meta">{b.cliente_telefono} · Previsto {b.orario_restituzione?.substring(0,5)}</div>
+                  <button
+                    className="ac-btn danger sm"
+                    onClick={() => { setCheckoutModal(b); setCheckoutNote(''); setBiciFotoIn(null); }}
+                  >
+                    Registra Rientro →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── PRENOTAZIONI VIEW ────────────────────────────────────────────────────────
+
+  function renderPrenotazioni() {
+    const FILTERS = [
+      { key: 'paid',      label: 'Confermate' },
+      { key: 'pending',   label: 'In Attesa'  },
+      { key: 'cancelled', label: 'Cancellate' },
+    ];
+
+    return (
+      <div>
+        <div className="ac-controls">
           {FILTERS.map(f => (
             <button
               key={f.key}
-              className={`admin-filter-btn${filter === f.key ? ' active' : ''}`}
+              className={`ac-filter-btn${filter === f.key ? ' active' : ''}`}
               onClick={() => loadBookings(f.key)}
-            >
-              {f.label}
-            </button>
+            >{f.label}</button>
           ))}
-          <button className="admin-filter-btn refresh" onClick={refresh}>
+          <button className="ac-filter-btn refresh" onClick={refresh}>
             <IconRefresh /> Aggiorna
           </button>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div style={{ background: 'rgba(220,38,38,0.12)', border: '1px solid rgba(220,38,38,0.25)',
-                        color: '#F87171', borderRadius: 8, padding: '10px 14px',
-                        fontSize: '0.88rem', marginBottom: 16 }}>
-            {error}
-          </div>
-        )}
+        {error && <div className="ac-error-banner">{error}</div>}
 
-        {/* Table */}
-        <div className="admin-table-wrapper">
+        <div className="ac-table-wrap">
           {loading ? (
-            <div className="admin-spinner" />
+            <div className="ac-spinner-center"><div className="ac-spinner" /></div>
           ) : bookings.length === 0 ? (
-            <div className="admin-empty">
-              <div className="admin-empty-icon">
-                <IconBike />
-              </div>
-              <p>Nessuna prenotazione trovata</p>
-            </div>
+            <div className="ac-empty-state"><IconBike /><p>Nessuna prenotazione trovata</p></div>
           ) : (
-            <div className="admin-table-scroll">
-              <table className="admin-table">
+            <div style={{ overflowX: 'auto' }}>
+              <table className="ac-table">
                 <thead>
                   <tr>
                     <th>Codice</th>
@@ -383,130 +855,68 @@ export default function AdminDashboard() {
                     <th>Prezzo</th>
                     <th>Status</th>
                     {filter === 'paid' && <th>Cauzione</th>}
-                    {filter === 'paid' && <th>Danno extra</th>}
                     {filter === 'paid' && <th>Azioni</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map(b => (
                     <tr key={b.id}>
+                      <td><span className="ac-code">{b.id.toUpperCase().substring(0, 8)}</span></td>
                       <td>
-                        <span className="cell-code">
-                          {b.id.toUpperCase().substring(0, 8)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="cell-name">{b.cliente_nome}</div>
-                        <div className="cell-sub">{b.cliente_email}</div>
-                        <div className="cell-sub">{b.cliente_telefono}</div>
+                        <div className="ac-cell-name">{b.cliente_nome}</div>
+                        <div className="ac-cell-sub">{b.cliente_email}</div>
+                        <div className="ac-cell-sub">{b.cliente_telefono}</div>
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{tipoShort(b.tipo_noleggio)}</div>
-                        {b.giorni > 1 && <div className="cell-sub">{b.giorni} giorni</div>}
+                        {b.giorni > 1 && <div className="ac-cell-sub">{b.giorni}g</div>}
                       </td>
                       <td>
                         <div>{formatDateIT(b.data_ritiro)}</div>
-                        <div style={{ fontWeight: 700, color: '#CBD5E1' }}>{b.orario_ritiro?.substring(0, 5)}</div>
+                        <div style={{ fontWeight: 700 }}>{b.orario_ritiro?.substring(0, 5)}</div>
                       </td>
                       <td>
                         <div>{formatDateIT(b.data_restituzione)}</div>
-                        <div style={{ fontWeight: 700, color: '#CBD5E1' }}>{b.orario_restituzione?.substring(0, 5)}</div>
+                        <div style={{ fontWeight: 700 }}>{b.orario_restituzione?.substring(0, 5)}</div>
                       </td>
                       <td style={{ textAlign: 'center', fontWeight: 700 }}>#{b.bicicletta_id}</td>
+                      <td><span className="ac-price">€{Number(b.prezzo_totale).toFixed(0)}</span></td>
                       <td>
-                        <span className="cell-price">€{Number(b.prezzo_totale).toFixed(0)}</span>
-                      </td>
-                      <td>
-                        <span className={`status-badge ${b.pagamento_status}`}>
-                          {b.pagamento_status === 'paid'      && 'Pagata'}
-                          {b.pagamento_status === 'pending'   && 'Attesa'}
+                        <span className={`ac-badge ${b.pagamento_status}`}>
+                          {b.pagamento_status === 'paid' && 'Pagata'}
+                          {b.pagamento_status === 'pending' && 'Attesa'}
                           {b.pagamento_status === 'cancelled' && 'Cancellata'}
                         </span>
                       </td>
-
                       {filter === 'paid' && (
                         <td>
-                          {b.cauzione_status === 'authorized' && (
-                            <span className="status-badge cauzione-ok">€1.000 bloccati</span>
-                          )}
-                          {b.cauzione_status === 'captured' && (
-                            <span className="status-badge cauzione-captured">
-                              €{Number(b.cauzione_captured_amount || 0).toFixed(0)} incassati
-                            </span>
-                          )}
-                          {b.cauzione_status === 'cancelled' && (
-                            <span className="status-badge cauzione-released">Rilasciata</span>
-                          )}
-                          {b.cauzione_status === 'failed' && (
-                            <span className="status-badge cauzione-failed">Non riuscita</span>
-                          )}
-                          {(!b.cauzione_status || b.cauzione_status === 'pending') && (
-                            <span style={{ color: '#475569', fontSize: '0.78rem' }}>—</span>
-                          )}
+                          {b.cauzione_status === 'authorized' && <span className="ac-badge cauzione-ok">€1.000 bloccati</span>}
+                          {b.cauzione_status === 'captured'   && <span className="ac-badge cauzione-cap">€{Number(b.cauzione_captured_amount||0).toFixed(0)} incassati</span>}
+                          {b.cauzione_status === 'cancelled'  && <span className="ac-badge muted">Rilasciata</span>}
+                          {b.cauzione_status === 'failed'     && <span className="ac-badge red">Non riuscita</span>}
+                          {(!b.cauzione_status || b.cauzione_status === 'pending') && <span className="ac-muted-dash">—</span>}
                         </td>
                       )}
-
-                      {filter === 'paid' && (
-                        <td>
-                          {b.danno_status === 'charged' ? (
-                            <span className="status-badge charged">
-                              €{Number(b.danno_amount).toFixed(0)} addebitato
-                            </span>
-                          ) : (
-                            <span style={{ color: '#475569', fontSize: '0.78rem' }}>—</span>
-                          )}
-                        </td>
-                      )}
-
                       {filter === 'paid' && (
                         <td style={{ whiteSpace: 'nowrap' }}>
-                          {/* Gestione cauzione */}
                           {b.cauzione_status === 'authorized' && (
                             <>
-                              <button
-                                className="admin-action-btn deposit-release"
-                                onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' })}
-                                title="Bici restituita OK — sblocca €1.000"
-                              >
-                                ✓ Rilascia
-                              </button>
-                              <button
-                                className="admin-action-btn deposit-capture"
-                                onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}
-                                title="Addebita danni dalla cauzione (max €1.000)"
-                              >
-                                ⚠ Danni
-                              </button>
+                              <button className="ac-action-btn release" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' })}>✓ Rilascia</button>
+                              <button className="ac-action-btn capture" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}>⚠ Danni</button>
                             </>
                           )}
-                          {/* Addebito extra se cauzione fallita/già gestita */}
                           {b.cauzione_status !== 'authorized' && (
                             <button
-                              className="admin-action-btn damage"
+                              className="ac-action-btn damage"
                               onClick={() => setDamageModal({ id: b.id, nome: b.cliente_nome })}
                               disabled={!b.stripe_payment_method_id || b.danno_status === 'charged'}
-                              title="Addebita danno extra sulla carta"
-                            >
-                              Addebita extra
-                            </button>
+                            >Extra</button>
                           )}
                           <button
-                            className="admin-action-btn email"
-                            onClick={() => {
-                              setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email });
-                              setEmailSubject('');
-                              setEmailMessage('');
-                            }}
-                            title={`Invia email a ${b.cliente_email}`}
-                          >
-                            ✉ Email
-                          </button>
-                          <button
-                            className="admin-action-btn cancel"
-                            onClick={() => cancelBooking(b.id)}
-                          >
-                            Cancella
-                          </button>
+                            className="ac-action-btn email"
+                            onClick={() => { setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email }); setEmailSubject(''); setEmailMessage(''); }}
+                          ><IconMail /></button>
+                          <button className="ac-action-btn cancel" onClick={() => cancelBooking(b.id)}>Cancella</button>
                         </td>
                       )}
                     </tr>
@@ -517,186 +927,388 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+    );
+  }
 
-      {/* Deposit Modal */}
-      {depositModal && (
-        <div className="admin-modal-overlay" onClick={e => e.target === e.currentTarget && setDepositModal(null)}>
-          <div className="admin-modal">
-            <h2>{depositModal.action === 'release' ? '✓ Rilascia Cauzione' : '⚠ Incassa Danni da Cauzione'}</h2>
-            <div className="admin-modal-sub">
-              Cliente: <strong>{depositModal.nome}</strong>
-            </div>
+  // ─── FLOTTA VIEW ──────────────────────────────────────────────────────────────
 
-            {depositModal.action === 'release' ? (
-              <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: '12px 0' }}>
-                I <strong style={{ color: '#4ADE80' }}>€1.000 bloccati</strong> sulla carta del cliente verranno sbloccati immediatamente. Operazione irreversibile.
-              </p>
-            ) : (
-              <>
-                <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: '12px 0 4px' }}>
-                  Inserisci l&apos;importo dei danni da trattenere (max €1.000). Il resto verrà sbloccato automaticamente.
-                </p>
-                <div className="admin-form-group">
-                  <label>Importo danni (€)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="1000"
-                    step="0.01"
-                    placeholder="es. 150"
-                    value={depositAmount}
-                    onChange={e => setDepositAmount(e.target.value)}
-                    autoFocus
+  function renderFlotta() {
+    const STATI = ['disponibile', 'noleggiata', 'manutenzione', 'guasto'];
+    const statoColor = { disponibile: 'green', noleggiata: 'indigo', manutenzione: 'yellow', guasto: 'red' };
+
+    if (flottaLoading) return <div className="ac-spinner-center"><div className="ac-spinner" /></div>;
+
+    const today = new Date().toISOString().substring(0, 10);
+    const soon  = new Date(Date.now() + 14 * 86400000).toISOString().substring(0, 10);
+
+    return (
+      <div>
+        <div className="ac-fleet-grid">
+          {flotta.map(bici => {
+            const batt = bici.batteria_pct ?? 100;
+            const battColor = batt >= 70 ? 'green' : batt >= 30 ? 'yellow' : 'red';
+            const maintenanceSoon = bici.prossima_manutenzione && bici.prossima_manutenzione <= soon;
+            const maintenanceLate = bici.prossima_manutenzione && bici.prossima_manutenzione < today;
+            return (
+              <div key={bici.id} className="ac-fleet-card">
+                <div className="ac-fleet-card-top">
+                  <div className="ac-fleet-num">
+                    <div className="ac-fleet-icon"><IconBike /></div>
+                    <div>
+                      <div className="ac-fleet-name">{bici.nome}</div>
+                      <div className="ac-cell-sub">{bici.tipo}</div>
+                    </div>
+                  </div>
+                  <span className={`ac-badge ${statoColor[bici.stato] || 'muted'}`}>
+                    {bici.stato || 'disponibile'}
+                  </span>
+                </div>
+
+                <div className="ac-fleet-battery">
+                  <div className="ac-fleet-battery-row">
+                    <span className="ac-label"><IconBattery /> Batteria</span>
+                    <span className={`ac-batt-pct ${battColor}`}>{batt}%</span>
+                  </div>
+                  <div className="ac-batt-track">
+                    <div className={`ac-batt-fill ${battColor}`} style={{ width: `${batt}%` }} />
+                  </div>
+                </div>
+
+                {(bici.ultima_manutenzione || bici.prossima_manutenzione) && (
+                  <div className="ac-fleet-maint">
+                    {bici.ultima_manutenzione && (
+                      <div className="ac-maint-row">
+                        <IconTool />
+                        <span>Ultima: {formatDateLong(bici.ultima_manutenzione)}</span>
+                      </div>
+                    )}
+                    {bici.prossima_manutenzione && (
+                      <div className={`ac-maint-row${maintenanceLate ? ' red' : maintenanceSoon ? ' yellow' : ''}`}>
+                        <IconCalendar />
+                        <span>Prossima: {formatDateLong(bici.prossima_manutenzione)}</span>
+                        {maintenanceLate && <span className="ac-badge red sm">Scaduta</span>}
+                        {!maintenanceLate && maintenanceSoon && <span className="ac-badge yellow sm">Imminente</span>}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {bici.note_admin && (
+                  <div className="ac-fleet-note">{bici.note_admin}</div>
+                )}
+
+                <button
+                  className="ac-btn ghost sm full"
+                  onClick={() => {
+                    setFleetModal(bici);
+                    setFleetEdit({
+                      stato:                bici.stato || 'disponibile',
+                      batteria_pct:         bici.batteria_pct ?? 100,
+                      note_admin:           bici.note_admin || '',
+                      ultima_manutenzione:  bici.ultima_manutenzione || '',
+                      prossima_manutenzione: bici.prossima_manutenzione || '',
+                    });
+                  }}
+                >
+                  <IconEdit /> Modifica
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        {flotta.length === 0 && !flottaLoading && (
+          <div className="ac-empty-state"><IconFlotta /><p>Nessuna bici trovata — esegui le migrazioni SQL</p></div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── REPORT VIEW ─────────────────────────────────────────────────────────────
+
+  function renderReport() {
+    if (reportLoading) return <div className="ac-spinner-center"><div className="ac-spinner" /></div>;
+    if (!report) return (
+      <div className="ac-empty-state">
+        <IconReport />
+        <p>Nessun dato disponibile</p>
+        <button className="ac-btn primary sm" onClick={loadReport}>Carica Report</button>
+      </div>
+    );
+
+    const maxRev = Math.max(...(report.by_month || []).map(m => m.revenue), 1);
+    const tipoLabels = { mezza_mattina: '½ Mattina', mezza_pomeriggio: '½ Pomeriggio', intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno', '4_ore': '4 Ore', '3_piu_giorni': '3+ Giorni' };
+
+    return (
+      <div className="ac-report">
+        <div className="ac-report-stats">
+          <div className="ac-report-stat">
+            <div className="ac-stat-label">Incasso Totale</div>
+            <div className="ac-stat-value">€{Number(report.total_revenue).toFixed(0)}</div>
+          </div>
+          <div className="ac-report-stat">
+            <div className="ac-stat-label">Prenotazioni Pagate</div>
+            <div className="ac-stat-value">{report.total_bookings}</div>
+          </div>
+          <div className="ac-report-stat">
+            <div className="ac-stat-label">Valore Medio</div>
+            <div className="ac-stat-value">€{Number(report.avg_booking).toFixed(0)}</div>
+          </div>
+        </div>
+
+        <div className="ac-report-section">
+          <h3 className="ac-section-title">Andamento Mensile</h3>
+          <div className="ac-bar-chart">
+            {(report.by_month || []).map(({ month, revenue }) => (
+              <div key={month} className="ac-bar-row">
+                <span className="ac-bar-month">{formatMonth(month)}</span>
+                <div className="ac-bar-track">
+                  <div
+                    className="ac-bar-fill"
+                    style={{ width: `${(revenue / maxRev) * 100}%` }}
                   />
                 </div>
-              </>
+                <span className="ac-bar-value">€{revenue.toFixed(0)}</span>
+              </div>
+            ))}
+            {(report.by_month || []).length === 0 && (
+              <p className="ac-empty-sm">Nessun dato per il periodo selezionato</p>
             )}
-
-            <div className="admin-modal-actions">
-              <button
-                className={`admin-modal-btn ${depositModal.action === 'release' ? 'confirm' : 'confirm'}`}
-                onClick={handleDeposit}
-                disabled={depositLoading || (depositModal.action === 'capture' && !depositAmount)}
-                style={depositModal.action === 'release' ? { background: '#166534', borderColor: '#166534' } : {}}
-              >
-                {depositLoading
-                  ? 'In corso…'
-                  : depositModal.action === 'release'
-                    ? '✓ Sblocca €1.000'
-                    : `⚠ Incassa €${parseFloat(depositAmount || 0).toFixed(2)}`}
-              </button>
-              <button
-                className="admin-modal-btn cancel-btn"
-                onClick={() => { setDepositModal(null); setDepositAmount(''); }}
-                disabled={depositLoading}
-              >
-                Annulla
-              </button>
-            </div>
           </div>
         </div>
-      )}
 
-      {/* Email Modal */}
-      {emailModal && (
-        <div className="admin-modal-overlay" onClick={e => e.target === e.currentTarget && setEmailModal(null)}>
-          <div className="admin-modal" style={{ maxWidth: 520 }}>
+        <div className="ac-report-section">
+          <h3 className="ac-section-title">Per Tipo di Noleggio</h3>
+          <div className="ac-type-table">
+            {Object.entries(report.by_type || {}).sort(([,a],[,b]) => b-a).map(([tipo, rev]) => (
+              <div key={tipo} className="ac-type-row">
+                <span className="ac-type-label">{tipoLabels[tipo] || tipo}</span>
+                <span className="ac-type-value">€{Number(rev).toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── MODALS ───────────────────────────────────────────────────────────────────
+
+  function renderCheckinModal() {
+    const b = checkinModal;
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setCheckinModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>Check-in — {b.cliente_nome}</h2>
+            <button className="ac-icon-btn" onClick={() => setCheckinModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Bici <strong>#{b.bicicletta_id}</strong> · {tipoLabel(b.tipo_noleggio)} · {formatDateIT(b.data_ritiro)} {b.orario_ritiro?.substring(0,5)}
+          </div>
+
+          <div className="ac-photo-grid">
+            <PhotoUpload label="Documento identità" value={docFoto} onChange={setDocFoto} inputRef={docFotoRef} />
+            <PhotoUpload label="Bici alla consegna" value={biciFotoOut} onChange={setBiciFotoOut} inputRef={bikeOutRef} />
+          </div>
+
+          <div className="ac-field">
+            <label className="ac-label">Note (opzionale)</label>
+            <textarea className="ac-textarea" rows={3} placeholder="Es. Casco taglia L, ruote gonfie..." value={checkinNote} onChange={e => setCheckinNote(e.target.value)} />
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleCheckin} disabled={checkinLoading}>
+              {checkinLoading ? 'Salvataggio…' : '✓ Conferma Check-in'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setCheckinModal(null)} disabled={checkinLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderCheckoutModal() {
+    const b = checkoutModal;
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setCheckoutModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>Checkout — {b.cliente_nome}</h2>
+            <button className="ac-icon-btn" onClick={() => setCheckoutModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Bici <strong>#{b.bicicletta_id}</strong> · Restituzione prevista {formatDateIT(b.data_restituzione)} {b.orario_restituzione?.substring(0,5)}
+          </div>
+
+          <PhotoUpload label="Bici al rientro" value={biciFotoIn} onChange={setBiciFotoIn} inputRef={bikeInRef} />
+
+          <div className="ac-field">
+            <label className="ac-label">Note rientro (danni, osservazioni…)</label>
+            <textarea className="ac-textarea" rows={3} placeholder="Es. Graffio sul parafango anteriore..." value={checkoutNote} onChange={e => setCheckoutNote(e.target.value)} />
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn green full" onClick={handleCheckout} disabled={checkoutLoading}>
+              {checkoutLoading ? 'Salvataggio…' : '✓ Registra Rientro'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setCheckoutModal(null)} disabled={checkoutLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderFleetModal() {
+    const STATI = ['disponibile', 'noleggiata', 'manutenzione', 'guasto'];
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setFleetModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>Modifica — {fleetModal.nome}</h2>
+            <button className="ac-icon-btn" onClick={() => setFleetModal(null)}><IconX /></button>
+          </div>
+
+          <div className="ac-field">
+            <label className="ac-label">Stato</label>
+            <select className="ac-select" value={fleetEdit.stato} onChange={e => setFleetEdit(p => ({ ...p, stato: e.target.value }))}>
+              {STATI.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Carica batteria ({fleetEdit.batteria_pct}%)</label>
+            <input className="ac-input" type="range" min="0" max="100" value={fleetEdit.batteria_pct}
+              onChange={e => setFleetEdit(p => ({ ...p, batteria_pct: Number(e.target.value) }))} />
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Ultima manutenzione</label>
+            <input className="ac-input" type="date" value={fleetEdit.ultima_manutenzione}
+              onChange={e => setFleetEdit(p => ({ ...p, ultima_manutenzione: e.target.value }))} />
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Prossima manutenzione</label>
+            <input className="ac-input" type="date" value={fleetEdit.prossima_manutenzione}
+              onChange={e => setFleetEdit(p => ({ ...p, prossima_manutenzione: e.target.value }))} />
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Note admin</label>
+            <textarea className="ac-textarea" rows={2} value={fleetEdit.note_admin}
+              onChange={e => setFleetEdit(p => ({ ...p, note_admin: e.target.value }))} />
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleFleetSave} disabled={fleetLoading}>
+              {fleetLoading ? 'Salvataggio…' : 'Salva Modifiche'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setFleetModal(null)} disabled={fleetLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderDepositModal() {
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setDepositModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>{depositModal.action === 'release' ? '✓ Rilascia Cauzione' : '⚠ Incassa Danni'}</h2>
+            <button className="ac-icon-btn" onClick={() => setDepositModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">Cliente: <strong>{depositModal.nome}</strong></div>
+
+          {depositModal.action === 'release' ? (
+            <p className="ac-modal-desc">
+              I <strong style={{ color: '#4ADE80' }}>€1.000 bloccati</strong> sulla carta del cliente verranno sbloccati immediatamente. Operazione irreversibile.
+            </p>
+          ) : (
+            <div className="ac-field">
+              <label className="ac-label">Importo danni da trattenere (max €1.000)</label>
+              <input className="ac-input" type="number" min="1" max="1000" step="0.01" placeholder="es. 150"
+                value={depositAmount} onChange={e => setDepositAmount(e.target.value)} autoFocus />
+            </div>
+          )}
+
+          <div className="ac-modal-footer">
+            <button
+              className={`ac-btn full${depositModal.action === 'release' ? ' green' : ' primary'}`}
+              onClick={handleDeposit}
+              disabled={depositLoading || (depositModal.action === 'capture' && !depositAmount)}
+            >
+              {depositLoading ? 'In corso…' : depositModal.action === 'release' ? '✓ Sblocca €1.000' : `⚠ Incassa €${parseFloat(depositAmount || 0).toFixed(2)}`}
+            </button>
+            <button className="ac-btn ghost" onClick={() => { setDepositModal(null); setDepositAmount(''); }} disabled={depositLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderEmailModal() {
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setEmailModal(null)}>
+        <div className="ac-modal" style={{ maxWidth: 520 }}>
+          <div className="ac-modal-header">
             <h2>✉ Invia Email</h2>
-            <div className="admin-modal-sub">
-              A: <strong>{emailModal.nome}</strong> &lt;{emailModal.email}&gt;
-            </div>
+            <button className="ac-icon-btn" onClick={() => setEmailModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">A: <strong>{emailModal.nome}</strong> &lt;{emailModal.email}&gt;</div>
 
-            <div className="admin-form-group" style={{ marginTop: 12 }}>
-              <label>Template rapido</label>
-              <select
-                style={{ background: '#1E293B', color: '#F1F5F9', border: '1px solid #334155',
-                         borderRadius: 6, padding: '8px 10px', width: '100%', fontSize: '0.88rem' }}
-                onChange={e => {
-                  const tpl = EMAIL_TEMPLATES[parseInt(e.target.value)];
-                  if (tpl) { setEmailSubject(tpl.subject); setEmailMessage(tpl.message); }
-                }}
-                defaultValue=""
-              >
-                <option value="" disabled>Scegli un template…</option>
-                {EMAIL_TEMPLATES.map((tpl, i) => (
-                  <option key={i} value={i}>{tpl.label}</option>
-                ))}
-              </select>
-            </div>
+          <div className="ac-field">
+            <label className="ac-label">Template rapido</label>
+            <select className="ac-select" onChange={e => { const t = EMAIL_TEMPLATES[e.target.value]; if (t) { setEmailSubject(t.subject); setEmailMessage(t.message); } }} defaultValue="">
+              <option value="" disabled>Scegli template…</option>
+              {EMAIL_TEMPLATES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
+            </select>
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Oggetto</label>
+            <input className="ac-input" type="text" placeholder="Oggetto email" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Messaggio</label>
+            <textarea className="ac-textarea" rows={7} value={emailMessage} onChange={e => setEmailMessage(e.target.value)} />
+          </div>
 
-            <div className="admin-form-group">
-              <label>Oggetto</label>
-              <input
-                type="text"
-                placeholder="Oggetto dell'email"
-                value={emailSubject}
-                onChange={e => setEmailSubject(e.target.value)}
-              />
-            </div>
-            <div className="admin-form-group">
-              <label>Messaggio</label>
-              <textarea
-                rows={7}
-                placeholder="Testo del messaggio…"
-                value={emailMessage}
-                onChange={e => setEmailMessage(e.target.value)}
-                style={{ resize: 'vertical', background: '#1E293B', color: '#F1F5F9',
-                         border: '1px solid #334155', borderRadius: 6, padding: '8px 10px',
-                         width: '100%', fontSize: '0.88rem', fontFamily: 'inherit' }}
-              />
-            </div>
-
-            <div className="admin-modal-actions">
-              <button
-                className="admin-modal-btn confirm"
-                onClick={handleSendEmail}
-                disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}
-              >
-                {emailLoading ? 'Invio…' : '✉ Invia'}
-              </button>
-              <button
-                className="admin-modal-btn cancel-btn"
-                onClick={() => setEmailModal(null)}
-                disabled={emailLoading}
-              >
-                Annulla
-              </button>
-            </div>
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleSendEmail} disabled={emailLoading || !emailSubject.trim() || !emailMessage.trim()}>
+              {emailLoading ? 'Invio…' : '✉ Invia'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setEmailModal(null)} disabled={emailLoading}>Annulla</button>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {/* Damage Modal */}
-      {damageModal && (
-        <div className="admin-modal-overlay" onClick={e => e.target === e.currentTarget && setDamageModal(null)}>
-          <div className="admin-modal">
-            <h2>Addebita Danno</h2>
-            <div className="admin-modal-sub">
-              Cliente: <strong>{damageModal.nome}</strong>
-            </div>
+  function renderDamageModal() {
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setDamageModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>Addebita Danno Extra</h2>
+            <button className="ac-icon-btn" onClick={() => setDamageModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">Cliente: <strong>{damageModal.nome}</strong></div>
 
-            <div className="admin-form-group">
-              <label>Importo danni (€)</label>
-              <input
-                type="number"
-                min="1"
-                max="5000"
-                step="0.01"
-                placeholder="es. 80"
-                value={damageAmount}
-                onChange={e => setDamageAmount(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div className="admin-form-group">
-              <label>Motivo (opzionale)</label>
-              <input
-                type="text"
-                placeholder="es. Ruota anteriore rotta"
-                value={damageMotivo}
-                onChange={e => setDamageMotivo(e.target.value)}
-              />
-            </div>
+          <div className="ac-field">
+            <label className="ac-label">Importo (€) — max €5.000</label>
+            <input className="ac-input" type="number" min="1" max="5000" step="0.01" placeholder="es. 80"
+              value={damageAmount} onChange={e => setDamageAmount(e.target.value)} autoFocus />
+          </div>
+          <div className="ac-field">
+            <label className="ac-label">Motivo (opzionale)</label>
+            <input className="ac-input" type="text" placeholder="Es. Ruota anteriore rotta"
+              value={damageMotivo} onChange={e => setDamageMotivo(e.target.value)} />
+          </div>
 
-            <div className="admin-modal-actions">
-              <button
-                className="admin-modal-btn confirm"
-                onClick={chargeDamage}
-                disabled={damageLoading || !damageAmount}
-              >
-                {damageLoading ? 'Addebito…' : 'Addebita'}
-              </button>
-              <button
-                className="admin-modal-btn cancel-btn"
-                onClick={() => { setDamageModal(null); setDamageAmount(''); setDamageMotivo(''); }}
-                disabled={damageLoading}
-              >
-                Annulla
-              </button>
-            </div>
+          <div className="ac-modal-footer">
+            <button className="ac-btn danger full" onClick={chargeDamage} disabled={damageLoading || !damageAmount}>
+              {damageLoading ? 'Addebito…' : 'Addebita'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => { setDamageModal(null); setDamageAmount(''); setDamageMotivo(''); }} disabled={damageLoading}>Annulla</button>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
 }

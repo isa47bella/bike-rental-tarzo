@@ -56,7 +56,25 @@ ALTER TABLE biciclette   DISABLE ROW LEVEL SECURITY;
 
 -- ─── Sistema Cauzione / Salvataggio Carta ─────────────────────────────────────
 -- Eseguire anche nel SQL Editor di Supabase (progetto live)
-ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_customer_id       VARCHAR(200);
-ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_payment_method_id VARCHAR(200);
-ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_status             VARCHAR(50)   DEFAULT NULL;
-ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_amount             DECIMAL(10,2) DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_customer_id        VARCHAR(200);
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS stripe_payment_method_id  VARCHAR(200);
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_status              VARCHAR(50)   DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS danno_amount              DECIMAL(10,2) DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS cauzione_pi_id            VARCHAR(200);
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS cauzione_status           VARCHAR(50)   DEFAULT 'pending';
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS cauzione_captured_amount  DECIMAL(10,2) DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS accessori                 TEXT          DEFAULT '';
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS checkin_at                TIMESTAMPTZ   DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS checkout_at               TIMESTAMPTZ   DEFAULT NULL;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS checkin_note              TEXT;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS checkout_note             TEXT;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS documento_foto            TEXT;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS bici_foto_consegna        TEXT;
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS bici_foto_rientro         TEXT;
+
+-- ─── Colonne flotta biciclette ────────────────────────────────────────────────
+ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS stato                  VARCHAR(30)  DEFAULT 'disponibile';
+ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS batteria_pct           INT          DEFAULT 100;
+ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS note_admin             TEXT;
+ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS ultima_manutenzione    DATE;
+ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS prossima_manutenzione  DATE;
