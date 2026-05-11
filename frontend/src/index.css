@@ -3231,3 +3231,174 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
 @media (max-width: 480px) {
   .ac-cau-summary { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ─── Kebab trigger button (⋮) ───────────────────────────────────────────────── */
+
+.ac-kebab-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid #1A2840;
+  color: #5A7090;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  padding: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ac-kebab-btn:hover {
+  background: #1A2840;
+  color: #E2EAF4;
+  border-color: #2A3D58;
+}
+
+/* Note indicator dot in table cell */
+.ac-note-indicator {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EA580C;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ─── Action Sheet Modal (⋮ menu) ────────────────────────────────────────────── */
+
+.ac-overlay-sheet {
+  align-items: center;
+}
+
+.ac-actionsheet {
+  background: #0D1520;
+  border: 1px solid #1E3350;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.4);
+  animation: ac-sheet-in 0.18s ease;
+  scrollbar-width: thin;
+  scrollbar-color: #1A2840 transparent;
+}
+
+@keyframes ac-sheet-in {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ac-actionsheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid #1A2840;
+  position: sticky;
+  top: 0;
+  background: #0D1520;
+  z-index: 1;
+}
+
+.ac-actionsheet-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #E2EAF4;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ac-actionsheet-meta {
+  font-size: 12px;
+  color: #5A7090;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ac-actionsheet-close {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: #1A2840;
+  border: none;
+  color: #8FA8C8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  margin-top: 2px;
+}
+.ac-actionsheet-close:hover { background: #2A3D58; color: #E2EAF4; }
+
+.ac-actionsheet-body {
+  padding: 6px 0 10px;
+}
+
+.ac-actionsheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  color: #C5D6ED;
+  font-size: 14px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.ac-actionsheet-btn:hover:not(:disabled) { background: #1A2840; color: #E2EAF4; }
+.ac-actionsheet-btn:hover:not(:disabled) svg { opacity: 1; }
+.ac-actionsheet-btn svg { opacity: 0.6; flex-shrink: 0; }
+.ac-actionsheet-btn span { flex: 1; }
+.ac-actionsheet-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.ac-actionsheet-btn.danger { color: #f87171; }
+.ac-actionsheet-btn.danger svg { opacity: 0.75; }
+.ac-actionsheet-btn.danger:hover:not(:disabled) { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+.ac-actionsheet-sep {
+  height: 1px;
+  background: #1A2840;
+  margin: 4px 0;
+}
+
+.ac-actionsheet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #EA580C;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Mobile: slide up from bottom */
+@media (max-width: 640px) {
+  .ac-overlay-sheet { align-items: flex-end; }
+  .ac-actionsheet {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    max-height: 85vh;
+  }
+  @keyframes ac-sheet-in {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}

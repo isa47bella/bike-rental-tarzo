@@ -9,7 +9,7 @@ const express  = require('express');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
-const { sendFirmaLinkEmail } = require('../lib/email');
+const { sendFirmaLinkEmail, sendReminderEmail } = require('../lib/email');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -148,6 +148,54 @@ router.get('/firma-reminder', cronAuth, async (req, res) => {
   const failed = results.filter(r => r.status === 'failed').length;
   console.log(`[CRON firma-reminder] Done — ${sent} inviati, ${failed} falliti`);
 
+  return res.json({ processed: bookings.length, sent, failed, results });
+});
+
+// ─── GET /api/cron/reminder ───────────────────────────────────────────────────
+// Invia promemoria ritiro ai clienti con noleggio domani
+
+router.get('/reminder', cronAuth, async (req, res) => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+
+  console.log(`[CRON reminder] Cerco prenotazioni per il ${dateStr}`);
+
+  const { data: bookings, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, orario_ritiro, data_ritiro')
+    .eq('data_ritiro', dateStr)
+    .eq('pagamento_status', 'paid');
+
+  if (error) {
+    console.error('[CRON reminder] Errore Supabase:', error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!bookings || bookings.length === 0) {
+    console.log('[CRON reminder] Nessuna prenotazione domani');
+    return res.json({ processed: 0, results: [] });
+  }
+
+  const results = [];
+  for (const booking of bookings) {
+    if (!booking.cliente_email || booking.cliente_email === 'noemail@bikerentaltarzo.it') {
+      results.push({ id: booking.id, status: 'skipped', reason: 'no email' });
+      continue;
+    }
+    try {
+      await sendReminderEmail(booking);
+      console.log(`[CRON reminder] Inviato a ${booking.cliente_email}`);
+      results.push({ id: booking.id, status: 'sent' });
+    } catch (e) {
+      console.error(`[CRON reminder] ${booking.id} — errore: ${e.message}`);
+      results.push({ id: booking.id, status: 'failed', error: e.message });
+    }
+  }
+
+  const sent   = results.filter(r => r.status === 'sent').length;
+  const failed = results.filter(r => r.status === 'failed').length;
+  console.log(`[CRON reminder] Done — ${sent} inviati, ${failed} falliti`);
   return res.json({ processed: bookings.length, sent, failed, results });
 });
 

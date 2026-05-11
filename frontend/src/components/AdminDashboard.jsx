@@ -118,6 +118,23 @@ const IconBell         = IC(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9
 const IconDownload     = IC(<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>);
 const IconNote         = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="10" y1="17" x2="8" y2="17"/></>);
 
+// ─── Bike catalog ────────────────────────────────────────────────────────────
+
+const BICI = [
+  { id: 1,  nome: 'E-City KTM #1', tipo: 'E-City Bike KTM 500Wh'     },
+  { id: 2,  nome: 'E-City KTM #2', tipo: 'E-City Bike KTM 500Wh'     },
+  { id: 3,  nome: 'E-MTB KTM #1',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 4,  nome: 'E-MTB KTM #2',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 5,  nome: 'E-MTB KTM #3',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 6,  nome: 'E-MTB KTM #4',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 7,  nome: 'E-MTB KTM #5',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 8,  nome: 'E-MTB KTM #6',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 9,  nome: 'E-MTB KTM #7',  tipo: 'E-MTB KTM 625Wh BOSCH CX' },
+  { id: 10, nome: 'E-MTB Bimbo',   tipo: 'Haibike Hardfour 400Wh'    },
+];
+function biciNome(id) { return BICI.find(b => b.id === Number(id))?.nome || `Bici #${id}`; }
+function biciTipo(id) { return BICI.find(b => b.id === Number(id))?.tipo || '—'; }
+
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
 const NAV = [
@@ -148,14 +165,49 @@ const VIEW_TITLES = {
 
 const EMAIL_TEMPLATES = [
   {
+    label: 'Promemoria ritiro domani',
+    subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
+    message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
+  },
+  {
+    label: 'Conferma rimborso',
+    subject: 'Rimborso confermato — Bike Rental Tarzo',
+    message: `Abbiamo elaborato il rimborso per la tua prenotazione.\n\nI fondi torneranno sul tuo conto entro 5-10 giorni lavorativi, a seconda della tua banca.\n\nCi dispiace non aver potuto ospitarti questa volta. Speriamo di vederti presto sulle Colline del Prosecco!\n\nPer qualsiasi dubbio contattaci via WhatsApp al +39 392 8614635.`,
+  },
+  {
     label: 'Cauzione non autorizzata',
     subject: 'Importante: cauzione non autorizzata — Bike Rental Tarzo',
     message: `Abbiamo tentato di bloccare la cauzione di €1.000 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine.\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email.\n\nGrazie per la comprensione.`,
   },
   {
-    label: 'Promemoria ritiro',
-    subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
-    message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
+    label: 'Cambio bicicletta',
+    subject: 'Aggiornamento prenotazione: cambio bicicletta — Bike Rental Tarzo',
+    message: `Ti informiamo che per la tua prenotazione è stato necessario assegnarti una bicicletta diversa rispetto a quella originale.\n\nLa bicicletta che riceverai è della stessa tipologia e qualità. Il tuo noleggio non subisce altre modifiche.\n\nPer qualsiasi domanda siamo disponibili via WhatsApp al +39 392 8614635.`,
+  },
+  {
+    label: 'Ritardo restituzione',
+    subject: 'Promemoria restituzione bicicletta — Bike Rental Tarzo',
+    message: `Ci risulta che la bicicletta noleggiata non sia stata ancora restituita all'orario previsto.\n\nTi chiediamo di riconsegnare la bici il prima possibile in Via Pecol 22, Arfanta di Tarzo (TV).\n\nIn caso di difficoltà contattaci subito via WhatsApp al +39 392 8614635.\n\nGrazie per la collaborazione.`,
+  },
+  {
+    label: 'Danni rilevati',
+    subject: 'Comunicazione danni — Bike Rental Tarzo',
+    message: `A seguito dell'ispezione della bicicletta restituita, abbiamo rilevato dei danni che non erano presenti al momento della consegna.\n\nAbbiamo proceduto con l'addebito del costo di riparazione sulla tua carta, come previsto dal contratto di noleggio firmato.\n\nPer qualsiasi chiarimento siamo disponibili via WhatsApp al +39 392 8614635 o via email.\n\nGrazie per la comprensione.`,
+  },
+  {
+    label: 'Ringraziamento post-noleggio',
+    subject: 'Grazie per aver scelto Bike Rental Tarzo!',
+    message: `Grazie per aver noleggiato con noi! Speriamo che tu abbia trascorso una splendida giornata sulle Colline del Prosecco.\n\nSe ti è piaciuta l'esperienza, ti saremmo grati se lasciassi una recensione su Google — ci aiuta molto a far conoscere questo posto magico!\n\nSperiamo di rivederti presto!\n\nLo staff di Bike Rental Tarzo 🚲`,
+  },
+  {
+    label: 'Avviso meteo avverso',
+    subject: 'Avviso meteo per il tuo noleggio — Bike Rental Tarzo',
+    message: `Ti informiamo che per la data del tuo noleggio sono previste condizioni meteo avverse (pioggia/temporale).\n\nSe desideri spostare la data, contattaci il prima possibile via WhatsApp al +39 392 8614635 e troveremo insieme una soluzione.\n\nIn alternativa, puoi comunque effettuare il noleggio: le nostre bici sono adatte anche a condizioni umide, ma ti consigliamo abbigliamento impermeabile.\n\nGrazie per la comprensione.`,
+  },
+  {
+    label: 'Richiesta recensione',
+    subject: 'Come è andata la tua esperienza? — Bike Rental Tarzo',
+    message: `Speriamo che il tuo noleggio sia stato di tuo gradimento!\n\nLa tua opinione è molto importante per noi. Se hai 2 minuti, lascia una recensione su Google — ci aiuta enormemente:\n\nhttps://g.page/r/[LINK_GOOGLE]\n\nE se qualcosa non ha funzionato al meglio, scrivici direttamente via WhatsApp al +39 392 8614635: vogliamo sempre migliorare.\n\nGrazie e a presto!`,
   },
   {
     label: 'Richiesta modifica',
@@ -277,6 +329,26 @@ export default function AdminDashboard() {
   const [pushSub,     setPushSub]     = useState(null);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushStatus,  setPushStatus]  = useState('idle'); // idle | enabled | error | unsupported
+
+  // Action sheet (⋮) in prenotazioni table — modal, no clipping issues
+  const [actionSheet, setActionSheet] = useState(null); // booking object or null
+
+  // Refund modal
+  const [refundModal,   setRefundModal]   = useState(null); // {id, nome, email, prezzo}
+  const [refundAmount,  setRefundAmount]  = useState('');
+  const [refundType,    setRefundType]    = useState('full'); // 'full' | 'partial'
+  const [refundMotivo,  setRefundMotivo]  = useState('');
+  const [refundLoading, setRefundLoading] = useState(false);
+
+  // Reschedule modal
+  const [rescheduleModal,   setRescheduleModal]   = useState(null); // booking object
+  const [rescheduleForm,    setRescheduleForm]    = useState({});
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+
+  // Cambia bici modal
+  const [cambiaBiciModal,   setCambiaBiciModal]   = useState(null); // {id, nome, bicicletta_id}
+  const [cambiaBiciId,      setCambiaBiciId]      = useState('');
+  const [cambiaBiciLoading, setCambiaBiciLoading] = useState(false);
 
   async function handleSendFirma(bookingId) {
     setFirmaLoading(prev => ({ ...prev, [bookingId]: true }));
@@ -631,6 +703,98 @@ export default function AdminDashboard() {
     finally { setEmailLoading(false); }
   }
 
+  // ─── WhatsApp rapido ─────────────────────────────────────────────────────────
+
+  function handleWhatsApp(b) {
+    const tel = (b.cliente_telefono || '').replace(/[\s\-()]/g, '').replace(/^\+/, '');
+    if (!tel) return alert('Numero di telefono non disponibile');
+    const msg = encodeURIComponent(
+      `Ciao ${b.cliente_nome}, ti scrivo riguardo alla tua prenotazione bici del ${b.data_ritiro} — Bike Rental Tarzo.`
+    );
+    window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
+  }
+
+  // ─── Stampa riepilogo ────────────────────────────────────────────────────────
+
+  function handlePrintRiepilogo(b) {
+    const fmtD = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '—';
+    const shortId = b.id.toUpperCase().slice(0, 8);
+    const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Riepilogo ${shortId} — Bike Rental Tarzo</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}@page{margin:20mm 16mm;size:A4}body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a1a;background:#f0f4f0}.page{max-width:700px;margin:0 auto;background:#fff}.hdr{background:#2D8659;color:#fff;padding:24px 32px}.hdr h1{font-size:1.2rem;margin-bottom:4px}.hdr p{font-size:.76rem;opacity:.82}.body{padding:24px 32px}.row{display:flex;border-bottom:1px solid #eee;padding:9px 0}.row:last-child{border:none}.lbl{color:#777;width:42%;font-size:.87rem}.val{font-weight:600;font-size:.87rem}.code{background:#1a5c3a;color:#fff;padding:2px 10px;border-radius:4px;font-family:monospace;letter-spacing:.1em}.ftr{text-align:center;margin-top:20px;font-size:.69rem;color:#aaa;border-top:1px solid #ddd;padding:12px 32px}.btn{display:block;margin:16px auto 0;padding:10px 28px;background:#2D8659;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600}@media print{.btn{display:none!important}body{background:#fff}}</style>
+</head><body><div class="page">
+<div class="hdr"><h1>🚲 Riepilogo Prenotazione</h1><p>Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV)</p></div>
+<div class="body">
+<div class="row"><div class="lbl">Codice</div><div class="val"><span class="code">${shortId}</span></div></div>
+<div class="row"><div class="lbl">Cliente</div><div class="val">${b.cliente_nome}</div></div>
+<div class="row"><div class="lbl">Email</div><div class="val">${b.cliente_email || '—'}</div></div>
+<div class="row"><div class="lbl">Telefono</div><div class="val">${b.cliente_telefono || '—'}</div></div>
+<div class="row"><div class="lbl">Tipo noleggio</div><div class="val">${tipoLabel(b.tipo_noleggio)}</div></div>
+<div class="row"><div class="lbl">Ritiro</div><div class="val">${fmtD(b.data_ritiro)} alle ${(b.orario_ritiro||'').slice(0,5)}</div></div>
+<div class="row"><div class="lbl">Restituzione</div><div class="val">${fmtD(b.data_restituzione)} alle ${(b.orario_restituzione||'').slice(0,5)}</div></div>
+${Number(b.giorni) > 1 ? `<div class="row"><div class="lbl">Giorni</div><div class="val">${b.giorni} giorni</div></div>` : ''}
+<div class="row"><div class="lbl">Bicicletta</div><div class="val">${biciNome(b.bicicletta_id)} — ${biciTipo(b.bicicletta_id)}</div></div>
+<div class="row"><div class="lbl">Totale pagato</div><div class="val">€${Number(b.prezzo_totale).toFixed(2)}</div></div>
+<div class="row"><div class="lbl">Stato</div><div class="val">${b.pagamento_status === 'paid' ? '✓ Pagata' : b.pagamento_status}</div></div>
+${b.firma_at ? `<div class="row"><div class="lbl">Contratto</div><div class="val">✍️ Firmato il ${new Date(b.firma_at).toLocaleDateString('it-IT')}</div></div>` : ''}
+${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class="val">${b.note_admin}</div></div>` : ''}
+</div>
+<button class="btn" onclick="window.print()">Stampa / Salva PDF</button>
+<div class="ftr">Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV) · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO</div>
+</div></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, '_blank');
+    if (win) setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  // ─── Refund ──────────────────────────────────────────────────────────────────
+
+  async function handleRefund() {
+    const amount = refundType === 'full' ? null : parseFloat(refundAmount);
+    if (refundType === 'partial' && (!amount || amount <= 0)) return alert('Inserisci un importo valido');
+    if (!confirm(`Rimborsare ${refundType === 'full' ? 'l\'intero importo' : `€${amount?.toFixed(2)}`} a ${refundModal.nome}?`)) return;
+    setRefundLoading(true);
+    try {
+      const result = await adminApi.refundBooking(refundModal.id, amount || undefined, refundMotivo);
+      alert(`Rimborso di €${result.amount?.toFixed(2)} elaborato con successo.\nI fondi torneranno entro 5-10 giorni lavorativi.`);
+      setRefundModal(null); setRefundAmount(''); setRefundMotivo('');
+      await loadBookings(filter);
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setRefundLoading(false); }
+  }
+
+  // ─── Reschedule ──────────────────────────────────────────────────────────────
+
+  async function handleReschedule() {
+    const { data_ritiro, tipo_noleggio, giorni = 1 } = rescheduleForm;
+    if (!data_ritiro || !tipo_noleggio) return alert('Compila data e tipo noleggio');
+    setRescheduleLoading(true);
+    try {
+      await adminApi.rescheduleBooking(rescheduleModal.id, data_ritiro, tipo_noleggio, Number(giorni));
+      alert('Prenotazione spostata con successo!');
+      setRescheduleModal(null);
+      await loadBookings(filter);
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setRescheduleLoading(false); }
+  }
+
+  // ─── Cambia bici ─────────────────────────────────────────────────────────────
+
+  async function handleCambiaBici() {
+    const newId = parseInt(cambiaBiciId, 10);
+    if (!newId) return;
+    if (!confirm(`Assegnare la bici #${newId} a ${cambiaBiciModal.nome}?`)) return;
+    setCambiaBiciLoading(true);
+    try {
+      await adminApi.assegnaBici(cambiaBiciModal.id, newId);
+      alert(`Bici #${newId} assegnata con successo!`);
+      setCambiaBiciModal(null); setCambiaBiciId('');
+      await loadBookings(filter);
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setCambiaBiciLoading(false); }
+  }
+
   // ─── Manual booking ─────────────────────────────────────────────────────────
 
   const PREZZI_MANUAL = { mezza_mattina: 35, mezza_pomeriggio: 35, intera_giornata: 45 };
@@ -858,14 +1022,18 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Modals ── */}
-      {checkinModal  && renderCheckinModal()}
-      {checkoutModal && renderCheckoutModal()}
-      {fleetModal    && renderFleetModal()}
-      {depositModal  && renderDepositModal()}
-      {emailModal    && renderEmailModal()}
-      {damageModal   && renderDamageModal()}
-      {manualModal   && renderManualModal()}
-      {noteModal     && renderNoteModal()}
+      {checkinModal      && renderCheckinModal()}
+      {checkoutModal     && renderCheckoutModal()}
+      {fleetModal        && renderFleetModal()}
+      {depositModal      && renderDepositModal()}
+      {emailModal        && renderEmailModal()}
+      {damageModal       && renderDamageModal()}
+      {manualModal       && renderManualModal()}
+      {noteModal         && renderNoteModal()}
+      {refundModal       && renderRefundModal()}
+      {rescheduleModal   && renderRescheduleModal()}
+      {cambiaBiciModal   && renderCambiaBiciModal()}
+      {actionSheet       && renderActionSheet()}
 
       {/* ── Mobile bottom nav ── */}
       <nav className="ac-bottom-nav">
@@ -1266,14 +1434,13 @@ export default function AdminDashboard() {
                     <th>Cliente</th>
                     <th>Tipo</th>
                     <th>Ritiro</th>
-                    <th>Restituzione</th>
+                    <th>Rest.</th>
                     <th>Bici</th>
-                    <th>Prezzo</th>
-                    <th>Status</th>
+                    <th>€</th>
+                    <th>Stato</th>
                     {filter === 'paid' && <th>Firma</th>}
                     {filter === 'paid' && <th>Cauzione</th>}
-                    {filter === 'paid' && <th>Note</th>}
-                    {filter === 'paid' && <th>Azioni</th>}
+                    <th style={{ width: 40 }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1281,7 +1448,10 @@ export default function AdminDashboard() {
                     <tr key={b.id}>
                       <td><span className="ac-code">{b.id.toUpperCase().substring(0, 8)}</span></td>
                       <td>
-                        <div className="ac-cell-name">{b.cliente_nome}</div>
+                        <div className="ac-cell-name">
+                          {b.cliente_nome}
+                          {b.note_admin && <span className="ac-note-indicator" title={b.note_admin} />}
+                        </div>
                         <div className="ac-cell-sub">{b.cliente_email}</div>
                         <div className="ac-cell-sub">{b.cliente_telefono}</div>
                       </td>
@@ -1307,29 +1477,11 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       {filter === 'paid' && (
-                        <td style={{ whiteSpace: 'nowrap' }}>
+                        <td>
                           {b.firma_at
-                            ? (
-                              <>
-                                <span className="ac-badge green sm">✍️ Firmato</span>
-                                <button
-                                  className="ac-action-btn"
-                                  title="Vedi contratto firmato"
-                                  onClick={() => handleViewContratto(b.id)}
-                                ><IconFileText /></button>
-                              </>
-                            )
-                            : (
-                              <>
-                                <button
-                                  className="ac-action-btn email"
-                                  title="Invia link contratto via email"
-                                  onClick={() => handleSendFirma(b.id)}
-                                  disabled={firmaLoading[b.id]}
-                                >{firmaLoading[b.id] ? '…' : <IconMail />}</button>
-                                <button className="ac-action-btn" title="Copia link" onClick={() => copyFirmaLink(b.id)}><IconLink /></button>
-                              </>
-                            )}
+                            ? <span className="ac-badge green sm">✍️ Firmato</span>
+                            : <span className="ac-badge yellow sm">Da firmare</span>
+                          }
                         </td>
                       )}
                       {filter === 'paid' && (
@@ -1341,37 +1493,13 @@ export default function AdminDashboard() {
                           {(!b.cauzione_status || b.cauzione_status === 'pending') && <span className="ac-muted-dash">—</span>}
                         </td>
                       )}
-                      {filter === 'paid' && (
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            className={`ac-action-btn note${b.note_admin ? ' note-active' : ''}`}
-                            title={b.note_admin || 'Aggiungi nota interna'}
-                            onClick={() => { setNoteModal({ id: b.id, nome: b.cliente_nome }); setNoteText(b.note_admin || ''); }}
-                          ><IconNote /></button>
-                        </td>
-                      )}
-                      {filter === 'paid' && (
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          {b.cauzione_status === 'authorized' && (
-                            <>
-                              <button className="ac-action-btn release" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' })}>✓ Rilascia</button>
-                              <button className="ac-action-btn capture" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}>⚠ Danni</button>
-                            </>
-                          )}
-                          {b.cauzione_status !== 'authorized' && (
-                            <button
-                              className="ac-action-btn damage"
-                              onClick={() => setDamageModal({ id: b.id, nome: b.cliente_nome })}
-                              disabled={!b.stripe_payment_method_id || b.danno_status === 'charged'}
-                            >Extra</button>
-                          )}
-                          <button
-                            className="ac-action-btn email"
-                            onClick={() => { setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email }); setEmailSubject(''); setEmailMessage(''); }}
-                          ><IconMail /></button>
-                          <button className="ac-action-btn cancel" onClick={() => cancelBooking(b.id)}>Cancella</button>
-                        </td>
-                      )}
+                      <td style={{ textAlign: 'right', paddingRight: 8 }}>
+                        <button
+                          className="ac-kebab-btn"
+                          title="Azioni"
+                          onClick={() => setActionSheet(b)}
+                        >⋮</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -2075,7 +2203,7 @@ export default function AdminDashboard() {
               <select className="ac-select" value={f.bicicletta_id}
                 onChange={e => setManualField('bicicletta_id', e.target.value)}>
                 <option value="">Auto-assegna</option>
-                {[1,2,3,4,5].map(n => <option key={n} value={n}>Bici #{n}</option>)}
+                {BICI.map(b => <option key={b.id} value={b.id}>{b.nome} — {b.tipo}</option>)}
               </select>
             </div>
           </div>
@@ -2181,6 +2309,281 @@ export default function AdminDashboard() {
               <button className="ac-btn danger" onClick={() => setNoteText('')}>Cancella testo</button>
             )}
             <button className="ac-btn ghost" onClick={() => setNoteModal(null)} disabled={noteSaving}>Chiudi</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── ACTION SHEET MODAL (⋮) ──────────────────────────────────────────────────
+
+  function renderActionSheet() {
+    const b = actionSheet;
+    const isPaid = b.pagamento_status === 'paid';
+
+    function act(fn) { return () => { setActionSheet(null); fn(); }; }
+
+    return (
+      <div className="ac-overlay ac-overlay-sheet" onClick={() => setActionSheet(null)}>
+        <div className="ac-actionsheet" onClick={e => e.stopPropagation()}>
+
+          {/* Header */}
+          <div className="ac-actionsheet-header">
+            <div>
+              <div className="ac-actionsheet-name">
+                {b.cliente_nome}
+                {b.note_admin && <span className="ac-note-indicator" title={b.note_admin} />}
+              </div>
+              <div className="ac-actionsheet-meta">
+                <span className="ac-code" style={{ fontSize: 11 }}>{b.id.toUpperCase().slice(0,8)}</span>
+                <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio)} · Bici #{b.bicicletta_id}</span>
+              </div>
+            </div>
+            <button className="ac-actionsheet-close" onClick={() => setActionSheet(null)}>
+              <IconX />
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="ac-actionsheet-body">
+
+            {/* Contratto */}
+            {b.firma_at ? (
+              <button className="ac-actionsheet-btn" onClick={act(() => handleViewContratto(b.id))}>
+                <IconFileText /><span>Vedi contratto firmato</span>
+              </button>
+            ) : (
+              <button className="ac-actionsheet-btn" onClick={act(() => handleSendFirma(b.id))}>
+                <IconMail /><span>Invia link firma contratto</span>
+              </button>
+            )}
+            <button className="ac-actionsheet-btn" onClick={act(() => { setNoteModal({ id: b.id, nome: b.cliente_nome }); setNoteText(b.note_admin || ''); })}>
+              <IconNote /><span>Note interne</span>
+              {b.note_admin && <span className="ac-actionsheet-dot" />}
+            </button>
+
+            <div className="ac-actionsheet-sep" />
+
+            {/* Comunicazione */}
+            {isPaid && (
+              <button className="ac-actionsheet-btn" onClick={act(() => { setRefundModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email, prezzo: b.prezzo_totale }); setRefundType('full'); setRefundAmount(Number(b.prezzo_totale).toFixed(2)); setRefundMotivo(''); })}>
+                <IconEuro /><span>Rimborso Stripe</span>
+              </button>
+            )}
+            <button className="ac-actionsheet-btn" onClick={act(() => handleWhatsApp(b))}>
+              <IconBell /><span>WhatsApp rapido</span>
+            </button>
+            <button className="ac-actionsheet-btn" onClick={act(() => { setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email }); setEmailSubject(''); setEmailMessage(''); })}>
+              <IconMail /><span>Invia email</span>
+            </button>
+
+            <div className="ac-actionsheet-sep" />
+
+            {/* Modifica */}
+            {isPaid && (
+              <button className="ac-actionsheet-btn" onClick={act(() => { setRescheduleModal(b); setRescheduleForm({ data_ritiro: b.data_ritiro, tipo_noleggio: b.tipo_noleggio, giorni: b.giorni || 1 }); })}>
+                <IconCalendar /><span>Sposta data</span>
+              </button>
+            )}
+            {isPaid && (
+              <button className="ac-actionsheet-btn" onClick={act(() => { setCambiaBiciModal({ id: b.id, nome: b.cliente_nome, bicicletta_id: b.bicicletta_id }); setCambiaBiciId(String(b.bicicletta_id)); })}>
+                <IconBike /><span>Cambia bicicletta</span>
+              </button>
+            )}
+            <button className="ac-actionsheet-btn" onClick={act(() => handlePrintRiepilogo(b))}>
+              <IconDownload /><span>Stampa riepilogo PDF</span>
+            </button>
+
+            {/* Cauzione */}
+            {isPaid && b.cauzione_status === 'authorized' && (
+              <>
+                <div className="ac-actionsheet-sep" />
+                <button className="ac-actionsheet-btn" onClick={act(() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' }))}>
+                  <IconCheck /><span>Rilascia cauzione (€1.000)</span>
+                </button>
+                <button className="ac-actionsheet-btn" onClick={act(() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' }))}>
+                  <IconAlert /><span>Incassa cauzione per danni</span>
+                </button>
+              </>
+            )}
+            {isPaid && b.cauzione_status !== 'authorized' && (
+              <>
+                <div className="ac-actionsheet-sep" />
+                <button className="ac-actionsheet-btn"
+                  disabled={!b.stripe_payment_method_id || b.danno_status === 'charged'}
+                  onClick={act(() => setDamageModal({ id: b.id, nome: b.cliente_nome }))}>
+                  <IconCard /><span>Addebita danno extra</span>
+                </button>
+              </>
+            )}
+
+            <div className="ac-actionsheet-sep" />
+
+            {/* Cancella */}
+            <button className="ac-actionsheet-btn danger" onClick={act(() => cancelBooking(b.id))}>
+              <IconX /><span>Cancella prenotazione</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── REFUND MODAL ────────────────────────────────────────────────────────────
+
+  function renderRefundModal() {
+    const prezzo = Number(refundModal.prezzo);
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setRefundModal(null)}>
+        <div className="ac-modal" style={{ maxWidth: 440 }}>
+          <div className="ac-modal-header">
+            <h2><IconEuro /> Rimborso Stripe</h2>
+            <button className="ac-icon-btn" onClick={() => setRefundModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Cliente: <strong>{refundModal.nome}</strong> — Pagato: <strong>€{prezzo.toFixed(2)}</strong>
+          </div>
+
+          <div className="ac-field">
+            <label className="ac-label">Tipo rimborso</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className={`ac-btn sm${refundType === 'full' ? ' primary' : ' ghost'}`}
+                onClick={() => { setRefundType('full'); setRefundAmount(prezzo.toFixed(2)); }}>
+                Totale (€{prezzo.toFixed(2)})
+              </button>
+              <button className={`ac-btn sm${refundType === 'partial' ? ' primary' : ' ghost'}`}
+                onClick={() => { setRefundType('partial'); setRefundAmount(''); }}>
+                Parziale
+              </button>
+            </div>
+          </div>
+
+          {refundType === 'partial' && (
+            <div className="ac-field">
+              <label className="ac-label">Importo rimborso (€) — max €{prezzo.toFixed(2)}</label>
+              <input className="ac-input" type="number" min="0.01" max={prezzo} step="0.01"
+                placeholder={`es. ${(prezzo / 2).toFixed(2)}`}
+                value={refundAmount} onChange={e => setRefundAmount(e.target.value)} autoFocus />
+            </div>
+          )}
+
+          <div className="ac-field">
+            <label className="ac-label">Motivo (opzionale)</label>
+            <input className="ac-input" type="text" placeholder="Es. Prenotazione annullata, maltempo…"
+              value={refundMotivo} onChange={e => setRefundMotivo(e.target.value)} />
+          </div>
+
+          <div style={{ padding: '0 22px 12px' }}>
+            <div style={{ background: '#1A2840', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#8FA8C8', lineHeight: 1.5 }}>
+              I fondi tornano al cliente entro 5–10 giorni lavorativi a seconda della banca.
+            </div>
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn danger full" onClick={handleRefund}
+              disabled={refundLoading || !refundAmount || parseFloat(refundAmount) <= 0}>
+              {refundLoading ? 'Elaborazione…' : `Rimborsa €${Number(refundAmount || 0).toFixed(2)}`}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setRefundModal(null)} disabled={refundLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── RESCHEDULE MODAL ────────────────────────────────────────────────────────
+
+  function renderRescheduleModal() {
+    const b = rescheduleModal;
+    const f = rescheduleForm;
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setRescheduleModal(null)}>
+        <div className="ac-modal" style={{ maxWidth: 460 }}>
+          <div className="ac-modal-header">
+            <h2><IconCalendar /> Sposta Data</h2>
+            <button className="ac-icon-btn" onClick={() => setRescheduleModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Cliente: <strong>{b.cliente_nome}</strong> — Bici: <strong>#{b.bicicletta_id}</strong>
+          </div>
+
+          <div style={{ padding: '16px 22px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Nuova data ritiro</label>
+              <input className="ac-input" type="date" value={f.data_ritiro || ''}
+                onChange={e => setRescheduleForm(p => ({ ...p, data_ritiro: e.target.value }))} />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Tipo noleggio</label>
+              <select className="ac-select" value={f.tipo_noleggio || 'intera_giornata'}
+                onChange={e => setRescheduleForm(p => ({ ...p, tipo_noleggio: e.target.value }))}>
+                <option value="mezza_mattina">½ Mattina (09–13)</option>
+                <option value="mezza_pomeriggio">½ Pomeriggio (14–18)</option>
+                <option value="intera_giornata">Giornata intera (09–18)</option>
+                <option value="multi_giorno">Multi-giorno</option>
+              </select>
+            </div>
+            {f.tipo_noleggio === 'multi_giorno' && (
+              <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+                <label className="ac-label">Giorni</label>
+                <input className="ac-input" type="number" min="2" max="30"
+                  value={f.giorni || 2}
+                  onChange={e => setRescheduleForm(p => ({ ...p, giorni: e.target.value }))} />
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: '0 22px 12px' }}>
+            <div style={{ background: '#1A2840', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#8FA8C8' }}>
+              La bici #{b.bicicletta_id} rimane assegnata se disponibile nella nuova data.
+            </div>
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleReschedule}
+              disabled={rescheduleLoading || !f.data_ritiro}>
+              {rescheduleLoading ? 'Salvataggio…' : 'Conferma Spostamento'}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setRescheduleModal(null)} disabled={rescheduleLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── CAMBIA BICI MODAL ───────────────────────────────────────────────────────
+
+  function renderCambiaBiciModal() {
+    const b = cambiaBiciModal;
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setCambiaBiciModal(null)}>
+        <div className="ac-modal" style={{ maxWidth: 380 }}>
+          <div className="ac-modal-header">
+            <h2><IconBike /> Cambia Bicicletta</h2>
+            <button className="ac-icon-btn" onClick={() => setCambiaBiciModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Cliente: <strong>{b.nome}</strong> — Bici attuale: <strong>{biciNome(b.bicicletta_id)}</strong>
+          </div>
+
+          <div className="ac-field">
+            <label className="ac-label">Nuova bicicletta</label>
+            <select className="ac-select" value={cambiaBiciId}
+              onChange={e => setCambiaBiciId(e.target.value)}>
+              {BICI.map(bk => (
+                <option key={bk.id} value={bk.id} disabled={bk.id === b.bicicletta_id}>
+                  {bk.nome} — {bk.tipo}{bk.id === b.bicicletta_id ? ' (attuale)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleCambiaBici}
+              disabled={cambiaBiciLoading || !cambiaBiciId || parseInt(cambiaBiciId) === b.bicicletta_id}>
+              {cambiaBiciLoading ? 'Aggiornamento…' : `Assegna ${biciNome(cambiaBiciId)}`}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setCambiaBiciModal(null)} disabled={cambiaBiciLoading}>Annulla</button>
           </div>
         </div>
       </div>

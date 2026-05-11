@@ -800,7 +800,7 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
     <div class="hdr-logo">🚲</div>
     <div class="hdr-text">
       <h1>${esc(title)}</h1>
-      <p>Bike Rental Tarzo / Papin Sport &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
+      <p>Bike Rental Tarzo &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
     </div>
   </div>
   <div class="body">
@@ -841,7 +841,7 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
     </div>
 
     <div class="doc-foot">
-      Bike Rental Tarzo / Papin Sport &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
+      Bike Rental Tarzo &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
       arfantabikerental@gmail.com &nbsp;·&nbsp; Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO
     </div>
   </div>
@@ -852,6 +852,134 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   return res.send(html);
+});
+
+// ─── POST /api/admin/bookings/:id/refund ─────────────────────────────────────
+
+router.post('/bookings/:id/refund', async (req, res) => {
+  const { amount, motivo = '' } = req.body;
+
+  const { data: b, error } = await supabase
+    .from('prenotazioni')
+    .select('stripe_session_id, stripe_payment_id, pagamento_status, prezzo_totale, cliente_nome')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !b) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (b.pagamento_status !== 'paid') return res.status(400).json({ error: 'Prenotazione non pagata — rimborso non applicabile' });
+
+  let paymentIntentId = b.stripe_payment_id;
+  if (!paymentIntentId && b.stripe_session_id) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(b.stripe_session_id);
+      paymentIntentId = session.payment_intent;
+    } catch (e) {
+      return res.status(400).json({ error: 'Impossibile recuperare dati di pagamento Stripe' });
+    }
+  }
+  if (!paymentIntentId) return res.status(400).json({ error: 'Nessun pagamento Stripe trovato' });
+
+  try {
+    const refundParams = { payment_intent: paymentIntentId };
+    if (amount) refundParams.amount = Math.round(parseFloat(amount) * 100);
+    if (motivo) refundParams.metadata = { motivo, booking_id: req.params.id };
+
+    const refund = await stripe.refunds.create(refundParams);
+
+    const amountNum = parseFloat(amount) || Number(b.prezzo_totale);
+    const isTotal   = amountNum >= Number(b.prezzo_totale) - 0.01;
+    if (isTotal) await supabase.from('prenotazioni').update({ pagamento_status: 'cancelled' }).eq('id', req.params.id);
+
+    console.log(`[admin refund] ${req.params.id} — €${refund.amount / 100} rimborsati`);
+    return res.json({ success: true, refund_id: refund.id, amount: refund.amount / 100 });
+  } catch (e) {
+    console.error('[admin refund] Stripe error:', e);
+    return res.status(402).json({ error: e.message || 'Errore rimborso Stripe' });
+  }
+});
+
+// ─── PATCH /api/admin/bookings/:id/reschedule ─────────────────────────────────
+
+router.patch('/bookings/:id/reschedule', async (req, res) => {
+  const { data_ritiro, tipo_noleggio, giorni = 1 } = req.body;
+  if (!data_ritiro || !tipo_noleggio) return res.status(400).json({ error: 'data_ritiro e tipo_noleggio obbligatori' });
+
+  const { data: booking, error } = await supabase
+    .from('prenotazioni')
+    .select('id, bicicletta_id, pagamento_status')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !booking) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (booking.pagamento_status !== 'paid') return res.status(400).json({ error: 'Prenotazione non attiva' });
+
+  const numGiorni = Number(giorni);
+  const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
+  const { data_restituzione, orario_restituzione, orario_ritiro } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
+
+  const { data: conflitti } = await supabase
+    .from('prenotazioni')
+    .select('id')
+    .eq('pagamento_status', 'paid')
+    .neq('id', req.params.id)
+    .eq('bicicletta_id', booking.bicicletta_id)
+    .lt('start_ts', end.toISOString())
+    .gt('end_ts', start.toISOString());
+
+  if (conflitti && conflitti.length > 0) {
+    return res.status(409).json({ error: `Bici #${booking.bicicletta_id} già occupata in questa data/orario` });
+  }
+
+  const { data, error: uErr } = await supabase
+    .from('prenotazioni')
+    .update({
+      data_ritiro, tipo_noleggio, giorni: numGiorni,
+      orario_ritiro, data_restituzione, orario_restituzione,
+      start_ts: start.toISOString(), end_ts: end.toISOString(),
+    })
+    .eq('id', req.params.id)
+    .select().single();
+
+  if (uErr) return res.status(500).json({ error: uErr.message });
+  return res.json({ success: true, booking: data });
+});
+
+// ─── PATCH /api/admin/bookings/:id/assegna-bici ───────────────────────────────
+
+router.patch('/bookings/:id/assegna-bici', async (req, res) => {
+  const newBiciId = parseInt(req.body.bicicletta_id, 10);
+  if (!newBiciId || newBiciId < 1) return res.status(400).json({ error: 'ID bici non valido' });
+
+  const { data: booking, error } = await supabase
+    .from('prenotazioni')
+    .select('id, start_ts, end_ts, pagamento_status')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !booking) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (booking.pagamento_status !== 'paid') return res.status(400).json({ error: 'Prenotazione non attiva' });
+
+  const { data: conflitti } = await supabase
+    .from('prenotazioni')
+    .select('id')
+    .eq('pagamento_status', 'paid')
+    .neq('id', req.params.id)
+    .eq('bicicletta_id', newBiciId)
+    .lt('start_ts', booking.end_ts)
+    .gt('end_ts', booking.start_ts);
+
+  if (conflitti && conflitti.length > 0) {
+    return res.status(409).json({ error: `Bici #${newBiciId} non disponibile in questa fascia oraria` });
+  }
+
+  const { data, error: uErr } = await supabase
+    .from('prenotazioni')
+    .update({ bicicletta_id: newBiciId })
+    .eq('id', req.params.id)
+    .select().single();
+
+  if (uErr) return res.status(500).json({ error: uErr.message });
+  return res.json({ success: true, booking: data });
 });
 
 // ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────

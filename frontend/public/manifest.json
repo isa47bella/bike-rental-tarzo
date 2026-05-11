@@ -1,7 +1,7 @@
 {
   "name": "Bike Rental Tarzo",
   "short_name": "BikeRental",
-  "description": "Pannello admin noleggio bici — Papin Sport Tarzo",
+  "description": "Pannello admin noleggio bici — Bike Rental Tarzo",
   "start_url": "/admin",
   "scope": "/",
   "display": "standalone",

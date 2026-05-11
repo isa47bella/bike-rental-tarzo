@@ -13,6 +13,14 @@ const transporter = nodemailer.createTransport({
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const BICI_NOMI = {
+  1: 'E-City KTM #1',  2: 'E-City KTM #2',
+  3: 'E-MTB KTM #1',   4: 'E-MTB KTM #2',   5: 'E-MTB KTM #3',
+  6: 'E-MTB KTM #4',   7: 'E-MTB KTM #5',   8: 'E-MTB KTM #6',
+  9: 'E-MTB KTM #7',  10: 'E-MTB Bimbo',
+};
+function biciLabel(id) { return BICI_NOMI[Number(id)] || `Bici #${id}`; }
+
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('it-IT', {
@@ -95,7 +103,7 @@ function buildClienteHtml(p) {
               ${row('🕔 Orario Restituzione', p.orario_restituzione.substring(0,5))}
               ${p.giorni > 1 ? row('📆 Numero Giorni', p.giorni + ' giorni') : ''}
               ${row('💶 Totale Pagato',   '€' + Number(p.prezzo_totale).toFixed(2))}
-              ${row('🚲 Bicicletta',      'Bicicletta ' + p.bicicletta_id + ' (Papin Sport)')}
+              ${row('🚲 Bicicletta',      biciLabel(p.bicicletta_id))}
               ${parseAccessori(p.accessori).length > 0 ? row('🎒 Accessori inclusi', parseAccessori(p.accessori).map(accLabel).join(', ')) : ''}
             </table>
 
@@ -301,4 +309,12 @@ async function sendFirmaLinkEmail(prenotazione) {
   );
 }
 
-module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert };
+// ─── Email promemoria ritiro (cron giorno prima) ──────────────────────────────
+
+async function sendReminderEmail(prenotazione) {
+  const subject = `🚲 Il tuo noleggio è domani — Bike Rental Tarzo`;
+  const message = `Ti ricordiamo che domani è il giorno del tuo noleggio!\n\n📋 Codice prenotazione: ${prenotazione.id.toUpperCase().substring(0, 8)}\n📅 Ritiro: ${formatDate(prenotazione.data_ritiro)} alle ${(prenotazione.orario_ritiro || '').substring(0, 5)}\n📍 Dove: Via Pecol 22, Arfanta di Tarzo (TV)\n\nRicorda di portare:\n• Documento di identità valido\n• Il codice prenotazione sopra\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.\n\nTi aspettiamo!`;
+  await sendAdminEmail(prenotazione, subject, message);
+}
+
+module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert, sendReminderEmail };

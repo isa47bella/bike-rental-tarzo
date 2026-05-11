@@ -7,7 +7,7 @@ const TERMS = {
   it: [
     {
       title: 'Art. 1 — Oggetto e Parti',
-      text: 'Il presente contratto regola il noleggio di una bicicletta elettrica da parte di Bike Rental Tarzo / Papin Sport (di seguito "Noleggiatore"), con sede in Via Pecol 22, Arfanta di Tarzo (TV), email: arfantabikerental@gmail.com, nei confronti del cliente (di seguito "Conduttore").',
+      text: 'Il presente contratto regola il noleggio di una bicicletta elettrica da parte di Bike Rental Tarzo (di seguito "Noleggiatore"), con sede in Via Pecol 22, Arfanta di Tarzo (TV), email: arfantabikerental@gmail.com, nei confronti del cliente (di seguito "Conduttore").',
     },
     {
       title: 'Art. 2 — Requisiti del Conduttore',
@@ -46,7 +46,7 @@ const TERMS = {
   en: [
     {
       title: 'Art. 1 — Subject and Parties',
-      text: 'This agreement governs the rental of an electric bicycle by Bike Rental Tarzo / Papin Sport (hereinafter "Lessor"), located at Via Pecol 22, Arfanta di Tarzo (TV), Italy, email: arfantabikerental@gmail.com, to the customer (hereinafter "Renter").',
+      text: 'This agreement governs the rental of an electric bicycle by Bike Rental Tarzo (hereinafter "Lessor"), located at Via Pecol 22, Arfanta di Tarzo (TV), Italy, email: arfantabikerental@gmail.com, to the customer (hereinafter "Renter").',
     },
     {
       title: 'Art. 2 — Requirements',
@@ -85,7 +85,7 @@ const TERMS = {
   de: [
     {
       title: 'Art. 1 — Gegenstand und Parteien',
-      text: 'Dieser Vertrag regelt die Vermietung eines Elektrofahrrads durch Bike Rental Tarzo / Papin Sport (im Folgenden „Vermieter"), mit Sitz in Via Pecol 22, Arfanta di Tarzo (TV), Italien, E-Mail: arfantabikerental@gmail.com, an den Kunden (im Folgenden „Mieter").',
+      text: 'Dieser Vertrag regelt die Vermietung eines Elektrofahrrads durch Bike Rental Tarzo (im Folgenden „Vermieter"), mit Sitz in Via Pecol 22, Arfanta di Tarzo (TV), Italien, E-Mail: arfantabikerental@gmail.com, an den Kunden (im Folgenden „Mieter").',
     },
     {
       title: 'Art. 2 — Anforderungen',
@@ -124,7 +124,7 @@ const TERMS = {
   es: [
     {
       title: 'Art. 1 — Objeto y Partes',
-      text: 'El presente contrato regula el alquiler de una bicicleta eléctrica por parte de Bike Rental Tarzo / Papin Sport (en adelante "Arrendador"), con sede en Via Pecol 22, Arfanta di Tarzo (TV), Italia, email: arfantabikerental@gmail.com, al cliente (en adelante "Arrendatario").',
+      text: 'El presente contrato regula el alquiler de una bicicleta eléctrica por parte de Bike Rental Tarzo (en adelante "Arrendador"), con sede en Via Pecol 22, Arfanta di Tarzo (TV), Italia, email: arfantabikerental@gmail.com, al cliente (en adelante "Arrendatario").',
     },
     {
       title: 'Art. 2 — Requisitos',
@@ -163,7 +163,7 @@ const TERMS = {
   fr: [
     {
       title: 'Art. 1 — Objet et Parties',
-      text: 'Le présent contrat régit la location d\'un vélo électrique par Bike Rental Tarzo / Papin Sport (ci-après « Loueur »), dont le siège est Via Pecol 22, Arfanta di Tarzo (TV), Italie, email : arfantabikerental@gmail.com, au profit du client (ci-après « Locataire »).',
+      text: 'Le présent contrat régit la location d\'un vélo électrique par Bike Rental Tarzo (ci-après « Loueur »), dont le siège est Via Pecol 22, Arfanta di Tarzo (TV), Italie, email : arfantabikerental@gmail.com, au profit du client (ci-après « Locataire »).',
     },
     {
       title: 'Art. 2 — Conditions requises',

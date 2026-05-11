@@ -162,4 +162,9 @@ export const adminApi = {
   pushSubscribe:  (subscription)       => adminPost('/admin/push/subscribe', { subscription }),
   pushUnsubscribe:(endpoint)           => adminDelete('/admin/push/subscribe', { endpoint }),
   pushTest:       ()                   => adminPost('/admin/push/test', {}),
+
+  refundBooking:  (id, amount, motivo) => adminPost(`/admin/bookings/${id}/refund`, { amount, motivo }),
+  rescheduleBooking: (id, data_ritiro, tipo_noleggio, giorni) =>
+    adminPatch(`/admin/bookings/${id}/reschedule`, { data_ritiro, tipo_noleggio, giorni }),
+  assegnaBici:    (id, bicicletta_id)  => adminPatch(`/admin/bookings/${id}/assegna-bici`, { bicicletta_id }),
 };
