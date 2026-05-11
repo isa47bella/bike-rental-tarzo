@@ -2484,28 +2484,6 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* SQL migrations */}
-        <div className="ac-settings-section">
-          <h3 className="ac-section-title">Migrazioni Database</h3>
-          <p className="ac-settings-desc">Esegui questi comandi SQL in Supabase → SQL Editor se non ancora eseguiti:</p>
-          <pre className="ac-sql-pre">{`-- Note admin sulle prenotazioni
-ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS note_admin TEXT;
-
--- Tabella configurazione prezzi
-CREATE TABLE IF NOT EXISTS config (
-  chiave TEXT PRIMARY KEY,
-  valore TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Tabella iscrizioni push notifications
-CREATE TABLE IF NOT EXISTS push_subscriptions (
-  endpoint TEXT PRIMARY KEY,
-  subscription TEXT NOT NULL,
-  active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);`}</pre>
-        </div>
 
       </div>
     );
