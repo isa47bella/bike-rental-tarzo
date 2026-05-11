@@ -210,6 +210,17 @@ export default function AdminDashboard() {
   const [damageMotivo,  setDamageMotivo]  = useState('');
   const [damageLoading, setDamageLoading] = useState(false);
 
+  // Manual booking modal
+  const MANUAL_EMPTY = {
+    cliente_nome: '', cliente_email: '', cliente_telefono: '', cliente_note: '',
+    data_ritiro: '', tipo_noleggio: 'intera_giornata', giorni: 2,
+    bicicletta_id: '', accessori: [], prezzo_totale: '', note_pagamento: 'Contanti',
+  };
+  const [manualModal,   setManualModal]   = useState(false);
+  const [manualForm,    setManualForm]    = useState(MANUAL_EMPTY);
+  const [manualLoading, setManualLoading] = useState(false);
+  const [manualError,   setManualError]   = useState(null);
+
   // ─── Data loaders ───────────────────────────────────────────────────────────
 
   const loadStats = useCallback(async () => {
@@ -398,6 +409,56 @@ export default function AdminDashboard() {
     finally { setEmailLoading(false); }
   }
 
+  // ─── Manual booking ─────────────────────────────────────────────────────────
+
+  const PREZZI_MANUAL = { mezza_mattina: 35, mezza_pomeriggio: 35, intera_giornata: 45 };
+  const PREZZI_MULTI  = { 2:84, 3:120, 4:152, 5:180, 6:205, 7:225 };
+
+  function calcPrezzoManual(tipo, giorni) {
+    if (tipo === 'multi_giorno') {
+      const n = Number(giorni);
+      if (n >= 2 && n <= 7) return PREZZI_MULTI[n];
+      if (n > 7) return PREZZI_MULTI[7] + (n - 7) * 20;
+    }
+    return PREZZI_MANUAL[tipo] ?? 45;
+  }
+
+  function setManualField(key, value) {
+    setManualForm(prev => {
+      const next = { ...prev, [key]: value };
+      // auto-update price when tipo or giorni changes
+      if ((key === 'tipo_noleggio' || key === 'giorni') && !prev._prezzoCambiato) {
+        next.prezzo_totale = String(calcPrezzoManual(next.tipo_noleggio, next.giorni));
+      }
+      return next;
+    });
+  }
+
+  async function handleManualBooking() {
+    if (!manualForm.cliente_nome || !manualForm.data_ritiro || !manualForm.tipo_noleggio) {
+      setManualError('Compila i campi obbligatori: nome, data, tipo noleggio');
+      return;
+    }
+    setManualLoading(true);
+    setManualError(null);
+    try {
+      await adminApi.manualBooking({
+        ...manualForm,
+        giorni:        Number(manualForm.giorni),
+        bicicletta_id: manualForm.bicicletta_id || undefined,
+        prezzo_totale: manualForm.prezzo_totale || undefined,
+      });
+      setManualModal(false);
+      setManualForm(MANUAL_EMPTY);
+      await loadBookings('paid');
+      await loadStats();
+    } catch (e) {
+      setManualError(e.message);
+    } finally {
+      setManualLoading(false);
+    }
+  }
+
   // ─── Photo upload helper ─────────────────────────────────────────────────────
 
   async function handlePhotoFile(file, setter) {
@@ -547,6 +608,7 @@ export default function AdminDashboard() {
       {depositModal  && renderDepositModal()}
       {emailModal    && renderEmailModal()}
       {damageModal   && renderDamageModal()}
+      {manualModal   && renderManualModal()}
     </div>
   );
 
@@ -831,6 +893,18 @@ export default function AdminDashboard() {
           ))}
           <button className="ac-filter-btn refresh" onClick={refresh}>
             <IconRefresh /> Aggiorna
+          </button>
+          <button
+            className="ac-btn primary sm"
+            style={{ marginLeft: 'auto' }}
+            onClick={() => {
+              const prezzoDefault = String(calcPrezzoManual('intera_giornata', 2));
+              setManualForm({ ...MANUAL_EMPTY, prezzo_totale: prezzoDefault });
+              setManualError(null);
+              setManualModal(true);
+            }}
+          >
+            + Nuova Prenotazione
           </button>
         </div>
 
@@ -1306,6 +1380,141 @@ export default function AdminDashboard() {
               {damageLoading ? 'Addebito…' : 'Addebita'}
             </button>
             <button className="ac-btn ghost" onClick={() => { setDamageModal(null); setDamageAmount(''); setDamageMotivo(''); }} disabled={damageLoading}>Annulla</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderManualModal() {
+    const f = manualForm;
+    const isMulti = f.tipo_noleggio === 'multi_giorno';
+    const accList = [
+      { key: 'casco',    label: 'Casco' },
+      { key: 'lucchetto', label: 'Lucchetto' },
+      { key: 'kit_foro', label: 'Kit Foratura' },
+    ];
+    function toggleAcc(key) {
+      setManualForm(prev => ({
+        ...prev,
+        accessori: prev.accessori.includes(key)
+          ? prev.accessori.filter(k => k !== key)
+          : [...prev.accessori, key],
+      }));
+    }
+
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setManualModal(false)}>
+        <div className="ac-modal" style={{ maxWidth: 540 }}>
+          <div className="ac-modal-header">
+            <h2>+ Nuova Prenotazione Manuale</h2>
+            <button className="ac-icon-btn" onClick={() => setManualModal(false)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">
+            Prenotazione diretta (walk-in / telefono) — segnata come <strong style={{ color: '#4ADE80' }}>pagata</strong>
+          </div>
+
+          {manualError && <div style={{ padding: '10px 22px 0' }}><div className="ac-error-banner">{manualError}</div></div>}
+
+          {/* Dati prenotazione */}
+          <div style={{ padding: '16px 22px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Data ritiro *</label>
+              <input className="ac-input" type="date" value={f.data_ritiro}
+                onChange={e => setManualField('data_ritiro', e.target.value)} />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Tipo noleggio *</label>
+              <select className="ac-select" value={f.tipo_noleggio}
+                onChange={e => setManualField('tipo_noleggio', e.target.value)}>
+                <option value="mezza_mattina">½ Mattina (09–13)</option>
+                <option value="mezza_pomeriggio">½ Pomeriggio (14–18)</option>
+                <option value="intera_giornata">Giornata intera (09–18)</option>
+                <option value="multi_giorno">Multi-giorno</option>
+              </select>
+            </div>
+            {isMulti && (
+              <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+                <label className="ac-label">Numero giorni</label>
+                <input className="ac-input" type="number" min="2" max="30"
+                  value={f.giorni} onChange={e => setManualField('giorni', e.target.value)} />
+              </div>
+            )}
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Bici # (vuoto = auto)</label>
+              <select className="ac-select" value={f.bicicletta_id}
+                onChange={e => setManualField('bicicletta_id', e.target.value)}>
+                <option value="">Auto-assegna</option>
+                {[1,2,3,4,5].map(n => <option key={n} value={n}>Bici #{n}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Prezzo e pagamento */}
+          <div style={{ padding: '0 22px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Prezzo (€) — auto-calcolato</label>
+              <input className="ac-input" type="number" min="0" step="0.01"
+                value={f.prezzo_totale}
+                onChange={e => setManualForm(p => ({ ...p, prezzo_totale: e.target.value, _prezzoCambiato: true }))}
+                placeholder={String(calcPrezzoManual(f.tipo_noleggio, f.giorni))} />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Metodo pagamento</label>
+              <select className="ac-select" value={f.note_pagamento}
+                onChange={e => setManualField('note_pagamento', e.target.value)}>
+                <option>Contanti</option>
+                <option>POS / Carta</option>
+                <option>Bonifico</option>
+                <option>Non ancora pagato</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Dati cliente */}
+          <div style={{ padding: '0 22px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Nome cliente *</label>
+              <input className="ac-input" type="text" placeholder="Mario Rossi"
+                value={f.cliente_nome} onChange={e => setManualField('cliente_nome', e.target.value)} autoFocus />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Telefono *</label>
+              <input className="ac-input" type="tel" placeholder="+39 345 1234567"
+                value={f.cliente_telefono} onChange={e => setManualField('cliente_telefono', e.target.value)} />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Email (opzionale)</label>
+              <input className="ac-input" type="email" placeholder="mario@email.com"
+                value={f.cliente_email} onChange={e => setManualField('cliente_email', e.target.value)} />
+            </div>
+            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <label className="ac-label">Note</label>
+              <input className="ac-input" type="text" placeholder="Richieste, taglia casco..."
+                value={f.cliente_note} onChange={e => setManualField('cliente_note', e.target.value)} />
+            </div>
+          </div>
+
+          {/* Accessori */}
+          <div style={{ padding: '0 22px 4px' }}>
+            <label className="ac-label" style={{ marginBottom: 8 }}>Accessori inclusi</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {accList.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`ac-btn sm${f.accessori.includes(key) ? ' primary' : ' ghost'}`}
+                  onClick={() => toggleAcc(key)}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="ac-modal-footer" style={{ marginTop: 8 }}>
+            <button className="ac-btn primary full" onClick={handleManualBooking} disabled={manualLoading}>
+              {manualLoading ? 'Salvataggio…' : `✓ Crea Prenotazione — €${f.prezzo_totale || calcPrezzoManual(f.tipo_noleggio, f.giorni)}`}
+            </button>
+            <button className="ac-btn ghost" onClick={() => setManualModal(false)} disabled={manualLoading}>Annulla</button>
           </div>
         </div>
       </div>

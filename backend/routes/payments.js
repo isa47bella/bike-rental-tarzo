@@ -9,7 +9,7 @@ const express  = require('express');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
-const { sendConfirmationToCliente, sendNotificationToGestore } = require('../lib/email');
+const { sendConfirmationToCliente, sendNotificationToGestore, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione } = require('./availability');
 
 // Prezzi per tipo di bici (Dobbiaco bassa stagione)
@@ -243,11 +243,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     // Cauzione: il blocco €1.000 avviene tramite cron job 2 giorni prima del ritiro
     // (cauzione_status rimane 'pending' fino all'esecuzione del cron)
 
-    // Invia email (non bloccante — ignora errori email)
+    // Invia email + WhatsApp (non bloccante — ignora errori)
     if (prenotazione) {
       Promise.all([
         sendConfirmationToCliente(prenotazione).catch(e => console.error('Email cliente:', e)),
         sendNotificationToGestore(prenotazione).catch(e => console.error('Email gestore:', e)),
+        sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp alert:', e)),
       ]);
     }
   }

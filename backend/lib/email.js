@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const https      = require('https');
 
 const transporter = nodemailer.createTransport({
   host:   process.env.EMAIL_HOST,
@@ -228,4 +229,38 @@ async function sendAdminEmail(prenotazione, subject, messageText) {
   });
 }
 
-module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail };
+// ─── Notifica WhatsApp via CallMeBot ─────────────────────────────────────────
+// Setup: manda "I allow callmebot to send me messages" su WhatsApp a +34 644 28 72 02
+// e imposta CALLMEBOT_API_KEY + OWNER_WHATSAPP (numero senza +, es. 393928614635)
+
+async function sendWhatsAppAlert(prenotazione) {
+  const phone  = process.env.OWNER_WHATSAPP;
+  const apikey = process.env.CALLMEBOT_API_KEY;
+  if (!phone || !apikey) return; // non configurato, skip silenzioso
+
+  const tipoShort = {
+    mezza_mattina: '½ Mattina', mezza_pomeriggio: '½ Pomeriggio',
+    intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno',
+  }[prenotazione.tipo_noleggio] || prenotazione.tipo_noleggio;
+
+  const lines = [
+    '🚲 NUOVA PRENOTAZIONE!',
+    `👤 ${prenotazione.cliente_nome}`,
+    `📅 ${prenotazione.data_ritiro} ${(prenotazione.orario_ritiro || '').substring(0, 5)} — ${tipoShort}`,
+    prenotazione.giorni > 1 ? `📆 ${prenotazione.giorni} giorni` : '',
+    `💶 €${Number(prenotazione.prezzo_totale).toFixed(2)} PAGATO`,
+    `📞 ${prenotazione.cliente_telefono}`,
+    `🔑 ${prenotazione.id.toUpperCase().substring(0, 8)}`,
+  ].filter(Boolean).join('%0A');
+
+  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${lines}&apikey=${apikey}`;
+
+  await new Promise(resolve => {
+    https.get(url, res => {
+      res.on('data', () => {});
+      res.on('end', resolve);
+    }).on('error', () => resolve()); // silenzioso in caso di errore
+  });
+}
+
+module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendWhatsAppAlert };

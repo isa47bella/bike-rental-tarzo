@@ -120,4 +120,7 @@ export const adminApi = {
 
   getReport: () =>
     adminGet('/admin/report'),
+
+  manualBooking: (data) =>
+    adminPost('/admin/bookings/manual', data),
 };

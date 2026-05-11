@@ -10,7 +10,8 @@ const express  = require('express');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
-const { sendAdminEmail } = require('../lib/email');
+const { sendAdminEmail, sendWhatsAppAlert } = require('../lib/email');
+const { calcRange, calcRestituzione }       = require('./availability');
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
@@ -366,6 +367,120 @@ router.get('/report', async (req, res) => {
     by_month:       months,
     by_type:        byType,
   });
+});
+
+// ─── POST /api/admin/bookings/manual ─────────────────────────────────────────
+// Crea prenotazione manuale (walk-in / telefono) senza Stripe
+
+const PREZZI_MANUAL = {
+  mezza_mattina:    35,
+  mezza_pomeriggio: 35,
+  intera_giornata:  45,
+  multi_giorno:     null, // calcolato in base ai giorni
+};
+const PREZZI_MULTI = { 2:84, 3:120, 4:152, 5:180, 6:205, 7:225 };
+
+function calcolaPrezzoManual(tipo_noleggio, giorni) {
+  if (PREZZI_MANUAL[tipo_noleggio] !== null && PREZZI_MANUAL[tipo_noleggio] !== undefined) {
+    return PREZZI_MANUAL[tipo_noleggio];
+  }
+  const n = Number(giorni);
+  if (n >= 2 && n <= 7) return PREZZI_MULTI[n];
+  if (n > 7) return PREZZI_MULTI[7] + (n - 7) * 20;
+  return 45;
+}
+
+router.post('/bookings/manual', async (req, res) => {
+  const {
+    cliente_nome, cliente_telefono,
+    cliente_email   = '',
+    cliente_note    = '',
+    tipo_noleggio, data_ritiro,
+    giorni          = 1,
+    bicicletta_id:  forcedBiciId,
+    accessori:      accessoriRaw = [],
+    prezzo_totale:  prezzoOverride,
+    note_pagamento  = '',
+  } = req.body;
+
+  if (!cliente_nome?.trim() || !data_ritiro || !tipo_noleggio) {
+    return res.status(400).json({ error: 'Campi obbligatori mancanti (nome, data, tipo)' });
+  }
+
+  const TIPI_VALIDI = ['mezza_mattina', 'mezza_pomeriggio', 'intera_giornata', 'multi_giorno'];
+  if (!TIPI_VALIDI.includes(tipo_noleggio)) {
+    return res.status(400).json({ error: 'Tipo noleggio non valido' });
+  }
+  if (tipo_noleggio === 'multi_giorno' && Number(giorni) < 2) {
+    return res.status(400).json({ error: 'Multi-giorno richiede almeno 2 giorni' });
+  }
+
+  const numGiorni = Number(giorni);
+  const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
+  const { data_restituzione, orario_restituzione, orario_ritiro } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
+
+  // Trova bici disponibile
+  const { data: conflitti } = await supabase
+    .from('prenotazioni')
+    .select('bicicletta_id')
+    .eq('pagamento_status', 'paid')
+    .lt('start_ts', end.toISOString())
+    .gt('end_ts', start.toISOString());
+
+  const occupate = new Set((conflitti || []).map(r => r.bicicletta_id));
+
+  let bicicletta_id;
+  if (forcedBiciId) {
+    if (occupate.has(Number(forcedBiciId))) {
+      return res.status(409).json({ error: `Bici #${forcedBiciId} già occupata in questa fascia oraria` });
+    }
+    bicicletta_id = Number(forcedBiciId);
+  } else {
+    const { data: tutteLeBici } = await supabase.from('biciclette').select('id').order('id');
+    const libera = (tutteLeBici || []).find(b => !occupate.has(b.id));
+    if (!libera) return res.status(409).json({ error: 'Nessuna bici disponibile per questa data/orario' });
+    bicicletta_id = libera.id;
+  }
+
+  const VALID_ACC   = ['casco', 'lucchetto', 'kit_foro'];
+  const accessoriStr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => VALID_ACC.includes(a)).join(',');
+  const prezzo      = prezzoOverride ? parseFloat(prezzoOverride) : calcolaPrezzoManual(tipo_noleggio, numGiorni);
+
+  const noteFinale = [cliente_note, note_pagamento ? `Pagamento: ${note_pagamento}` : ''].filter(Boolean).join(' | ');
+
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .insert({
+      cliente_nome:        cliente_nome.trim(),
+      cliente_email:       cliente_email.trim() || 'noemail@bikerentaltarzo.it',
+      cliente_telefono:    (cliente_telefono || '').trim(),
+      cliente_note:        noteFinale || null,
+      bicicletta_id,
+      tipo_noleggio,
+      giorni:              numGiorni,
+      data_ritiro,
+      orario_ritiro,
+      data_restituzione,
+      orario_restituzione,
+      start_ts:            start.toISOString(),
+      end_ts:              end.toISOString(),
+      prezzo_totale:       prezzo,
+      accessori:           accessoriStr,
+      pagamento_status:    'paid',
+      stripe_session_id:   null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Errore prenotazione manuale:', error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  // WhatsApp alert (non bloccante)
+  sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp manual:', e));
+
+  return res.json({ success: true, booking: prenotazione });
 });
 
 // ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────
