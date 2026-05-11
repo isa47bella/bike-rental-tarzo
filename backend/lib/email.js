@@ -99,6 +99,16 @@ function buildClienteHtml(p) {
               ${parseAccessori(p.accessori).length > 0 ? row('🎒 Accessori inclusi', parseAccessori(p.accessori).map(accLabel).join(', ')) : ''}
             </table>
 
+            <!-- Firma contratto -->
+            <div style="background:#e8f5e9;border:1.5px solid #2D8659;border-radius:10px;padding:18px 20px;margin-bottom:24px;text-align:center;">
+              <strong style="color:#1a5c3a;font-size:15px;">✍️ Firma il contratto di noleggio</strong><br>
+              <p style="color:#555;font-size:13px;margin:6px 0 14px;">Leggi e accetta le condizioni prima del ritiro. Bastano 30 secondi.</p>
+              <a href="${process.env.FRONTEND_URL}/firma/${p.id}"
+                 style="display:inline-block;background:#2D8659;color:#fff;text-decoration:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:14px;">
+                → Firma ora
+              </a>
+            </div>
+
             <!-- Dove venire -->
             <div style="background:#fff8e1;border-left:4px solid #FF6B6B;padding:16px 20px;
                         border-radius:0 8px 8px 0;margin-bottom:24px;">
@@ -263,4 +273,32 @@ async function sendWhatsAppAlert(prenotazione) {
   });
 }
 
-module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendWhatsAppAlert };
+// ─── Email link firma (inviata dall'admin panel) ──────────────────────────────
+
+async function sendFirmaLinkEmail(prenotazione) {
+  const firmaUrl = `${process.env.FRONTEND_URL}/firma/${prenotazione.id}`;
+  const lang = prenotazione.lingua || 'it';
+
+  const subjects = {
+    it: `✍️ Firma il contratto di noleggio — Bike Rental Tarzo`,
+    en: `✍️ Please sign your rental agreement — Bike Rental Tarzo`,
+    de: `✍️ Mietvertrag unterzeichnen — Bike Rental Tarzo`,
+    es: `✍️ Firma tu contrato de alquiler — Bike Rental Tarzo`,
+    fr: `✍️ Signez votre contrat de location — Bike Rental Tarzo`,
+  };
+  const messages = {
+    it: `Ti chiediamo di firmare il contratto di noleggio prima del ritiro della bicicletta.\n\nÈ sufficiente aprire il link, leggere i termini e condizioni e apporre la firma digitale. Bastano meno di 2 minuti.\n\n→ ${firmaUrl}\n\nGrazie per la collaborazione.\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).`,
+    en: `Please sign your rental agreement before picking up the bicycle.\n\nSimply open the link, read the terms and conditions, and add your digital signature. It takes less than 2 minutes.\n\n→ ${firmaUrl}\n\nThank you. We look forward to seeing you at Via Pecol 22, Arfanta di Tarzo (TV), Italy.`,
+    de: `Bitte unterzeichnen Sie den Mietvertrag vor der Abholung des Fahrrads.\n\nÖffnen Sie einfach den Link, lesen Sie die Allgemeinen Geschäftsbedingungen und fügen Sie Ihre digitale Unterschrift hinzu. Es dauert weniger als 2 Minuten.\n\n→ ${firmaUrl}\n\nVielen Dank. Wir freuen uns auf Ihren Besuch in Via Pecol 22, Arfanta di Tarzo (TV), Italien.`,
+    es: `Le pedimos que firme el contrato de alquiler antes de recoger la bicicleta.\n\nSimplemente abra el enlace, lea los términos y condiciones y añada su firma digital. Tarda menos de 2 minutos.\n\n→ ${firmaUrl}\n\nGracias. Le esperamos en Via Pecol 22, Arfanta di Tarzo (TV), Italia.`,
+    fr: `Nous vous demandons de signer le contrat de location avant de récupérer le vélo.\n\nOuvrez simplement le lien, lisez les conditions générales et apposez votre signature numérique. Cela prend moins de 2 minutes.\n\n→ ${firmaUrl}\n\nMerci. Nous vous attendons au Via Pecol 22, Arfanta di Tarzo (TV), Italie.`,
+  };
+
+  await sendAdminEmail(
+    prenotazione,
+    subjects[lang] || subjects.it,
+    messages[lang] || messages.it,
+  );
+}
+
+module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert };

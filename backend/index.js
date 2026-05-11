@@ -5,6 +5,7 @@ const cors     = require('cors');
 const availabilityRoutes = require('./routes/availability');
 const paymentsRoutes     = require('./routes/payments');
 const adminRoutes        = require('./routes/admin');
+const firmaRoutes        = require('./routes/firma');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/payments',     paymentsRoutes);
 app.use('/api/admin',        adminRoutes);
+app.use('/api/firma',        firmaRoutes);
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get('/health', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }));

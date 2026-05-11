@@ -9,6 +9,7 @@ const express  = require('express');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
+const { sendFirmaLinkEmail } = require('../lib/email');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -98,6 +99,56 @@ router.get('/deposit', cronAuth, async (req, res) => {
   console.log(`[CRON deposit] Done — ${ok} autorizzate, ${failed} fallite`);
 
   return res.json({ processed: bookings.length, authorized: ok, failed, results });
+});
+
+// ─── GET /api/cron/firma-reminder ─────────────────────────────────────────────
+// Invia promemoria firma ai clienti con ritiro domani e contratto non firmato
+
+router.get('/firma-reminder', cronAuth, async (req, res) => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = tomorrow.toISOString().split('T')[0];
+
+  console.log(`[CRON firma-reminder] Cerco prenotazioni senza firma per il ${dateStr}`);
+
+  const { data: bookings, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, lingua')
+    .eq('data_ritiro', dateStr)
+    .eq('pagamento_status', 'paid')
+    .is('firma_at', null);
+
+  if (error) {
+    console.error('[CRON firma-reminder] Errore Supabase:', error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!bookings || bookings.length === 0) {
+    console.log('[CRON firma-reminder] Nessuna prenotazione da notificare');
+    return res.json({ processed: 0, results: [] });
+  }
+
+  const results = [];
+  for (const booking of bookings) {
+    if (!booking.cliente_email || booking.cliente_email === 'noemail@bikerentaltarzo.it') {
+      results.push({ id: booking.id, status: 'skipped', reason: 'no email' });
+      continue;
+    }
+    try {
+      await sendFirmaLinkEmail(booking);
+      console.log(`[CRON firma-reminder] Inviato a ${booking.cliente_email}`);
+      results.push({ id: booking.id, status: 'sent' });
+    } catch (e) {
+      console.error(`[CRON firma-reminder] ${booking.id} — errore: ${e.message}`);
+      results.push({ id: booking.id, status: 'failed', error: e.message });
+    }
+  }
+
+  const sent   = results.filter(r => r.status === 'sent').length;
+  const failed = results.filter(r => r.status === 'failed').length;
+  console.log(`[CRON firma-reminder] Done — ${sent} inviati, ${failed} falliti`);
+
+  return res.json({ processed: bookings.length, sent, failed, results });
 });
 
 module.exports = router;

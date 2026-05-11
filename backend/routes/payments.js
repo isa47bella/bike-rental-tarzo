@@ -11,6 +11,7 @@ const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 const { sendConfirmationToCliente, sendNotificationToGestore, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione } = require('./availability');
+const { sendPushToAll } = require('../lib/push');
 
 // Prezzi per tipo di bici (Dobbiaco bassa stagione)
 const PREZZI = {
@@ -60,6 +61,7 @@ router.post('/checkout', async (req, res) => {
     tipo_noleggio, giorni = 1,
     data_ritiro,
     accessori: accessoriRaw = [],
+    lingua = 'it',
   } = req.body;
 
   const VALID_ACC = ['casco', 'lucchetto', 'kit_foro'];
@@ -138,6 +140,7 @@ router.post('/checkout', async (req, res) => {
       end_ts:              end.toISOString(),
       prezzo_totale:       prezzo,
       accessori:           accessoriStr,
+      lingua:              ['it','en','de','es','fr'].includes(lingua) ? lingua : 'it',
       pagamento_status:    'pending',
     })
     .select()
@@ -245,10 +248,16 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
     // Invia email + WhatsApp (non bloccante — ignora errori)
     if (prenotazione) {
+      const tipoMap = { mezza_mattina: '½ Mattina', mezza_pomeriggio: '½ Pomeriggio', intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno' };
       Promise.all([
         sendConfirmationToCliente(prenotazione).catch(e => console.error('Email cliente:', e)),
         sendNotificationToGestore(prenotazione).catch(e => console.error('Email gestore:', e)),
         sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp alert:', e)),
+        sendPushToAll({
+          title: '🚲 Nuova prenotazione!',
+          body:  `${prenotazione.cliente_nome} — ${tipoMap[prenotazione.tipo_noleggio] || prenotazione.tipo_noleggio} · ${prenotazione.data_ritiro} · €${prenotazione.prezzo_totale}`,
+          url:   '/admin',
+        }).catch(e => console.error('Push:', e)),
       ]);
     }
   }

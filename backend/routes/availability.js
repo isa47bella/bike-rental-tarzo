@@ -66,6 +66,19 @@ router.post('/', async (req, res) => {
   const { data_ritiro, tipo_noleggio, giorni = 1 } = req.body;
   if (!data_ritiro || !tipo_noleggio) return res.status(400).json({ error: 'Parametri mancanti' });
 
+  // Verifica chiusure
+  const { data: chiusureRows } = await supabase.from('chiusure').select('data');
+  const chiusureSet = new Set((chiusureRows || []).map(c => c.data));
+  const numGiorniReq = Number(giorni);
+  for (let i = 0; i < (tipo_noleggio === 'multi_giorno' ? numGiorniReq : 1); i++) {
+    const d = new Date(`${data_ritiro}T00:00:00`);
+    d.setDate(d.getDate() + i);
+    const ds = d.toISOString().substring(0, 10);
+    if (chiusureSet.has(ds)) {
+      return res.status(400).json({ error: 'Data non disponibile — negozio chiuso', chiuso: true });
+    }
+  }
+
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, Number(giorni));
 
   const { data: occupate, error } = await supabase
@@ -119,6 +132,9 @@ router.post('/calendario', async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'Errore database' });
 
+  const { data: chiusureCal } = await supabase.from('chiusure').select('data');
+  const chiusureCalSet = new Set((chiusureCal || []).map(c => c.data));
+
   const TOTALE = 10;
   const risultati = {};
   for (let d = 1; d <= ultimoGiorno.getDate(); d++) {
@@ -132,7 +148,11 @@ router.post('/calendario', async (req, res) => {
         .map(p => p.bicicletta_id)
     );
 
-    risultati[dataStr] = { disponibili: TOTALE - occupate.size, occupate: occupate.size };
+    risultati[dataStr] = {
+      disponibili: TOTALE - occupate.size,
+      occupate:    occupate.size,
+      chiuso:      chiusureCalSet.has(dataStr),
+    };
   }
 
   return res.json(risultati);

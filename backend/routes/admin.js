@@ -8,9 +8,12 @@
 
 const express  = require('express');
 const router   = express.Router();
+const crypto   = require('crypto');
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
-const { sendAdminEmail, sendWhatsAppAlert } = require('../lib/email');
+const { CONTRATTO_TERMS, TIPO_LABEL, CONTRATTO_TITLE, CONTRATTO_FIELDS, LOCALE_MAP } = require('../lib/contratto-terms');
+const { sendPushToAll } = require('../lib/push');
+const { sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione }       = require('./availability');
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
@@ -40,7 +43,8 @@ router.get('/bookings', async (req, res) => {
       data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
       prezzo_totale, pagamento_status, created_at,
       stripe_payment_method_id, danno_status, danno_amount,
-      cauzione_status, cauzione_captured_amount, accessori
+      cauzione_status, cauzione_captured_amount, accessori,
+      firma_at, firma_nome, note_admin
     `)
     .order('data_ritiro', { ascending: true })
     .range(offset, offset + limit - 1);
@@ -253,6 +257,29 @@ router.post('/bookings/:id/send-email', async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/bookings/:id/send-firma ─────────────────────────────────
+
+router.post('/bookings/:id/send-firma', async (req, res) => {
+  const { data: p, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, lingua, firma_at')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !p) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!p.cliente_email || p.cliente_email === 'noemail@bikerentaltarzo.it') {
+    return res.status(400).json({ error: 'Nessuna email per questo cliente' });
+  }
+
+  try {
+    await sendFirmaLinkEmail(p);
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('[send-firma]', e.message);
+    return res.status(500).json({ error: 'Errore invio email: ' + e.message });
+  }
+});
+
 // ─── GET /api/admin/oggi ──────────────────────────────────────────────────────
 
 router.get('/oggi', async (req, res) => {
@@ -260,7 +287,7 @@ router.get('/oggi', async (req, res) => {
   const fields = `id, cliente_nome, cliente_email, cliente_telefono, bicicletta_id,
     tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione,
     orario_restituzione, prezzo_totale, pagamento_status, cauzione_status,
-    checkin_at, checkout_at, accessori`;
+    checkin_at, checkout_at, accessori, firma_at, firma_nome`;
 
   const [
     { data: ritiri },
@@ -481,6 +508,350 @@ router.post('/bookings/manual', async (req, res) => {
   sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp manual:', e));
 
   return res.json({ success: true, booking: prenotazione });
+});
+
+// ─── GET /api/admin/chiusure ──────────────────────────────────────────────────
+
+router.get('/chiusure', async (req, res) => {
+  const { data, error } = await supabase
+    .from('chiusure')
+    .select('*')
+    .order('data', { ascending: true });
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ chiusure: data || [] });
+});
+
+// ─── POST /api/admin/chiusure ─────────────────────────────────────────────────
+
+router.post('/chiusure', async (req, res) => {
+  const { data: dateInput, motivo = '' } = req.body;
+  if (!dateInput || !/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    return res.status(400).json({ error: 'Data non valida (formato: YYYY-MM-DD)' });
+  }
+  const { data, error } = await supabase
+    .from('chiusure')
+    .insert({ data: dateInput, motivo: motivo.trim() })
+    .select()
+    .single();
+  if (error) {
+    if (error.code === '23505') return res.status(409).json({ error: 'Questa data è già bloccata' });
+    return res.status(500).json({ error: error.message });
+  }
+  return res.json({ success: true, chiusura: data });
+});
+
+// ─── DELETE /api/admin/chiusure/:id ──────────────────────────────────────────
+
+router.delete('/chiusure/:id', async (req, res) => {
+  const { error } = await supabase
+    .from('chiusure')
+    .delete()
+    .eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ success: true });
+});
+
+// ─── GET /api/admin/cauzioni ─────────────────────────────────────────────────
+
+router.get('/cauzioni', async (req, res) => {
+  const { data, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, bicicletta_id, data_ritiro, data_restituzione, cauzione_status, cauzione_pi_id, cauzione_captured_amount, pagamento_status, prezzo_totale')
+    .eq('pagamento_status', 'paid')
+    .not('cauzione_status', 'is', null)
+    .order('data_ritiro', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ cauzioni: data || [] });
+});
+
+// ─── GET /api/admin/config ────────────────────────────────────────────────────
+
+const CONFIG_DEFAULTS = {
+  mezza_mattina: 35, mezza_pomeriggio: 35, intera_giornata: 45,
+  multi_2: 84, multi_3: 120, multi_4: 152, multi_5: 180, multi_6: 205, multi_7: 225, multi_extra: 20,
+};
+
+router.get('/config', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('config').select('chiave, valore');
+    if (error) throw error;
+    const saved = {};
+    (data || []).forEach(r => { saved[r.chiave] = isNaN(r.valore) ? r.valore : parseFloat(r.valore); });
+    return res.json({ config: { ...CONFIG_DEFAULTS, ...saved }, needs_migration: false });
+  } catch (_) {
+    return res.json({ config: CONFIG_DEFAULTS, needs_migration: true });
+  }
+});
+
+// ─── PUT /api/admin/config ────────────────────────────────────────────────────
+
+router.put('/config', async (req, res) => {
+  const rows = Object.entries(req.body).map(([chiave, valore]) => ({ chiave, valore: String(valore) }));
+  try {
+    const { error } = await supabase.from('config').upsert(rows, { onConflict: 'chiave' });
+    if (error) throw error;
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message, needs_migration: true });
+  }
+});
+
+// ─── GET /api/admin/occupazione ──────────────────────────────────────────────
+
+router.get('/occupazione', async (req, res) => {
+  const TOTAL_BICI = 10;
+  const months = [];
+  const now = new Date();
+
+  for (let m = 5; m >= 0; m--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+    const year  = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const startStr = `${year}-${String(month).padStart(2,'0')}-01`;
+    const endStr   = `${year}-${String(month).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+    const { data: pren } = await supabase
+      .from('prenotazioni')
+      .select('bicicletta_id, data_ritiro, data_restituzione, giorni, tipo_noleggio')
+      .eq('pagamento_status', 'paid')
+      .lte('data_ritiro', endStr)
+      .gte('data_restituzione', startStr);
+
+    let bookingDays = 0;
+    (pren || []).forEach(p => {
+      const from = new Date(Math.max(new Date(p.data_ritiro), new Date(startStr)));
+      const to   = new Date(Math.min(new Date(p.data_restituzione), new Date(endStr)));
+      const days = Math.max(0, Math.round((to - from) / 86400000) + 1);
+      bookingDays += days;
+    });
+
+    const possibleDays = daysInMonth * TOTAL_BICI;
+    const pct = Math.min(100, Math.round((bookingDays / possibleDays) * 100));
+
+    months.push({
+      month: `${year}-${String(month).padStart(2,'0')}`,
+      label: d.toLocaleDateString('it-IT', { month: 'short', year: '2-digit' }),
+      pct,
+      bookings: (pren || []).length,
+      bookingDays,
+    });
+  }
+
+  return res.json({ months });
+});
+
+// ─── GET /api/admin/cliente ───────────────────────────────────────────────────
+
+router.get('/cliente', async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim().length < 2) return res.status(400).json({ error: 'Query troppo corta (min 2 caratteri)' });
+  const safe = q.trim().replace(/[%_]/g, '\\$&');
+  const { data, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, cliente_telefono, tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione, orario_restituzione, prezzo_totale, pagamento_status, firma_at, note_admin, created_at')
+    .or(`cliente_email.ilike.%${safe}%,cliente_nome.ilike.%${safe}%,cliente_telefono.ilike.%${safe}%`)
+    .order('data_ritiro', { ascending: false })
+    .limit(50);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ results: data || [] });
+});
+
+// ─── PATCH /api/admin/bookings/:id/note ──────────────────────────────────────
+
+router.patch('/bookings/:id/note', async (req, res) => {
+  const { note_admin } = req.body;
+  const { error } = await supabase
+    .from('prenotazioni')
+    .update({ note_admin: note_admin ?? null })
+    .eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ success: true });
+});
+
+// ─── POST /api/admin/push/subscribe ──────────────────────────────────────────
+
+router.post('/push/subscribe', async (req, res) => {
+  const { subscription } = req.body;
+  if (!subscription?.endpoint) return res.status(400).json({ error: 'Subscription non valida' });
+  try {
+    await supabase.from('push_subscriptions')
+      .upsert({ endpoint: subscription.endpoint, subscription: JSON.stringify(subscription), active: true }, { onConflict: 'endpoint' });
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message, needs_migration: true });
+  }
+});
+
+// ─── DELETE /api/admin/push/subscribe ────────────────────────────────────────
+
+router.delete('/push/subscribe', async (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) return res.status(400).json({ error: 'Endpoint mancante' });
+  await supabase.from('push_subscriptions').update({ active: false }).eq('endpoint', endpoint).catch(() => {});
+  return res.json({ success: true });
+});
+
+// ─── POST /api/admin/push/test ────────────────────────────────────────────────
+
+router.post('/push/test', async (req, res) => {
+  try {
+    const result = await sendPushToAll({ title: '🚲 Test Notifica', body: 'Bike Rental Tarzo — notifiche push attive!', url: '/admin' });
+    return res.json({ success: true, result });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── GET /api/admin/bookings/:id/contratto ────────────────────────────────────
+// Restituisce il contratto firmato come HTML (da aprire in nuova tab → stampa PDF)
+
+router.get('/bookings/:id/contratto', async (req, res) => {
+  const { data: b, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione, orario_restituzione, prezzo_totale, lingua, firma_at, firma_nome, firma_ip')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !b) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!b.firma_at)  return res.status(400).json({ error: 'Contratto non ancora firmato' });
+
+  const lang   = b.lingua || 'it';
+  const esc    = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const locale = LOCALE_MAP[lang] || 'it-IT';
+
+  const fmtDate = ds => {
+    if (!ds) return '—';
+    return new Date(ds + 'T00:00:00').toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  const fmtDateTime = iso => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Rome' }) + ' (CET)';
+  };
+
+  const docHash = crypto.createHash('sha256')
+    .update(`${b.id}|${b.firma_at}|${b.firma_nome}`)
+    .digest('hex').slice(0, 16).toUpperCase();
+
+  const f          = CONTRATTO_FIELDS[lang] || CONTRATTO_FIELDS.it;
+  const title      = CONTRATTO_TITLE[lang]  || CONTRATTO_TITLE.it;
+  const tipoLabels = TIPO_LABEL[lang]        || TIPO_LABEL.it;
+  const tipoStr    = (tipoLabels[b.tipo_noleggio] || b.tipo_noleggio) + (Number(b.giorni) > 1 ? ` · ${b.giorni} giorni` : '');
+  const terms      = CONTRATTO_TERMS[lang]   || CONTRATTO_TERMS.it;
+  const shortId    = b.id.toUpperCase().slice(0, 8);
+
+  const termsHtml = terms.map(a => `
+    <div class="article">
+      <h3>${esc(a.title)}</h3>
+      <p>${esc(a.text)}</p>
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)} — ${shortId} — Bike Rental Tarzo</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+@page{margin:18mm 14mm;size:A4}
+body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65;color:#1a1a1a;background:#f2f4f0}
+@media print{body{background:#fff}.no-print{display:none!important}}
+.page{max-width:794px;margin:0 auto;background:#fff}
+.hdr{background:#2D8659;color:#fff;padding:26px 36px 22px;display:flex;align-items:center;gap:18px}
+.hdr-logo{font-size:44px;line-height:1}
+.hdr-text h1{font-size:1.4rem;font-weight:700;margin-bottom:3px}
+.hdr-text p{font-size:0.78rem;opacity:.82;font-family:Arial,sans-serif}
+.body{padding:30px 36px}
+.sec{margin-bottom:26px}
+.sec-title{font-family:Arial,sans-serif;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#2D8659;margin-bottom:10px;border-bottom:2px solid #2D8659;padding-bottom:3px}
+.sum-table{width:100%;border-collapse:collapse;font-family:Arial,sans-serif}
+.sum-table tr{border-bottom:1px solid #e4ece4}
+.sum-table tr:last-child{border-bottom:none}
+.sum-table td{padding:7px 4px;font-size:.87rem}
+.sum-table td:first-child{color:#666;width:36%}
+.sum-table td:last-child{font-weight:600;color:#111}
+.code{background:#1a5c3a;color:#fff;border-radius:4px;padding:3px 10px;font-size:.83rem;letter-spacing:.12em;font-family:'Courier New',monospace;display:inline-block}
+.terms-box{border:1px solid #cddacd;border-radius:6px;padding:15px 20px;background:#fafffe;font-size:.82rem;line-height:1.72}
+.article+.article{border-top:1px solid #e8ede8;margin-top:11px;padding-top:11px}
+.article h3{font-family:Arial,sans-serif;font-size:.78rem;font-weight:700;color:#1a5c3a;margin-bottom:4px}
+.article p{color:#444}
+.cert{background:#f0faf4;border:2px solid #2D8659;border-radius:10px;padding:22px 26px;margin-top:26px;page-break-inside:avoid}
+.cert-hdr{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.cert-seal{font-size:34px}
+.cert-htitle{font-family:Arial,sans-serif;font-size:.97rem;font-weight:700;color:#1a5c3a}
+.cert-hsub{font-family:Arial,sans-serif;font-size:.7rem;color:#666;margin-top:2px}
+.cert-table{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:.86rem}
+.cert-table tr{border-bottom:1px solid #c4e0cc}
+.cert-table tr:last-child{border-bottom:none}
+.cert-table td{padding:7px 4px}
+.cert-table td:first-child{color:#555;width:38%}
+.cert-table td:last-child{font-weight:600;color:#111;font-family:'Courier New',monospace;font-size:.82rem}
+.cert-table .hash td:last-child{color:#1a5c3a;font-size:.8rem}
+.cert-foot{margin-top:12px;font-family:Arial,sans-serif;font-size:.7rem;color:#888;border-top:1px solid #c4e0cc;padding-top:9px;line-height:1.6}
+.doc-foot{text-align:center;margin-top:26px;padding-top:12px;border-top:1px solid #ddd;font-family:Arial,sans-serif;font-size:.7rem;color:#aaa;line-height:1.8}
+.print-btn{display:block;margin:18px auto 0;padding:11px 30px;background:#2D8659;color:#fff;border:none;border-radius:8px;font-family:Arial,sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;letter-spacing:.03em}
+.print-btn:hover{background:#1a5c3a}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="hdr">
+    <div class="hdr-logo">🚲</div>
+    <div class="hdr-text">
+      <h1>${esc(title)}</h1>
+      <p>Bike Rental Tarzo / Papin Sport &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
+    </div>
+  </div>
+  <div class="body">
+
+    <div class="sec">
+      <div class="sec-title">${esc(f.summary)}</div>
+      <table class="sum-table">
+        <tr><td>${esc(f.code)}</td><td><span class="code">${shortId}</span></td></tr>
+        <tr><td>${esc(f.client)}</td><td>${esc(b.cliente_nome)}</td></tr>
+        <tr><td>${esc(f.type)}</td><td>${esc(tipoStr)}</td></tr>
+        <tr><td>${esc(f.pickup)}</td><td>${esc(fmtDate(b.data_ritiro))} &nbsp;${esc(b.orario_ritiro ? b.orario_ritiro.slice(0,5) : '')}</td></tr>
+        <tr><td>${esc(f.ret)}</td><td>${esc(fmtDate(b.data_restituzione))} &nbsp;${esc(b.orario_restituzione ? b.orario_restituzione.slice(0,5) : '')}</td></tr>
+        <tr><td>${esc(f.price)}</td><td>€${esc(Number(b.prezzo_totale || 0).toFixed(2))}</td></tr>
+      </table>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">${esc(f.terms)}</div>
+      <div class="terms-box">${termsHtml}</div>
+    </div>
+
+    <div class="cert">
+      <div class="cert-hdr">
+        <div class="cert-seal">✍️</div>
+        <div>
+          <div class="cert-htitle">${esc(f.cert)}</div>
+          <div class="cert-hsub">Bike Rental Tarzo — ${shortId}</div>
+        </div>
+      </div>
+      <table class="cert-table">
+        <tr><td>${esc(f.signer)}</td><td>${esc(b.firma_nome)}</td></tr>
+        <tr><td>${esc(f.date)}</td><td>${esc(fmtDateTime(b.firma_at))}</td></tr>
+        <tr><td>${esc(f.ip)}</td><td>${esc(b.firma_ip || '—')}</td></tr>
+        <tr><td>${esc(f.booking)}</td><td>${esc(b.id)}</td></tr>
+        <tr class="hash"><td>${esc(f.docid)}</td><td>${docHash}</td></tr>
+      </table>
+      <div class="cert-foot">${esc(f.footer)}</div>
+    </div>
+
+    <div class="doc-foot">
+      Bike Rental Tarzo / Papin Sport &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
+      arfantabikerental@gmail.com &nbsp;·&nbsp; Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO
+    </div>
+  </div>
+  <button class="print-btn no-print" onclick="window.print()">${esc(f.print)}</button>
+</div>
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.send(html);
 });
 
 // ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────

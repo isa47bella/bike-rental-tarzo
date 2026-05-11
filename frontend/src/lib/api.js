@@ -55,6 +55,28 @@ async function adminPost(path, body) {
   return data;
 }
 
+async function adminDelete(path, body) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const opts = { method: 'DELETE', headers: { 'x-admin-token': token } };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  const res  = await fetch(`${BASE}${path}`, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+  return data;
+}
+
+async function adminPut(path, body) {
+  const token = sessionStorage.getItem('admin_token') || '';
+  const res = await fetch(`${BASE}${path}`, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+    body:    JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+  return data;
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export const api = {
@@ -123,4 +145,21 @@ export const adminApi = {
 
   manualBooking: (data) =>
     adminPost('/admin/bookings/manual', data),
+
+  sendFirmaLink: (id) =>
+    adminPost(`/admin/bookings/${id}/send-firma`, {}),
+
+  getChiusure:    ()                   => adminGet('/admin/chiusure'),
+  addChiusura:    (data, motivo = '')  => adminPost('/admin/chiusure', { data, motivo }),
+  deleteChiusura: (id)                 => adminDelete(`/admin/chiusure/${id}`),
+
+  getCauzioni:    ()                   => adminGet('/admin/cauzioni'),
+  getConfig:      ()                   => adminGet('/admin/config'),
+  saveConfig:     (cfg)                => adminPut('/admin/config', cfg),
+  getOccupazione: ()                   => adminGet('/admin/occupazione'),
+  searchCliente:  (q)                  => adminGet('/admin/cliente', { q }),
+  saveNote:       (id, note_admin)     => adminPatch(`/admin/bookings/${id}/note`, { note_admin }),
+  pushSubscribe:  (subscription)       => adminPost('/admin/push/subscribe', { subscription }),
+  pushUnsubscribe:(endpoint)           => adminDelete('/admin/push/subscribe', { endpoint }),
+  pushTest:       ()                   => adminPost('/admin/push/test', {}),
 };

@@ -20,7 +20,7 @@ export default function StepSummary({ booking, onBack }) {
     setLoading(true);
     setError(null);
     try {
-      const { url } = await api.checkout(booking);
+      const { url } = await api.checkout({ ...booking, lingua: i18n.language });
       window.location.href = url;
     } catch (e) {
       setError(e.message || 'Errore durante il pagamento. Riprova.');

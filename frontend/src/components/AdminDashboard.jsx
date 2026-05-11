@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { adminApi } from '../lib/api.js';
+import { adminApi, api } from '../lib/api.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -106,6 +106,17 @@ const IconCard         = IC(<><rect x="1" y="4" width="22" height="16" rx="2"/><
 const IconX            = IC(<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
 const IconEdit         = IC(<><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>);
 const IconBattery      = IC(<><rect x="1" y="6" width="18" height="12" rx="2"/><path d="M23 13v-2"/></>);
+const IconPen          = IC(<><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></>);
+const IconLink         = IC(<><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></>);
+const IconSearch       = IC(<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>);
+const IconBlock        = IC(<><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></>);
+const IconFileText     = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>);
+const IconSettings     = IC(<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></>);
+const IconUsers        = IC(<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></>);
+const IconDeposit      = IC(<><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/><circle cx="12" cy="15" r="2"/></>);
+const IconBell         = IC(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>);
+const IconDownload     = IC(<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>);
+const IconNote         = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="10" y1="17" x2="8" y2="17"/></>);
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
@@ -114,7 +125,11 @@ const NAV = [
   { id: 'oggi',         label: 'Oggi',          Icon: IconOggi       },
   { id: 'prenotazioni', label: 'Prenotazioni',  Icon: IconBookings   },
   { id: 'flotta',       label: 'Flotta',        Icon: IconFlotta     },
+  { id: 'calendario',   label: 'Calendario',    Icon: IconCalendar   },
+  { id: 'cauzioni',     label: 'Cauzioni',      Icon: IconDeposit    },
+  { id: 'clienti',      label: 'Clienti',       Icon: IconUsers      },
   { id: 'report',       label: 'Report',        Icon: IconReport     },
+  { id: 'impostazioni', label: 'Impostazioni',  Icon: IconSettings   },
 ];
 
 const VIEW_TITLES = {
@@ -122,7 +137,11 @@ const VIEW_TITLES = {
   oggi:         'Operazioni di Oggi',
   prenotazioni: 'Prenotazioni',
   flotta:       'Gestione Flotta',
-  report:       'Report Finanziario',
+  calendario:   'Calendario & Disponibilità',
+  cauzioni:     'Dashboard Cauzioni',
+  clienti:      'Storico Clienti',
+  report:       'Report & Statistiche',
+  impostazioni: 'Impostazioni',
 };
 
 // ─── Email templates ──────────────────────────────────────────────────────────
@@ -210,6 +229,167 @@ export default function AdminDashboard() {
   const [damageMotivo,  setDamageMotivo]  = useState('');
   const [damageLoading, setDamageLoading] = useState(false);
 
+  // Send firma link
+  const [firmaLoading, setFirmaLoading] = useState({});
+
+  // Search
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Calendario
+  const [calYear,   setCalYear]   = useState(new Date().getFullYear());
+  const [calMonth,  setCalMonth]  = useState(new Date().getMonth() + 1);
+  const [calData,   setCalData]   = useState(null);
+  const [calLoading, setCalLoading] = useState(false);
+  const [calSelDay, setCalSelDay] = useState(null);
+
+  // Chiusure
+  const [chiusure,            setChiusure]            = useState([]);
+  const [nuovaChiusura,       setNuovaChiusura]       = useState('');
+  const [nuovaChiusuraMotivo, setNuovaChiusuraMotivo] = useState('');
+  const [chiusuraLoading,     setChiusuraLoading]     = useState(false);
+
+  // Cauzioni
+  const [cauzioni,        setCauzioni]        = useState([]);
+  const [cauzioniLoading, setCauzioniLoading] = useState(false);
+
+  // Clienti / Storico
+  const [clientiQuery,   setClientiQuery]   = useState('');
+  const [clientiResults, setClientiResults] = useState(null);
+  const [clientiLoading, setClientiLoading] = useState(false);
+
+  // Config prezzi
+  const [config,       setConfig]       = useState(null);
+  const [configEdit,   setConfigEdit]   = useState({});
+  const [configLoading,setConfigLoading]= useState(false);
+  const [configSaved,  setConfigSaved]  = useState(false);
+  const [configMigration, setConfigMigration] = useState(false);
+
+  // Occupazione (in Report)
+  const [occupazione,        setOccupazione]        = useState(null);
+  const [occupazioneLoading, setOccupazioneLoading] = useState(false);
+
+  // Note interne
+  const [noteModal,   setNoteModal]   = useState(null); // { id, nome, note_admin }
+  const [noteText,    setNoteText]    = useState('');
+  const [noteSaving,  setNoteSaving]  = useState(false);
+
+  // Push notifications
+  const [pushSub,     setPushSub]     = useState(null);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushStatus,  setPushStatus]  = useState('idle'); // idle | enabled | error | unsupported
+
+  async function handleSendFirma(bookingId) {
+    setFirmaLoading(prev => ({ ...prev, [bookingId]: true }));
+    try {
+      await adminApi.sendFirmaLink(bookingId);
+      alert('Email con link contratto inviata al cliente!');
+    } catch (e) {
+      alert('Errore: ' + e.message);
+    } finally {
+      setFirmaLoading(prev => ({ ...prev, [bookingId]: false }));
+    }
+  }
+
+  function exportCSV(data) {
+    const cols = ['ID','Nome','Email','Telefono','Tipo','Giorni','Data Ritiro','Orario Ritiro','Data Restituzione','Orario Restituzione','Prezzo €','Stato','Firma','Bici','Note Admin'];
+    const rows = (data || bookings).map(b => [
+      b.id.toUpperCase().slice(0,8),
+      b.cliente_nome, b.cliente_email, b.cliente_telefono,
+      tipoLabel(b.tipo_noleggio), b.giorni,
+      b.data_ritiro, b.orario_ritiro?.slice(0,5),
+      b.data_restituzione, b.orario_restituzione?.slice(0,5),
+      Number(b.prezzo_totale).toFixed(2), b.pagamento_status,
+      b.firma_at ? 'SI' : 'NO', `#${b.bicicletta_id}`,
+      b.note_admin || '',
+    ]);
+    const csv = [cols, ...rows].map(r => r.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `prenotazioni_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+
+  async function handleSaveNote() {
+    if (!noteModal) return;
+    setNoteSaving(true);
+    try {
+      await adminApi.saveNote(noteModal.id, noteText.trim() || null);
+      setNoteModal(null);
+      if (activeView === 'prenotazioni') await loadBookings(filter);
+    } catch (e) { alert('Errore: ' + e.message); }
+    finally { setNoteSaving(false); }
+  }
+
+  async function handleSaveConfig() {
+    setConfigLoading(true);
+    setConfigSaved(false);
+    try {
+      await adminApi.saveConfig(configEdit);
+      setConfig(configEdit);
+      setConfigSaved(true);
+      setTimeout(() => setConfigSaved(false), 3000);
+    } catch (e) {
+      if (e.message.includes('migration') || e.message.includes('does not exist')) setConfigMigration(true);
+      else alert('Errore: ' + e.message);
+    }
+    finally { setConfigLoading(false); }
+  }
+
+  async function handleClientiSearch(e) {
+    e?.preventDefault();
+    if (clientiQuery.trim().length < 2) return;
+    setClientiLoading(true);
+    try { const d = await adminApi.searchCliente(clientiQuery); setClientiResults(d.results || []); }
+    catch (e) { alert(e.message); }
+    finally { setClientiLoading(false); }
+  }
+
+  async function handlePushToggle() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported'); return;
+    }
+    setPushLoading(true);
+    try {
+      if (pushSub) {
+        await pushSub.unsubscribe();
+        await adminApi.pushUnsubscribe(pushSub.endpoint);
+        setPushSub(null); setPushStatus('idle');
+      } else {
+        const reg = await navigator.serviceWorker.ready;
+        const pub = 'BLGd4Jd629f3Cux4BFEx5gkFr8PHr6rIjtTQIGqA8LF_wg3xJYosQ_1Hnnu8KW5NsdIXXyIY2_DjaQ-1U5ZSVAM';
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: pub,
+        });
+        await adminApi.pushSubscribe(sub.toJSON());
+        setPushSub(sub); setPushStatus('enabled');
+      }
+    } catch (e) { setPushStatus('error'); console.error('Push:', e); }
+    finally { setPushLoading(false); }
+  }
+
+  async function handleViewContratto(bookingId) {
+    try {
+      const adminToken = sessionStorage.getItem('admin_token') || '';
+      const res = await fetch(`/api/admin/bookings/${bookingId}/contratto`, {
+        headers: { 'x-admin-token': adminToken },
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        alert(d.error || 'Contratto non disponibile');
+        return;
+      }
+      const html = await res.text();
+      const blob = new Blob([html], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      const win  = window.open(url, '_blank');
+      if (win) setTimeout(() => URL.revokeObjectURL(url), 120000);
+    } catch (e) {
+      alert('Errore: ' + e.message);
+    }
+  }
+
   // Manual booking modal
   const MANUAL_EMPTY = {
     cliente_nome: '', cliente_email: '', cliente_telefono: '', cliente_note: '',
@@ -259,13 +439,55 @@ export default function AdminDashboard() {
     finally { setReportLoading(false); }
   }, []);
 
+  const loadCalendario = useCallback(async (year, month) => {
+    setCalLoading(true);
+    try {
+      const data = await api.getCalendario(year, month);
+      setCalData(data);
+    } catch (_) {}
+    finally { setCalLoading(false); }
+  }, []);
+
+  const loadChiusure = useCallback(async () => {
+    try {
+      const d = await adminApi.getChiusure();
+      setChiusure(d.chiusure || []);
+    } catch (_) {}
+  }, []);
+
+  const loadCauzioni = useCallback(async () => {
+    setCauzioniLoading(true);
+    try { const d = await adminApi.getCauzioni(); setCauzioni(d.cauzioni || []); } catch (_) {}
+    finally { setCauzioniLoading(false); }
+  }, []);
+
+  const loadConfig = useCallback(async () => {
+    setConfigLoading(true);
+    try {
+      const d = await adminApi.getConfig();
+      setConfig(d.config);
+      setConfigEdit(d.config);
+      setConfigMigration(d.needs_migration || false);
+    } catch (_) {}
+    finally { setConfigLoading(false); }
+  }, []);
+
+  const loadOccupazione = useCallback(async () => {
+    setOccupazioneLoading(true);
+    try { const d = await adminApi.getOccupazione(); setOccupazione(d.months || []); } catch (_) {}
+    finally { setOccupazioneLoading(false); }
+  }, []);
+
   // Load data when switching views
   useEffect(() => {
     if (!authed) return;
     if (activeView === 'oggi') loadOggi();
     if (activeView === 'prenotazioni' && bookings.length === 0) loadBookings('paid');
     if (activeView === 'flotta' && flotta.length === 0) loadFlotta();
-    if (activeView === 'report' && !report) loadReport();
+    if (activeView === 'report') { if (!report) loadReport(); if (!occupazione) loadOccupazione(); }
+    if (activeView === 'calendario') { loadCalendario(calYear, calMonth); loadChiusure(); }
+    if (activeView === 'cauzioni') loadCauzioni();
+    if (activeView === 'impostazioni' && !config) loadConfig();
   }, [activeView, authed]); // eslint-disable-line
 
   // ─── Login ──────────────────────────────────────────────────────────────────
@@ -459,6 +681,36 @@ export default function AdminDashboard() {
     }
   }
 
+  // ─── Firma link helper ───────────────────────────────────────────────────────
+
+  function copyFirmaLink(bookingId) {
+    const url = `${window.location.origin}/firma/${bookingId}`;
+    navigator.clipboard.writeText(url).then(() => alert('Link copiato!\n' + url)).catch(() => alert(url));
+  }
+
+  // ─── Chiusure ────────────────────────────────────────────────────────────────
+
+  async function handleAddChiusura() {
+    if (!nuovaChiusura) return;
+    setChiusuraLoading(true);
+    try {
+      await adminApi.addChiusura(nuovaChiusura, nuovaChiusuraMotivo);
+      setNuovaChiusura('');
+      setNuovaChiusuraMotivo('');
+      await loadChiusure();
+      await loadCalendario(calYear, calMonth);
+    } catch (e) { alert(e.message); }
+    finally { setChiusuraLoading(false); }
+  }
+
+  async function handleDeleteChiusura(id) {
+    try {
+      await adminApi.deleteChiusura(id);
+      await loadChiusure();
+      await loadCalendario(calYear, calMonth);
+    } catch (e) { alert(e.message); }
+  }
+
   // ─── Photo upload helper ─────────────────────────────────────────────────────
 
   async function handlePhotoFile(file, setter) {
@@ -597,7 +849,11 @@ export default function AdminDashboard() {
           {activeView === 'oggi'         && renderOggi()}
           {activeView === 'prenotazioni' && renderPrenotazioni()}
           {activeView === 'flotta'       && renderFlotta()}
+          {activeView === 'calendario'   && renderCalendario()}
+          {activeView === 'cauzioni'     && renderCauzioni()}
+          {activeView === 'clienti'      && renderClienti()}
           {activeView === 'report'       && renderReport()}
+          {activeView === 'impostazioni' && renderImpostazioni()}
         </div>
       </div>
 
@@ -609,6 +865,7 @@ export default function AdminDashboard() {
       {emailModal    && renderEmailModal()}
       {damageModal   && renderDamageModal()}
       {manualModal   && renderManualModal()}
+      {noteModal     && renderNoteModal()}
     </div>
   );
 
@@ -791,14 +1048,38 @@ export default function AdminDashboard() {
                   {parseAccessori(b.accessori).length > 0 && (
                     <div className="ac-op-acc">🎒 {parseAccessori(b.accessori).join(', ')}</div>
                   )}
-                  {!b.checkin_at && (
-                    <button
-                      className="ac-btn primary sm"
-                      onClick={() => { setCheckinModal(b); setCheckinNote(''); setDocFoto(null); setBiciFotoOut(null); }}
-                    >
-                      Check-in →
-                    </button>
-                  )}
+                  <div className="ac-op-card-actions">
+                    {b.firma_at
+                      ? (
+                        <>
+                          <span className="ac-badge green sm"><IconPen /> Contratto firmato</span>
+                          <button className="ac-btn ghost sm" onClick={() => handleViewContratto(b.id)} title="Vedi contratto firmato">
+                            <IconFileText /> Vedi PDF
+                          </button>
+                        </>
+                      )
+                      : (
+                        <>
+                          <button
+                            className="ac-btn primary sm"
+                            onClick={() => handleSendFirma(b.id)}
+                            disabled={firmaLoading[b.id]}
+                            title="Invia link contratto via email"
+                          >
+                            <IconMail /> {firmaLoading[b.id] ? 'Invio…' : 'Invia contratto'}
+                          </button>
+                          <button className="ac-btn ghost sm" onClick={() => copyFirmaLink(b.id)} title="Copia link"><IconLink /></button>
+                        </>
+                      )}
+                    {!b.checkin_at && (
+                      <button
+                        className="ac-btn green sm"
+                        onClick={() => { setCheckinModal(b); setCheckinNote(''); setDocFoto(null); setBiciFotoOut(null); }}
+                      >
+                        Check-in →
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))
             }
@@ -881,6 +1162,18 @@ export default function AdminDashboard() {
       { key: 'cancelled', label: 'Cancellate' },
     ];
 
+    const filteredBookings = searchQuery.trim()
+      ? bookings.filter(b => {
+          const q = searchQuery.toLowerCase();
+          return (
+            (b.cliente_nome     || '').toLowerCase().includes(q) ||
+            (b.cliente_email    || '').toLowerCase().includes(q) ||
+            (b.cliente_telefono || '').toLowerCase().includes(q) ||
+            b.id.toLowerCase().includes(q)
+          );
+        })
+      : bookings;
+
     return (
       <div>
         <div className="ac-controls">
@@ -895,8 +1188,15 @@ export default function AdminDashboard() {
             <IconRefresh /> Aggiorna
           </button>
           <button
-            className="ac-btn primary sm"
+            className="ac-btn ghost sm"
             style={{ marginLeft: 'auto' }}
+            onClick={() => exportCSV(filteredBookings)}
+            title="Esporta CSV"
+          >
+            <IconDownload /> CSV
+          </button>
+          <button
+            className="ac-btn primary sm"
             onClick={() => {
               const prezzoDefault = String(calcPrezzoManual('intera_giornata', 2));
               setManualForm({ ...MANUAL_EMPTY, prezzo_totale: prezzoDefault });
@@ -908,12 +1208,31 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        <div className="ac-search-row">
+          <div className="ac-search-box">
+            <IconSearch />
+            <input
+              className="ac-search-input"
+              type="text"
+              placeholder="Cerca per nome, email, telefono, codice…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button className="ac-search-clear" onClick={() => setSearchQuery('')}><IconX /></button>
+            )}
+          </div>
+          {searchQuery && (
+            <span className="ac-search-count">{filteredBookings.length} / {bookings.length}</span>
+          )}
+        </div>
+
         {error && <div className="ac-error-banner">{error}</div>}
 
         <div className="ac-table-wrap">
           {loading ? (
             <div className="ac-spinner-center"><div className="ac-spinner" /></div>
-          ) : bookings.length === 0 ? (
+          ) : filteredBookings.length === 0 ? (
             <div className="ac-empty-state"><IconBike /><p>Nessuna prenotazione trovata</p></div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -928,12 +1247,14 @@ export default function AdminDashboard() {
                     <th>Bici</th>
                     <th>Prezzo</th>
                     <th>Status</th>
+                    {filter === 'paid' && <th>Firma</th>}
                     {filter === 'paid' && <th>Cauzione</th>}
+                    {filter === 'paid' && <th>Note</th>}
                     {filter === 'paid' && <th>Azioni</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map(b => (
+                  {filteredBookings.map(b => (
                     <tr key={b.id}>
                       <td><span className="ac-code">{b.id.toUpperCase().substring(0, 8)}</span></td>
                       <td>
@@ -963,12 +1284,47 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       {filter === 'paid' && (
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {b.firma_at
+                            ? (
+                              <>
+                                <span className="ac-badge green sm">✍️ Firmato</span>
+                                <button
+                                  className="ac-action-btn"
+                                  title="Vedi contratto firmato"
+                                  onClick={() => handleViewContratto(b.id)}
+                                ><IconFileText /></button>
+                              </>
+                            )
+                            : (
+                              <>
+                                <button
+                                  className="ac-action-btn email"
+                                  title="Invia link contratto via email"
+                                  onClick={() => handleSendFirma(b.id)}
+                                  disabled={firmaLoading[b.id]}
+                                >{firmaLoading[b.id] ? '…' : <IconMail />}</button>
+                                <button className="ac-action-btn" title="Copia link" onClick={() => copyFirmaLink(b.id)}><IconLink /></button>
+                              </>
+                            )}
+                        </td>
+                      )}
+                      {filter === 'paid' && (
                         <td>
                           {b.cauzione_status === 'authorized' && <span className="ac-badge cauzione-ok">€1.000 bloccati</span>}
                           {b.cauzione_status === 'captured'   && <span className="ac-badge cauzione-cap">€{Number(b.cauzione_captured_amount||0).toFixed(0)} incassati</span>}
                           {b.cauzione_status === 'cancelled'  && <span className="ac-badge muted">Rilasciata</span>}
                           {b.cauzione_status === 'failed'     && <span className="ac-badge red">Non riuscita</span>}
                           {(!b.cauzione_status || b.cauzione_status === 'pending') && <span className="ac-muted-dash">—</span>}
+                        </td>
+                      )}
+                      {filter === 'paid' && (
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className={`ac-action-btn note${b.note_admin ? ' note-active' : ''}`}
+                            title={b.note_admin || 'Aggiungi nota interna'}
+                            onClick={() => { setNoteModal({ id: b.id, nome: b.cliente_nome }); setNoteText(b.note_admin || ''); }}
+                          ><IconNote /></button>
                         </td>
                       )}
                       {filter === 'paid' && (
@@ -1161,6 +1517,223 @@ export default function AdminDashboard() {
             ))}
           </div>
         </div>
+
+        {occupazione && occupazione.length > 0 && (
+          <div className="ac-report-section">
+            <h3 className="ac-section-title">Tasso di Occupazione — Ultimi 6 Mesi</h3>
+            <div className="ac-occ-chart">
+              {occupazione.map(m => (
+                <div key={m.month} className="ac-occ-col">
+                  <div className="ac-occ-val">{m.pct}%</div>
+                  <div className="ac-occ-bar-wrap">
+                    <div
+                      className={`ac-occ-bar${m.pct >= 70 ? ' high' : m.pct >= 40 ? ' mid' : ' low'}`}
+                      style={{ height: `${Math.max(m.pct, 2)}%` }}
+                    />
+                  </div>
+                  <div className="ac-occ-label">{formatMonth(m.month)}</div>
+                  <div className="ac-occ-days">{m.booked_days}/{m.total_days}g</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {occupazioneLoading && (
+          <div className="ac-report-section">
+            <div className="ac-spinner-center"><div className="ac-spinner" /></div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── CALENDARIO VIEW ─────────────────────────────────────────────────────────
+
+  function renderCalendario() {
+    const MESI   = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const GIORNI = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+    const TOTALE = 10;
+    const chiusureSet = new Set(chiusure.map(c => c.data));
+    const today       = new Date().toISOString().substring(0, 10);
+
+    function prevMonth() {
+      let nm = calMonth - 1, ny = calYear;
+      if (nm < 1) { nm = 12; ny--; }
+      setCalYear(ny); setCalMonth(nm); setCalData(null); setCalSelDay(null);
+      loadCalendario(ny, nm);
+    }
+    function nextMonth() {
+      let nm = calMonth + 1, ny = calYear;
+      if (nm > 12) { nm = 1; ny++; }
+      setCalYear(ny); setCalMonth(nm); setCalData(null); setCalSelDay(null);
+      loadCalendario(ny, nm);
+    }
+
+    // Build cells array
+    const firstDow   = new Date(calYear, calMonth - 1, 1).getDay();
+    const startOff   = firstDow === 0 ? 6 : firstDow - 1;
+    const daysInMon  = new Date(calYear, calMonth, 0).getDate();
+    const cells      = [...Array(startOff).fill(null), ...Array.from({ length: daysInMon }, (_, i) => i + 1)];
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    function getStatus(dateStr) {
+      if (chiusureSet.has(dateStr)) return 'closed';
+      if (!calData?.[dateStr]) return 'unknown';
+      const { disponibili } = calData[dateStr];
+      if (disponibili >= 7) return 'available';
+      if (disponibili >= 4) return 'partial';
+      if (disponibili >= 1) return 'tight';
+      return 'full';
+    }
+
+    function getDayLabel(dateStr) {
+      if (chiusureSet.has(dateStr)) return 'Chiuso';
+      if (!calData?.[dateStr]) return null;
+      return `${calData[dateStr].disponibili}/${TOTALE}`;
+    }
+
+    const selectedChiusura = calSelDay ? chiusure.find(c => c.data === calSelDay) : null;
+
+    return (
+      <div className="ac-calendario">
+        {/* Calendar grid */}
+        <div className="ac-cal-main">
+          <div className="ac-cal-nav">
+            <button className="ac-btn ghost sm" onClick={prevMonth}>‹ Prec.</button>
+            <h3 className="ac-cal-title">{MESI[calMonth - 1]} {calYear}</h3>
+            <button className="ac-btn ghost sm" onClick={nextMonth}>Succ. ›</button>
+          </div>
+
+          {calLoading ? (
+            <div className="ac-spinner-center"><div className="ac-spinner" /></div>
+          ) : (
+            <div className="ac-cal-grid">
+              {GIORNI.map(g => (
+                <div key={g} className="ac-cal-header-cell">{g}</div>
+              ))}
+              {cells.map((day, i) => {
+                if (day === null) return <div key={`e${i}`} className="ac-cal-cell empty" />;
+                const dateStr   = `${calYear}-${String(calMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                const status    = getStatus(dateStr);
+                const label     = getDayLabel(dateStr);
+                const isToday   = dateStr === today;
+                const isSel     = dateStr === calSelDay;
+                const cMotivo   = chiusure.find(ch => ch.data === dateStr)?.motivo;
+                return (
+                  <div
+                    key={day}
+                    className={`ac-cal-cell ${status}${isToday ? ' today' : ''}${isSel ? ' selected' : ''}`}
+                    onClick={() => setCalSelDay(isSel ? null : dateStr)}
+                    title={cMotivo || undefined}
+                  >
+                    <span className="ac-cal-day-num">{day}</span>
+                    {label && <span className="ac-cal-day-label">{label}</span>}
+                    {cMotivo && <span className="ac-cal-day-motivo">{cMotivo}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="ac-cal-legend">
+            <div className="ac-legend-item"><div className="ac-legend-dot available" />7–10 libere</div>
+            <div className="ac-legend-item"><div className="ac-legend-dot partial"   />4–6 libere</div>
+            <div className="ac-legend-item"><div className="ac-legend-dot tight"     />1–3 libere</div>
+            <div className="ac-legend-item"><div className="ac-legend-dot full"      />Esaurito</div>
+            <div className="ac-legend-item"><div className="ac-legend-dot closed"    />Chiuso</div>
+          </div>
+
+          {calSelDay && (
+            <div className="ac-cal-detail">
+              <div className="ac-cal-detail-header">
+                <h4>{formatDateLong(calSelDay)}</h4>
+                <button className="ac-icon-btn" onClick={() => setCalSelDay(null)}><IconX /></button>
+              </div>
+              {selectedChiusura ? (
+                <div className="ac-cal-detail-closed">
+                  <IconBlock />
+                  <span>Negozio chiuso{selectedChiusura.motivo ? ` — ${selectedChiusura.motivo}` : ''}</span>
+                  <button
+                    className="ac-btn danger sm"
+                    onClick={() => handleDeleteChiusura(selectedChiusura.id)}
+                  >Rimuovi blocco</button>
+                </div>
+              ) : (
+                <div className="ac-cal-detail-avail">
+                  {calData?.[calSelDay] && (
+                    <span className={`ac-badge ${getStatus(calSelDay)}`}>
+                      {calData[calSelDay].disponibili}/{TOTALE} bici disponibili
+                    </span>
+                  )}
+                  <button
+                    className="ac-btn ghost sm"
+                    onClick={() => setNuovaChiusura(calSelDay)}
+                    title="Blocca questa data"
+                  >
+                    <IconBlock /> Blocca data
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Chiusure management panel */}
+        <div className="ac-chiusure-panel">
+          <h3 className="ac-section-title">Blocco Date</h3>
+          <p className="ac-chiusure-desc">Le date bloccate non saranno prenotabili online.</p>
+
+          <div className="ac-chiusura-form">
+            <div>
+              <label className="ac-label">Data da bloccare</label>
+              <input
+                className="ac-input"
+                type="date"
+                value={nuovaChiusura}
+                onChange={e => setNuovaChiusura(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="ac-label">Motivazione (opz.)</label>
+              <input
+                className="ac-input"
+                type="text"
+                placeholder="Es. Chiusura estiva, Fiera..."
+                value={nuovaChiusuraMotivo}
+                onChange={e => setNuovaChiusuraMotivo(e.target.value)}
+              />
+            </div>
+            <button
+              className="ac-btn primary sm"
+              onClick={handleAddChiusura}
+              disabled={!nuovaChiusura || chiusuraLoading}
+            >
+              <IconBlock /> {chiusuraLoading ? 'Salvataggio…' : '+ Blocca data'}
+            </button>
+          </div>
+
+          <div>
+            <div className="ac-section-title" style={{ marginBottom: 8 }}>Programmate</div>
+            <div className="ac-chiusure-list">
+              {chiusure.length === 0 ? (
+                <div className="ac-empty-sm">Nessuna chiusura programmata</div>
+              ) : (
+                chiusure.map(c => (
+                  <div key={c.id} className="ac-chiusura-row">
+                    <div>
+                      <div className="ac-chiusura-date">{formatDateLong(c.data)}</div>
+                      {c.motivo && <div className="ac-cell-sub">{c.motivo}</div>}
+                    </div>
+                    <button
+                      className="ac-btn danger sm"
+                      onClick={() => handleDeleteChiusura(c.id)}
+                    >Rimuovi</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1178,6 +1751,35 @@ export default function AdminDashboard() {
           </div>
           <div className="ac-modal-info">
             Bici <strong>#{b.bicicletta_id}</strong> · {tipoLabel(b.tipo_noleggio)} · {formatDateIT(b.data_ritiro)} {b.orario_ritiro?.substring(0,5)}
+          </div>
+
+          <div className="ac-modal-firma-row">
+            {b.firma_at ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span className="ac-badge green">✍️ Contratto firmato da {b.firma_nome} — {formatDateTime(b.firma_at)}</span>
+                <button className="ac-btn primary sm" onClick={() => handleViewContratto(b.id)} title="Apri contratto firmato">
+                  <IconFileText /> Vedi contratto
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span className="ac-badge yellow">Contratto non firmato</span>
+                <button
+                  className="ac-btn primary sm"
+                  onClick={() => handleSendFirma(b.id)}
+                  disabled={firmaLoading[b.id]}
+                >
+                  <IconMail /> {firmaLoading[b.id] ? 'Invio…' : 'Invia via email'}
+                </button>
+                <button className="ac-btn ghost sm" onClick={() => copyFirmaLink(b.id)} title="Copia link">
+                  <IconLink /> Copia link
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div style={{ padding: '14px 22px 4px', borderTop: '1px solid #1A2840' }}>
+            <span className="ac-label" style={{ fontSize: '0.7rem', color: '#4ADE80' }}>📷 Foto da scattare al ritiro</span>
           </div>
 
           <div className="ac-photo-grid">
@@ -1214,7 +1816,12 @@ export default function AdminDashboard() {
             Bici <strong>#{b.bicicletta_id}</strong> · Restituzione prevista {formatDateIT(b.data_restituzione)} {b.orario_restituzione?.substring(0,5)}
           </div>
 
-          <PhotoUpload label="Bici al rientro" value={biciFotoIn} onChange={setBiciFotoIn} inputRef={bikeInRef} />
+          <div style={{ padding: '14px 22px 4px', borderTop: '1px solid #1A2840' }}>
+            <span className="ac-label" style={{ fontSize: '0.7rem', color: '#4ADE80' }}>📷 Foto da scattare al rientro</span>
+          </div>
+          <div style={{ padding: '0 22px 14px' }}>
+            <PhotoUpload label="Bici al rientro" value={biciFotoIn} onChange={setBiciFotoIn} inputRef={bikeInRef} />
+          </div>
 
           <div className="ac-field">
             <label className="ac-label">Note rientro (danni, osservazioni…)</label>
@@ -1520,4 +2127,365 @@ export default function AdminDashboard() {
       </div>
     );
   }
+
+  // ─── NOTE MODAL ───────────────────────────────────────────────────────────────
+
+  function renderNoteModal() {
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setNoteModal(null)}>
+        <div className="ac-modal" style={{ maxWidth: 460 }}>
+          <div className="ac-modal-header">
+            <h2><IconNote /> Nota interna</h2>
+            <button className="ac-icon-btn" onClick={() => setNoteModal(null)}><IconX /></button>
+          </div>
+          <div className="ac-modal-info">Prenotazione di <strong>{noteModal.nome}</strong> — non visibile al cliente</div>
+          <div className="ac-field">
+            <label className="ac-label">Nota</label>
+            <textarea
+              className="ac-textarea"
+              rows={5}
+              placeholder="Es. Cliente preferisce casco L, ha chiesto di posticipare..."
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="ac-modal-footer">
+            <button className="ac-btn primary full" onClick={handleSaveNote} disabled={noteSaving}>
+              {noteSaving ? 'Salvataggio…' : '✓ Salva Nota'}
+            </button>
+            {noteText && (
+              <button className="ac-btn danger" onClick={() => setNoteText('')}>Cancella testo</button>
+            )}
+            <button className="ac-btn ghost" onClick={() => setNoteModal(null)} disabled={noteSaving}>Chiudi</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── CAUZIONI VIEW ────────────────────────────────────────────────────────────
+
+  function renderCauzioni() {
+    if (cauzioniLoading) return <div className="ac-spinner-center"><div className="ac-spinner" /></div>;
+
+    const authorized = cauzioni.filter(c => c.cauzione_status === 'authorized');
+    const captured   = cauzioni.filter(c => c.cauzione_status === 'captured');
+    const released   = cauzioni.filter(c => c.cauzione_status === 'cancelled');
+    const pending    = cauzioni.filter(c => !c.cauzione_status || c.cauzione_status === 'pending');
+    const failed     = cauzioni.filter(c => c.cauzione_status === 'failed');
+
+    const statusLabel = { authorized: '€1.000 bloccati', captured: 'Incassata', cancelled: 'Rilasciata', pending: 'In attesa', failed: 'Non riuscita' };
+    const statusClass = { authorized: 'cauzione-ok', captured: 'cauzione-cap', cancelled: 'muted', pending: 'yellow', failed: 'red' };
+
+    return (
+      <div className="ac-cauzioni">
+        {/* Summary cards */}
+        <div className="ac-cau-summary">
+          <div className="ac-cau-card green">
+            <div className="ac-cau-num">{authorized.length}</div>
+            <div className="ac-cau-lbl">Bloccate attive</div>
+            <div className="ac-cau-amt">€{(authorized.length * 1000).toLocaleString('it-IT')}</div>
+          </div>
+          <div className="ac-cau-card orange">
+            <div className="ac-cau-num">{captured.length}</div>
+            <div className="ac-cau-lbl">Incassate</div>
+            <div className="ac-cau-amt">€{captured.reduce((s, c) => s + Number(c.cauzione_captured_amount || 0), 0).toFixed(0)}</div>
+          </div>
+          <div className="ac-cau-card muted">
+            <div className="ac-cau-num">{released.length}</div>
+            <div className="ac-cau-lbl">Rilasciate</div>
+          </div>
+          <div className="ac-cau-card yellow">
+            <div className="ac-cau-num">{pending.length + failed.length}</div>
+            <div className="ac-cau-lbl">Pending / Errori</div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="ac-table-wrap">
+          {cauzioni.length === 0 ? (
+            <div className="ac-empty-state"><IconDeposit /><p>Nessuna prenotazione con cauzione</p></div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="ac-table">
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Data Ritiro</th>
+                    <th>Bici</th>
+                    <th>Prezzo</th>
+                    <th>Cauzione</th>
+                    <th>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cauzioni.map(b => (
+                    <tr key={b.id}>
+                      <td>
+                        <div className="ac-cell-name">{b.cliente_nome}</div>
+                        <div className="ac-cell-sub">{b.cliente_email}</div>
+                      </td>
+                      <td>
+                        <div>{formatDateIT(b.data_ritiro)}</div>
+                        <div className="ac-cell-sub">{tipoShort(b.tipo_noleggio)}</div>
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>#{b.bicicletta_id}</td>
+                      <td><span className="ac-price">€{Number(b.prezzo_totale).toFixed(0)}</span></td>
+                      <td>
+                        <span className={`ac-badge ${statusClass[b.cauzione_status] || 'muted'}`}>
+                          {b.cauzione_status === 'captured'
+                            ? `€${Number(b.cauzione_captured_amount||0).toFixed(0)} incassati`
+                            : statusLabel[b.cauzione_status] || '—'}
+                        </span>
+                      </td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {b.cauzione_status === 'authorized' && (
+                          <>
+                            <button className="ac-action-btn release" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' })}>✓ Rilascia</button>
+                            <button className="ac-action-btn capture" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}>⚠ Danni</button>
+                          </>
+                        )}
+                        {b.cauzione_status !== 'authorized' && (
+                          <span className="ac-muted-dash">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── CLIENTI VIEW ─────────────────────────────────────────────────────────────
+
+  function renderClienti() {
+    return (
+      <div className="ac-clienti">
+        <form className="ac-clienti-search" onSubmit={handleClientiSearch}>
+          <div className="ac-search-box" style={{ flex: 1 }}>
+            <IconSearch />
+            <input
+              className="ac-search-input"
+              type="text"
+              placeholder="Cerca per nome, email o telefono…"
+              value={clientiQuery}
+              onChange={e => setClientiQuery(e.target.value)}
+              autoFocus
+            />
+            {clientiQuery && (
+              <button type="button" className="ac-search-clear" onClick={() => { setClientiQuery(''); setClientiResults(null); }}><IconX /></button>
+            )}
+          </div>
+          <button type="submit" className="ac-btn primary sm" disabled={clientiLoading || clientiQuery.trim().length < 2}>
+            {clientiLoading ? 'Ricerca…' : <><IconSearch /> Cerca</>}
+          </button>
+        </form>
+
+        {clientiResults === null && !clientiLoading && (
+          <div className="ac-empty-state" style={{ marginTop: 48 }}>
+            <IconUsers />
+            <p>Inserisci almeno 2 caratteri per cercare</p>
+          </div>
+        )}
+
+        {clientiResults !== null && clientiResults.length === 0 && (
+          <div className="ac-empty-state" style={{ marginTop: 48 }}>
+            <IconSearch />
+            <p>Nessun cliente trovato per "<strong>{clientiQuery}</strong>"</p>
+          </div>
+        )}
+
+        {clientiResults && clientiResults.length > 0 && (() => {
+          // Group by email (or nome+telefono as fallback)
+          const grouped = {};
+          for (const b of clientiResults) {
+            const key = b.cliente_email || `${b.cliente_nome}__${b.cliente_telefono}`;
+            if (!grouped[key]) grouped[key] = { nome: b.cliente_nome, email: b.cliente_email, telefono: b.cliente_telefono, bookings: [] };
+            grouped[key].bookings.push(b);
+          }
+          return Object.values(grouped).map(cliente => (
+            <div key={cliente.email || cliente.nome} className="ac-cliente-card">
+              <div className="ac-cliente-header">
+                <div>
+                  <div className="ac-cliente-nome">{cliente.nome}</div>
+                  <div className="ac-cliente-meta">
+                    {cliente.email && <span>{cliente.email}</span>}
+                    {cliente.email && cliente.telefono && <span> · </span>}
+                    {cliente.telefono && <span>{cliente.telefono}</span>}
+                  </div>
+                </div>
+                <span className="ac-badge indigo">{cliente.bookings.length} prenotazion{cliente.bookings.length === 1 ? 'e' : 'i'}</span>
+              </div>
+              <div className="ac-cliente-timeline">
+                {cliente.bookings.sort((a, b) => new Date(b.data_ritiro) - new Date(a.data_ritiro)).map(b => (
+                  <div key={b.id} className="ac-timeline-row">
+                    <div className={`ac-timeline-dot ${b.pagamento_status}`} />
+                    <div className="ac-timeline-body">
+                      <div className="ac-timeline-top">
+                        <span className="ac-timeline-date">{formatDateIT(b.data_ritiro)}</span>
+                        <span className="ac-timeline-tipo">{tipoLabel(b.tipo_noleggio)}{b.giorni > 1 ? ` · ${b.giorni}g` : ''}</span>
+                        <span className="ac-price" style={{ fontSize: '0.8rem' }}>€{Number(b.prezzo_totale).toFixed(0)}</span>
+                        <span className={`ac-badge sm ${b.pagamento_status}`}>
+                          {b.pagamento_status === 'paid' && 'Pagata'}
+                          {b.pagamento_status === 'cancelled' && 'Cancellata'}
+                          {b.pagamento_status === 'pending' && 'Attesa'}
+                        </span>
+                      </div>
+                      {b.firma_at && (
+                        <button className="ac-btn ghost sm" style={{ marginTop: 4 }} onClick={() => handleViewContratto(b.id)}>
+                          <IconFileText /> Vedi contratto
+                        </button>
+                      )}
+                      {b.note_admin && <div className="ac-timeline-note"><IconNote /> {b.note_admin}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
+      </div>
+    );
+  }
+
+  // ─── IMPOSTAZIONI VIEW ────────────────────────────────────────────────────────
+
+  function renderImpostazioni() {
+    const BIKE_TYPES = [
+      { key: 'ecity',  label: 'E-City Bike' },
+      { key: 'emtb',   label: 'E-MTB' },
+      { key: 'bimbo',  label: 'E-MTB Bimbo' },
+    ];
+    const TIPO_KEYS = [
+      { key: 'mezza',   label: 'Mezza Giornata' },
+      { key: 'intera',  label: 'Giornata Intera' },
+      { key: 'multi_2', label: 'Multi 2 giorni' },
+      { key: 'multi_3', label: 'Multi 3 giorni' },
+      { key: 'multi_4', label: 'Multi 4 giorni' },
+      { key: 'multi_5', label: 'Multi 5 giorni' },
+      { key: 'multi_6', label: 'Multi 6 giorni' },
+      { key: 'multi_7', label: 'Multi 7 giorni' },
+    ];
+
+    return (
+      <div className="ac-impostazioni">
+
+        {/* Push notifications */}
+        <div className="ac-settings-section">
+          <h3 className="ac-section-title"><IconBell /> Notifiche Push</h3>
+          <p className="ac-settings-desc">Ricevi una notifica push su questo browser ad ogni nuova prenotazione online.</p>
+          <div className="ac-push-row">
+            <div>
+              {pushStatus === 'enabled' && <span className="ac-badge green">Notifiche attive</span>}
+              {pushStatus === 'idle'    && <span className="ac-badge muted">Non attive</span>}
+              {pushStatus === 'error'   && <span className="ac-badge red">Errore — riprova</span>}
+              {pushStatus === 'unsupported' && <span className="ac-badge yellow">Browser non supportato</span>}
+            </div>
+            {pushStatus !== 'unsupported' && (
+              <button
+                className={`ac-btn sm ${pushSub ? 'danger' : 'primary'}`}
+                onClick={handlePushToggle}
+                disabled={pushLoading}
+              >
+                {pushLoading ? 'In corso…' : pushSub ? 'Disattiva notifiche' : 'Attiva notifiche'}
+              </button>
+            )}
+            {pushSub && (
+              <button
+                className="ac-btn ghost sm"
+                onClick={() => adminApi.pushTest().then(() => alert('Notifica di test inviata!')).catch(e => alert(e.message))}
+              >
+                Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Config prezzi */}
+        <div className="ac-settings-section">
+          <h3 className="ac-section-title"><IconEuro /> Prezzi Noleggio</h3>
+          {configMigration && (
+            <div className="ac-settings-migration">
+              <strong>Migrazione DB richiesta.</strong> Esegui questo SQL in Supabase SQL Editor:
+              <pre className="ac-sql-pre">{`CREATE TABLE IF NOT EXISTS config (
+  chiave TEXT PRIMARY KEY,
+  valore TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);`}</pre>
+              <p>Poi ricarica questa pagina.</p>
+            </div>
+          )}
+          {configLoading && <div className="ac-spinner-center"><div className="ac-spinner" /></div>}
+          {!configLoading && !configMigration && configEdit && (
+            <>
+              <div className="ac-config-grid">
+                {BIKE_TYPES.map(bt => (
+                  <div key={bt.key} className="ac-config-bike-col">
+                    <div className="ac-config-bike-title">{bt.label}</div>
+                    {TIPO_KEYS.map(tk => {
+                      const cfgKey = `price_${bt.key}_${tk.key}`;
+                      return (
+                        <div key={cfgKey} className="ac-config-row">
+                          <label className="ac-label">{tk.label}</label>
+                          <div className="ac-config-input-wrap">
+                            <span className="ac-config-euro">€</span>
+                            <input
+                              className="ac-input ac-config-input"
+                              type="number"
+                              min="0"
+                              step="1"
+                              value={configEdit[cfgKey] ?? ''}
+                              onChange={e => setConfigEdit(p => ({ ...p, [cfgKey]: e.target.value }))}
+                              placeholder="—"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              <div className="ac-config-footer">
+                <button className="ac-btn primary" onClick={handleSaveConfig} disabled={configLoading}>
+                  {configLoading ? 'Salvataggio…' : '✓ Salva Prezzi'}
+                </button>
+                {configSaved && <span className="ac-badge green">Salvato!</span>}
+                <span className="ac-settings-note">I prezzi salvati qui sono conservati nel DB per riferimento — la logica di calcolo vive nel backend.</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* SQL migrations */}
+        <div className="ac-settings-section">
+          <h3 className="ac-section-title">Migrazioni Database</h3>
+          <p className="ac-settings-desc">Esegui questi comandi SQL in Supabase → SQL Editor se non ancora eseguiti:</p>
+          <pre className="ac-sql-pre">{`-- Note admin sulle prenotazioni
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS note_admin TEXT;
+
+-- Tabella configurazione prezzi
+CREATE TABLE IF NOT EXISTS config (
+  chiave TEXT PRIMARY KEY,
+  valore TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Tabella iscrizioni push notifications
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  endpoint TEXT PRIMARY KEY,
+  subscription TEXT NOT NULL,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);`}</pre>
+        </div>
+
+      </div>
+    );
+  }
+
 }

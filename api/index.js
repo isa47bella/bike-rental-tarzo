@@ -6,6 +6,7 @@ const availabilityRoutes = require('./routes/availability');
 const paymentsRoutes     = require('./routes/payments');
 const adminRoutes        = require('./routes/admin');
 const cronRoutes         = require('./routes/cron');
+const firmaRoutes        = require('./routes/firma');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/payments',     paymentsRoutes);
 app.use('/api/admin',        adminRoutes);
 app.use('/api/cron',         cronRoutes);
+app.use('/api/firma',        firmaRoutes);
 
 app.get('/api/health', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 

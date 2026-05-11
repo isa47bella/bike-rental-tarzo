@@ -3,6 +3,7 @@ import BookingWizard   from './components/BookingWizard.jsx';
 import AdminDashboard  from './components/AdminDashboard.jsx';
 import SuccessPage     from './pages/Success.jsx';
 import CancelPage      from './pages/Cancel.jsx';
+import FirmaPage       from './pages/Firma.jsx';
 
 function Footer() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="/success" element={<PublicLayout><SuccessPage /></PublicLayout>} />
       <Route path="/cancel"  element={<PublicLayout><CancelPage /></PublicLayout>} />
       <Route path="/admin"   element={<AdminDashboard />} />
+      <Route path="/firma/:id" element={<FirmaPage />} />
     </Routes>
   );
 }

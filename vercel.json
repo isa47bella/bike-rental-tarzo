@@ -8,6 +8,7 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/cron/deposit", "schedule": "0 7 * * *" }
+    { "path": "/api/cron/deposit",        "schedule": "0 7 * * *" },
+    { "path": "/api/cron/firma-reminder", "schedule": "0 18 * * *" }
   ]
 }
