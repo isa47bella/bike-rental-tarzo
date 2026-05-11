@@ -442,6 +442,10 @@ export default function AdminDashboard() {
   }
 
   async function handleViewContratto(bookingId) {
+    // Must open window synchronously (before any await) or browsers block it as a popup
+    const win = window.open('', '_blank');
+    if (!win) { alert('Popup bloccato dal browser. Abilita i popup per questo sito.'); return; }
+    win.document.write('<html><body style="font-family:sans-serif;padding:40px;color:#555">Caricamento contratto…</body></html>');
     try {
       const adminToken = sessionStorage.getItem('admin_token') || '';
       const res = await fetch(`/api/admin/bookings/${bookingId}/contratto`, {
@@ -449,15 +453,16 @@ export default function AdminDashboard() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
+        win.close();
         alert(d.error || 'Contratto non disponibile');
         return;
       }
       const html = await res.text();
-      const blob = new Blob([html], { type: 'text/html' });
-      const url  = URL.createObjectURL(blob);
-      const win  = window.open(url, '_blank');
-      if (win) setTimeout(() => URL.revokeObjectURL(url), 120000);
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
     } catch (e) {
+      win.close();
       alert('Errore: ' + e.message);
     }
   }
