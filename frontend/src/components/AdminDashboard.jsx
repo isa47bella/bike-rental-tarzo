@@ -866,6 +866,29 @@ export default function AdminDashboard() {
       {damageModal   && renderDamageModal()}
       {manualModal   && renderManualModal()}
       {noteModal     && renderNoteModal()}
+
+      {/* ── Mobile bottom nav ── */}
+      <nav className="ac-bottom-nav">
+        {NAV.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            className={`ac-bottom-nav-item${activeView === id ? ' active' : ''}`}
+            onClick={() => setActiveView(id)}
+          >
+            <span className="ac-bottom-nav-icon">
+              <Icon />
+              {id === 'oggi' && lateCount > 0 && (
+                <span className="ac-bottom-nav-badge">{lateCount}</span>
+              )}
+            </span>
+            <span>{label}</span>
+          </button>
+        ))}
+        <button className="ac-bottom-nav-item ac-bottom-nav-logout" onClick={logout}>
+          <span className="ac-bottom-nav-icon"><IconLogout /></span>
+          <span>Esci</span>
+        </button>
+      </nav>
     </div>
   );
 
