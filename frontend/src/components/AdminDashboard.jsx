@@ -556,6 +556,17 @@ export default function AdminDashboard() {
   }, []);
 
   // Load data when switching views
+  // Restore push subscription state on mount (survives page refresh)
+  useEffect(() => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      setPushStatus('unsupported'); return;
+    }
+    navigator.serviceWorker.ready
+      .then(reg => reg.pushManager.getSubscription())
+      .then(sub => { if (sub) { setPushSub(sub); setPushStatus('enabled'); } })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!authed) return;
     if (activeView === 'oggi') loadOggi();
