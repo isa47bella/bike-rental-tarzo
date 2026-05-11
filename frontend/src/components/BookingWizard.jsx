@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { api } from '../lib/api.js';
 import ProgressBar      from './ProgressBar.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import StepDate         from './steps/StepDate.jsx';
