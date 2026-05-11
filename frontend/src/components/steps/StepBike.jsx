@@ -118,7 +118,7 @@ const IconPhone = () => (
   </svg>
 );
 
-export default function StepBike({ booking, onChange, onNext, onBack }) {
+export default function StepBike({ booking, onChange, onNext, onBack, prezziConfig }) {
   const { t } = useTranslation();
   const [perTipo,  setPerTipo]  = useState(null); // { ecity: N, emtb: N, bimbo: N }
   const [loading,  setLoading]  = useState(false);
@@ -192,9 +192,15 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
                 <div className="model-specs">{model.specs}</div>
                 <div className="model-desc">{model.descrizione}</div>
                 <div className="model-prices">
-                  <span>½ {t('stepBike.halfDay')} <strong>€{model.prezzi.mezza}</strong></span>
-                  <span>{t('stepBike.fullDay')} <strong>€{model.prezzi.intera}</strong></span>
-                  <span>{t('stepBike.multiFrom')} <strong>€{model.prezzi.multiDa}</strong></span>
+                  {(() => {
+                    const p = prezziConfig?.[model.key] || model.prezzi;
+                    const multiDa = prezziConfig?.[model.key]?.multi?.[2] || model.prezzi.multiDa;
+                    return (<>
+                      <span>½ {t('stepBike.halfDay')} <strong>€{p.mezza}</strong></span>
+                      <span>{t('stepBike.fullDay')} <strong>€{p.intera}</strong></span>
+                      <span>{t('stepBike.multiFrom')} <strong>€{multiDa}</strong></span>
+                    </>);
+                  })()}
                 </div>
                 {isSel && <div className="model-check">{t('stepBike.selected')}</div>}
               </button>

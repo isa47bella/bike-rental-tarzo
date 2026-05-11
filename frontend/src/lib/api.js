@@ -92,6 +92,10 @@ export const api = {
   getCalendario: (anno, mese) =>
     post('/availability/calendario', { anno, mese }),
 
+  // Prezzi correnti (letti da config DB)
+  getPrezzi: () =>
+    get('/availability/prezzi'),
+
   // Crea sessione pagamento Stripe
   checkout: (bookingData) =>
     post('/payments/checkout', bookingData),

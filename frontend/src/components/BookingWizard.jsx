@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import ProgressBar      from './ProgressBar.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
@@ -33,8 +33,13 @@ const INITIAL_BOOKING = {
 
 export default function BookingWizard() {
   const { t } = useTranslation();
-  const [step,    setStep]    = useState(1);
-  const [booking, setBooking] = useState(INITIAL_BOOKING);
+  const [step,         setStep]         = useState(1);
+  const [booking,      setBooking]      = useState(INITIAL_BOOKING);
+  const [prezziConfig, setPrezziConfig] = useState(null);
+
+  useEffect(() => {
+    api.getPrezzi().then(p => setPrezziConfig(p)).catch(() => {});
+  }, []);
 
   function updateBooking(partial) {
     setBooking(b => ({ ...b, ...partial }));
@@ -50,7 +55,7 @@ export default function BookingWizard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const stepProps = { booking, onChange: updateBooking, onNext: next, onBack: back };
+  const stepProps = { booking, onChange: updateBooking, onNext: next, onBack: back, prezziConfig };
 
   return (
     <div className="page-wrapper">

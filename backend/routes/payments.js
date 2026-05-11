@@ -10,20 +10,13 @@ const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 const { sendConfirmationToCliente, sendNotificationToGestore, sendWhatsAppAlert } = require('../lib/email');
-const { calcRange, calcRestituzione } = require('./availability');
+const { calcRange, calcRestituzione, loadPrezziFromConfig } = require('./availability');
 const { sendPushToAll } = require('../lib/push');
-
-// Prezzi per tipo di bici (Dobbiaco bassa stagione)
-const PREZZI = {
-  ecity: { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
-  emtb:  { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
-  bimbo: { mezza: 28, intera: 40, multi: { 2:75,3:107,4:136,5:163,6:187,7:208 }, extra: 20 },
-};
 
 const TIPO_IDS_BICI = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
 
-function calcolaPrezzo(bike_type, tipo_noleggio, giorni = 1) {
-  const p = PREZZI[bike_type];
+function calcolaPrezzo(bike_type, tipo_noleggio, giorni = 1, prezzi) {
+  const p = prezzi[bike_type];
   if (!p) throw new Error('Tipo bici non valido');
   if (tipo_noleggio === 'mezza_mattina' || tipo_noleggio === 'mezza_pomeriggio') return p.mezza;
   if (tipo_noleggio === 'intera_giornata') return p.intera;
@@ -119,7 +112,8 @@ router.post('/checkout', async (req, res) => {
   }
 
   const bicicletta_id = biciLibere[0]; // assegna la prima libera
-  const prezzo        = calcolaPrezzo(bike_type, tipo_noleggio, numGiorni);
+  const prezziConfig  = await loadPrezziFromConfig();
+  const prezzo        = calcolaPrezzo(bike_type, tipo_noleggio, numGiorni, prezziConfig);
 
   // Crea prenotazione PENDING
   const { data: prenotazione, error: dbError } = await supabase

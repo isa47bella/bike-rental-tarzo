@@ -9,8 +9,8 @@ const PREZZI = {
   bimbo: { mezza: 28, intera: 40, multi: { 2:75,3:107,4:136,5:163,6:187,7:208 }, extra: 20 },
 };
 
-function calcolaPrezzo(bike_type, tipo_noleggio, giorni) {
-  const p = PREZZI[bike_type];
+function calcolaPrezzo(bike_type, tipo_noleggio, giorni, prezziOverride) {
+  const p = (prezziOverride || PREZZI)[bike_type];
   if (!p) return 0;
   if (tipo_noleggio === 'mezza_mattina' || tipo_noleggio === 'mezza_pomeriggio') return p.mezza;
   if (tipo_noleggio === 'intera_giornata') return p.intera;
@@ -40,23 +40,25 @@ function formatDate(dateStr, locale) {
   return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
-export default function StepRentalType({ booking, onChange, onNext, onBack }) {
+export default function StepRentalType({ booking, onChange, onNext, onBack, prezziConfig }) {
   const { t, i18n } = useTranslation();
   const locale       = LOCALE_MAP[i18n.language] || 'it-IT';
   const [giorni, setGiorni] = useState(booking.giorni >= 2 ? booking.giorni : 2);
 
   const tipoSel = booking.tipo_noleggio;
 
+  const pc = prezziConfig; // shorthand
+
   const TIPI = [
-    { id: 'mezza_mattina',    icon: '🌅', label: t('stepRentalType.types.mezza_mattina.title'),    detail: '09:00 – 13:00',             price: calcolaPrezzo(booking.bike_type, 'mezza_mattina', 1)    },
-    { id: 'mezza_pomeriggio', icon: '🌤️', label: t('stepRentalType.types.mezza_pomeriggio.title'), detail: '14:00 – 18:00',             price: calcolaPrezzo(booking.bike_type, 'mezza_pomeriggio', 1) },
-    { id: 'intera_giornata',  icon: '☀️', label: t('stepRentalType.types.intera_giornata.title'),  detail: '09:00 – 18:00',             price: calcolaPrezzo(booking.bike_type, 'intera_giornata', 1)  },
+    { id: 'mezza_mattina',    icon: '🌅', label: t('stepRentalType.types.mezza_mattina.title'),    detail: '09:00 – 13:00',             price: calcolaPrezzo(booking.bike_type, 'mezza_mattina', 1, pc)    },
+    { id: 'mezza_pomeriggio', icon: '🌤️', label: t('stepRentalType.types.mezza_pomeriggio.title'), detail: '14:00 – 18:00',             price: calcolaPrezzo(booking.bike_type, 'mezza_pomeriggio', 1, pc) },
+    { id: 'intera_giornata',  icon: '☀️', label: t('stepRentalType.types.intera_giornata.title'),  detail: '09:00 – 18:00',             price: calcolaPrezzo(booking.bike_type, 'intera_giornata', 1, pc)  },
     { id: 'multi_giorno',     icon: '🗓️', label: t('stepRentalType.types.multi_giorno.title'),     detail: t('stepRentalType.types.multi_giorno.detail'), price: null },
   ];
 
   function selectTipo(id) {
     const g      = id === 'multi_giorno' ? giorni : 1;
-    const prezzo = calcolaPrezzo(booking.bike_type, id, g);
+    const prezzo = calcolaPrezzo(booking.bike_type, id, g, pc);
     const rest   = calcolaRestituzione(booking.data_ritiro, id, g);
     onChange({
       tipo_noleggio:       id,
@@ -72,7 +74,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
     const g      = Math.max(2, Math.min(30, Number(val)));
     setGiorni(g);
     if (tipoSel === 'multi_giorno') {
-      const prezzo = calcolaPrezzo(booking.bike_type, 'multi_giorno', g);
+      const prezzo = calcolaPrezzo(booking.bike_type, 'multi_giorno', g, pc);
       const rest   = calcolaRestituzione(booking.data_ritiro, 'multi_giorno', g);
       onChange({
         giorni:              g,
@@ -84,7 +86,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
   }
 
   const rest = tipoSel ? calcolaRestituzione(booking.data_ritiro, tipoSel, tipoSel === 'multi_giorno' ? giorni : 1) : null;
-  const prezzoCorrente = tipoSel ? calcolaPrezzo(booking.bike_type, tipoSel, tipoSel === 'multi_giorno' ? giorni : 1) : 0;
+  const prezzoCorrente = tipoSel ? calcolaPrezzo(booking.bike_type, tipoSel, tipoSel === 'multi_giorno' ? giorni : 1, pc) : 0;
 
   return (
     <div>
@@ -104,7 +106,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
             <div className="opt-title">{tipo.label}</div>
             <div className="opt-detail">{tipo.detail}</div>
             <div className="opt-price">
-              {tipo.price !== null ? `€${tipo.price}` : t('stepRentalType.types.multi_giorno.price', { price: calcolaPrezzo(booking.bike_type, 'multi_giorno', giorni) })}
+              {tipo.price !== null ? `€${tipo.price}` : t('stepRentalType.types.multi_giorno.price', { price: calcolaPrezzo(booking.bike_type, 'multi_giorno', giorni, pc) })}
             </div>
           </button>
         ))}
@@ -122,7 +124,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
             </span>
             <button className="cal-nav-btn" onClick={() => handleGiorni(giorni + 1)} disabled={giorni >= 30}>+</button>
             <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
-              {t('stepRentalType.daysCount', { n: giorni })} — <strong>€{calcolaPrezzo(booking.bike_type, 'multi_giorno', giorni)}</strong>
+              {t('stepRentalType.daysCount', { n: giorni })} — <strong>€{calcolaPrezzo(booking.bike_type, 'multi_giorno', giorni, pc)}</strong>
             </span>
           </div>
         </div>

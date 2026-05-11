@@ -8,6 +8,34 @@ const express  = require('express');
 const router   = express.Router();
 const supabase = require('../lib/supabase');
 
+// ─── Prezzi default + caricamento da config DB ────────────────────────────────
+
+const PREZZI_DEFAULTS = {
+  ecity: { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
+  emtb:  { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
+  bimbo: { mezza: 28, intera: 40, multi: { 2:75,3:107,4:136,5:163,6:187,7:208 }, extra: 20 },
+};
+
+async function loadPrezziFromConfig() {
+  try {
+    const { data } = await supabase.from('config').select('chiave, valore');
+    if (!data || data.length === 0) return PREZZI_DEFAULTS;
+    const cfg = {};
+    data.forEach(r => { const v = Number(r.valore); if (v > 0) cfg[r.chiave] = v; });
+    const result = JSON.parse(JSON.stringify(PREZZI_DEFAULTS));
+    for (const bike of ['ecity', 'emtb', 'bimbo']) {
+      if (cfg[`price_${bike}_mezza`])  result[bike].mezza  = cfg[`price_${bike}_mezza`];
+      if (cfg[`price_${bike}_intera`]) result[bike].intera = cfg[`price_${bike}_intera`];
+      for (let n = 2; n <= 7; n++) {
+        if (cfg[`price_${bike}_multi_${n}`]) result[bike].multi[n] = cfg[`price_${bike}_multi_${n}`];
+      }
+    }
+    return result;
+  } catch {
+    return PREZZI_DEFAULTS;
+  }
+}
+
 // Mappa tipo_noleggio → orari fissi
 function getOrari(tipo_noleggio) {
   if (tipo_noleggio === 'mezza_mattina')    return { ritiro: '09:00', restituzione: '13:00' };
@@ -158,6 +186,14 @@ router.post('/calendario', async (req, res) => {
   return res.json(risultati);
 });
 
+// ─── GET /api/availability/prezzi ─────────────────────────────────────────────
+// Endpoint pubblico — restituisce prezzi correnti per il wizard di prenotazione
+
+router.get('/prezzi', async (req, res) => {
+  res.json(await loadPrezziFromConfig());
+});
+
 module.exports = router;
-module.exports.calcRange        = calcRange;
-module.exports.calcRestituzione = calcRestituzione;
+module.exports.calcRange             = calcRange;
+module.exports.calcRestituzione      = calcRestituzione;
+module.exports.loadPrezziFromConfig  = loadPrezziFromConfig;
