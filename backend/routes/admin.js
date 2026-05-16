@@ -14,7 +14,7 @@ const supabase = require('../lib/supabase');
 const { CONTRATTO_TERMS, TIPO_LABEL, CONTRATTO_TITLE, CONTRATTO_FIELDS, LOCALE_MAP } = require('../lib/contratto-terms');
 const { sendPushToAll } = require('../lib/push');
 const { sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert } = require('../lib/email');
-const { calcRange, calcRestituzione }       = require('./availability');
+const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
 const { CAUZIONE_AMOUNT_EUR }               = require('../lib/config');
 
@@ -490,15 +490,12 @@ router.get('/flotta', async (req, res) => {
 // ─── PATCH /api/admin/flotta/:id ─────────────────────────────────────────────
 
 router.patch('/flotta/:id', async (req, res) => {
-  const allowed = ['stato', 'batteria_pct', 'note_admin', 'ultima_manutenzione', 'prossima_manutenzione'];
+  const allowed = ['stato', 'note_admin', 'ultima_manutenzione', 'prossima_manutenzione'];
   const update = {};
   for (const key of allowed) {
     if (req.body[key] !== undefined) {
       update[key] = req.body[key] === '' ? null : req.body[key];
     }
-  }
-  if (update.batteria_pct !== null && update.batteria_pct !== undefined) {
-    update.batteria_pct = parseInt(update.batteria_pct, 10);
   }
   const { data, error } = await supabase.from('biciclette').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
@@ -573,24 +570,18 @@ router.get('/report', async (req, res) => {
 });
 
 // ─── POST /api/admin/bookings/manual ─────────────────────────────────────────
-// Crea prenotazione manuale (walk-in / telefono) senza Stripe
+// Crea prenotazione manuale (walk-in / telefono) senza Stripe.
+// Pricing: SEASONAL_PRICES + tipo bici (allineato al sito) — vedi availability.js
 
-const PREZZI_MANUAL = {
-  mezza_mattina:    35,
-  mezza_pomeriggio: 35,
-  intera_giornata:  45,
-  multi_giorno:     null, // calcolato in base ai giorni
-};
-const PREZZI_MULTI = { 2:84, 3:120, 4:152, 5:180, 6:205, 7:225 };
+const TIPO_IDS_BICI   = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
+const ACC_PREZZI      = { casco: 2, lucchetto: 1 };
 
-function calcolaPrezzoManual(tipo_noleggio, giorni) {
-  if (PREZZI_MANUAL[tipo_noleggio] !== null && PREZZI_MANUAL[tipo_noleggio] !== undefined) {
-    return PREZZI_MANUAL[tipo_noleggio];
+function getBikeTypeFromId(id) {
+  const n = Number(id);
+  for (const [tipo, ids] of Object.entries(TIPO_IDS_BICI)) {
+    if (ids.includes(n)) return tipo;
   }
-  const n = Number(giorni);
-  if (n >= 2 && n <= 7) return PREZZI_MULTI[n];
-  if (n > 7) return PREZZI_MULTI[7] + (n - 7) * 20;
-  return 45;
+  return 'ecity';
 }
 
 router.post('/bookings/manual', async (req, res) => {
@@ -601,6 +592,7 @@ router.post('/bookings/manual', async (req, res) => {
     tipo_noleggio, data_ritiro,
     giorni          = 1,
     bicicletta_id:  forcedBiciId,
+    bike_type:      bikeTypeOverride,
     accessori:      accessoriRaw = [],
     prezzo_totale:  prezzoOverride,
     note_pagamento  = '',
@@ -632,6 +624,11 @@ router.post('/bookings/manual', async (req, res) => {
 
   const occupate = new Set((conflitti || []).map(r => r.bicicletta_id));
 
+  // Filtra il pool della bici da assegnare per bike_type (se specificato).
+  // Se admin forza bicicletta_id, ignoriamo bikeTypeOverride e ricaviamo da id.
+  const VALID_TYPES = ['ecity', 'emtb', 'bimbo'];
+  const bikeTypeReq = VALID_TYPES.includes(bikeTypeOverride) ? bikeTypeOverride : null;
+
   let bicicletta_id;
   if (forcedBiciId) {
     if (occupate.has(Number(forcedBiciId))) {
@@ -639,15 +636,41 @@ router.post('/bookings/manual', async (req, res) => {
     }
     bicicletta_id = Number(forcedBiciId);
   } else {
-    const { data: tutteLeBici } = await supabase.from('biciclette').select('id').order('id');
+    const poolIds = bikeTypeReq ? TIPO_IDS_BICI[bikeTypeReq] : null;
+    let queryBici = supabase.from('biciclette').select('id').order('id');
+    if (poolIds) queryBici = queryBici.in('id', poolIds);
+    const { data: tutteLeBici } = await queryBici;
     const libera = (tutteLeBici || []).find(b => !occupate.has(b.id));
-    if (!libera) return res.status(409).json({ error: 'Nessuna bici disponibile per questa data/orario' });
+    if (!libera) {
+      return res.status(409).json({
+        error: bikeTypeReq
+          ? `Nessuna bici di tipo ${bikeTypeReq} disponibile per questa data/orario`
+          : 'Nessuna bici disponibile per questa data/orario',
+      });
+    }
     bicicletta_id = libera.id;
   }
 
-  const VALID_ACC   = ['casco', 'lucchetto'];
-  const accessoriStr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => VALID_ACC.includes(a)).join(',');
-  const prezzo      = prezzoOverride ? parseFloat(prezzoOverride) : calcolaPrezzoManual(tipo_noleggio, numGiorni);
+  // Pricing allineato al sito: bike_type derivato da id + stagione + tipo noleggio.
+  const bikeType   = getBikeTypeFromId(bicicletta_id);
+  const accessoriArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => ACC_PREZZI[a]);
+  const accessoriStr = accessoriArr.join(',');
+  const accCost      = accessoriArr.reduce((sum, a) => sum + ACC_PREZZI[a], 0);
+
+  let prezzo;
+  if (prezzoOverride !== undefined && prezzoOverride !== null && prezzoOverride !== '') {
+    prezzo = parseFloat(prezzoOverride);
+  } else {
+    const stagione = getStagione(data_ritiro);
+    if (!stagione) {
+      return res.status(400).json({
+        error: 'Data fuori stagione: indica un prezzo manuale (prezzo_totale) per procedere',
+        fuori_stagione: true,
+      });
+    }
+    const prezzoBase = calcolaPrezzo(bikeType, tipo_noleggio, numGiorni, data_ritiro);
+    prezzo = prezzoBase + accCost;
+  }
 
   const noteFinale = [cliente_note, note_pagamento ? `Pagamento: ${note_pagamento}` : ''].filter(Boolean).join(' | ');
 

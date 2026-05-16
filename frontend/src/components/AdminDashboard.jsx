@@ -463,6 +463,7 @@ async function handleClientiSearch(e) {
   const MANUAL_EMPTY = {
     cliente_nome: '', cliente_email: '', cliente_telefono: '', cliente_note: '',
     data_ritiro: '', tipo_noleggio: 'intera_giornata', giorni: 2,
+    bike_type: 'ecity',
     bicicletta_id: '', accessori: [], prezzo_totale: '', note_pagamento: 'Contanti',
   };
   const [manualModal,   setManualModal]   = useState(false);
@@ -807,24 +808,66 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
   // ─── Manual booking ─────────────────────────────────────────────────────────
 
-  const PREZZI_MANUAL = { mezza_mattina: 35, mezza_pomeriggio: 35, intera_giornata: 45 };
-  const PREZZI_MULTI  = { 2:84, 3:120, 4:152, 5:180, 6:205, 7:225 };
+  // Pricing mirror del backend (availability.js) — alta/bassa stagione + tipo bici.
+  const SEASONAL_PRICES = {
+    bassa: {
+      ecity: { mezza: 35, intera: 45, due_giorni: 84,  extra: 40 },
+      emtb:  { mezza: 40, intera: 55, due_giorni: 100, extra: 50 },
+      bimbo: { mezza: 8,  intera: 11, due_giorni: 20,  extra: 9  },
+    },
+    alta: {
+      ecity: { mezza: 40, intera: 50, due_giorni: 95,  extra: 45 },
+      emtb:  { mezza: 45, intera: 55, due_giorni: 100, extra: 50 },
+      bimbo: { mezza: 10, intera: 14, due_giorni: 26,  extra: 12 },
+    },
+  };
+  const TIPO_IDS_BICI = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
 
-  function calcPrezzoManual(tipo, giorni) {
+  function getStagioneFE(dateStr) {
+    if (!dateStr) return null;
+    const [, mm, dd] = dateStr.split('-').map(Number);
+    const mmdd = mm * 100 + dd;
+    if (mmdd >= 401 && mmdd <= 630)  return 'bassa';
+    if (mmdd >= 701 && mmdd <= 831)  return 'alta';
+    if (mmdd >= 901 && mmdd <= 1031) return 'bassa';
+    return null;
+  }
+
+  function getBikeTypeFromId(id) {
+    const n = Number(id);
+    for (const [tipo, ids] of Object.entries(TIPO_IDS_BICI)) {
+      if (ids.includes(n)) return tipo;
+    }
+    return null;
+  }
+
+  function calcPrezzoManual(tipo, giorni, dateStr, bikeType) {
+    const stagione = getStagioneFE(dateStr);
+    if (!stagione || !bikeType) return 0;
+    const p = SEASONAL_PRICES[stagione][bikeType];
+    if (!p) return 0;
+    if (tipo === 'mezza_mattina' || tipo === 'mezza_pomeriggio') return p.mezza;
+    if (tipo === 'intera_giornata') return p.intera;
     if (tipo === 'multi_giorno') {
       const n = Number(giorni);
-      if (n >= 2 && n <= 7) return PREZZI_MULTI[n];
-      if (n > 7) return PREZZI_MULTI[7] + (n - 7) * 20;
+      if (n < 2) return 0;
+      return p.due_giorni + (n - 2) * p.extra;
     }
-    return PREZZI_MANUAL[tipo] ?? 45;
+    return 0;
   }
 
   function setManualField(key, value) {
     setManualForm(prev => {
       const next = { ...prev, [key]: value };
-      // auto-update price when tipo or giorni changes
-      if ((key === 'tipo_noleggio' || key === 'giorni') && !prev._prezzoCambiato) {
-        next.prezzo_totale = String(calcPrezzoManual(next.tipo_noleggio, next.giorni));
+      // Se admin sceglie una bici specifica, deriva il bike_type da lì
+      if (key === 'bicicletta_id' && value) {
+        const derived = getBikeTypeFromId(value);
+        if (derived) next.bike_type = derived;
+      }
+      // Auto-update prezzo quando cambia qualsiasi input che lo influenza
+      if (['tipo_noleggio', 'giorni', 'data_ritiro', 'bike_type', 'bicicletta_id'].includes(key) && !prev._prezzoCambiato) {
+        const calc = calcPrezzoManual(next.tipo_noleggio, next.giorni, next.data_ritiro, next.bike_type);
+        next.prezzo_totale = calc > 0 ? String(calc) : '';
       }
       return next;
     });
@@ -842,6 +885,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         ...manualForm,
         giorni:        Number(manualForm.giorni),
         bicicletta_id: manualForm.bicicletta_id || undefined,
+        bike_type:     manualForm.bike_type,
         prezzo_totale: manualForm.prezzo_totale || undefined,
       });
       setManualModal(false);
@@ -1424,8 +1468,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           <button
             className="ac-btn primary sm"
             onClick={() => {
-              const prezzoDefault = String(calcPrezzoManual('intera_giornata', 2));
-              setManualForm({ ...MANUAL_EMPTY, prezzo_totale: prezzoDefault });
+              setManualForm({ ...MANUAL_EMPTY });
               setManualError(null);
               setManualModal(true);
             }}
@@ -1561,8 +1604,6 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       <div>
         <div className="ac-fleet-grid">
           {flotta.map(bici => {
-            const batt = bici.batteria_pct ?? 100;
-            const battColor = batt >= 70 ? 'green' : batt >= 30 ? 'yellow' : 'red';
             const maintenanceSoon = bici.prossima_manutenzione && bici.prossima_manutenzione <= soon;
             const maintenanceLate = bici.prossima_manutenzione && bici.prossima_manutenzione < today;
             return (
@@ -1578,16 +1619,6 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                   <span className={`ac-badge ${statoColor[bici.stato] || 'muted'}`}>
                     {bici.stato || 'disponibile'}
                   </span>
-                </div>
-
-                <div className="ac-fleet-battery">
-                  <div className="ac-fleet-battery-row">
-                    <span className="ac-label"><IconBattery /> Batteria</span>
-                    <span className={`ac-batt-pct ${battColor}`}>{batt}%</span>
-                  </div>
-                  <div className="ac-batt-track">
-                    <div className={`ac-batt-fill ${battColor}`} style={{ width: `${batt}%` }} />
-                  </div>
                 </div>
 
                 {(bici.ultima_manutenzione || bici.prossima_manutenzione) && (
@@ -1619,7 +1650,6 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                     setFleetModal(bici);
                     setFleetEdit({
                       stato:                bici.stato || 'disponibile',
-                      batteria_pct:         bici.batteria_pct ?? 100,
                       note_admin:           bici.note_admin || '',
                       ultima_manutenzione:  bici.ultima_manutenzione || '',
                       prossima_manutenzione: bici.prossima_manutenzione || '',
@@ -2043,11 +2073,6 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             </select>
           </div>
           <div className="ac-field">
-            <label className="ac-label">Carica batteria ({fleetEdit.batteria_pct}%)</label>
-            <input className="ac-input" type="range" min="0" max="100" value={fleetEdit.batteria_pct}
-              onChange={e => setFleetEdit(p => ({ ...p, batteria_pct: Number(e.target.value) }))} />
-          </div>
-          <div className="ac-field">
             <label className="ac-label">Ultima manutenzione</label>
             <input className="ac-input" type="date" value={fleetEdit.ultima_manutenzione}
               onChange={e => setFleetEdit(p => ({ ...p, ultima_manutenzione: e.target.value }))} />
@@ -2207,16 +2232,16 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             Prenotazione diretta (walk-in / telefono) — segnata come <strong style={{ color: '#4ADE80' }}>pagata</strong>
           </div>
 
-          {manualError && <div style={{ padding: '10px 22px 0' }}><div className="ac-error-banner">{manualError}</div></div>}
+          {manualError && <div className="ac-manual-error"><div className="ac-error-banner">{manualError}</div></div>}
 
           {/* Dati prenotazione */}
-          <div style={{ padding: '16px 22px 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+          <div className="ac-manual-grid">
+            <div className="ac-field">
               <label className="ac-label">Data ritiro *</label>
               <input className="ac-input" type="date" value={f.data_ritiro}
                 onChange={e => setManualField('data_ritiro', e.target.value)} />
             </div>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+            <div className="ac-field">
               <label className="ac-label">Tipo noleggio *</label>
               <select className="ac-select" value={f.tipo_noleggio}
                 onChange={e => setManualField('tipo_noleggio', e.target.value)}>
@@ -2227,32 +2252,42 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               </select>
             </div>
             {isMulti && (
-              <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+              <div className="ac-field">
                 <label className="ac-label">Numero giorni</label>
                 <input className="ac-input" type="number" min="2" max="30"
                   value={f.giorni} onChange={e => setManualField('giorni', e.target.value)} />
               </div>
             )}
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
-              <label className="ac-label">Bici # (vuoto = auto)</label>
+            <div className="ac-field">
+              <label className="ac-label">Tipo bici *</label>
+              <select className="ac-select" value={f.bike_type}
+                onChange={e => setManualField('bike_type', e.target.value)}
+                disabled={!!f.bicicletta_id}>
+                <option value="ecity">E-City</option>
+                <option value="emtb">E-MTB</option>
+                <option value="bimbo">E-MTB Bimbo</option>
+              </select>
+            </div>
+            <div className="ac-field">
+              <label className="ac-label">Bici specifica (opzionale)</label>
               <select className="ac-select" value={f.bicicletta_id}
                 onChange={e => setManualField('bicicletta_id', e.target.value)}>
                 <option value="">Auto-assegna</option>
-                {BICI.map(b => <option key={b.id} value={b.id}>{b.nome} — {b.tipo}</option>)}
+                {BICI.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
               </select>
             </div>
           </div>
 
           {/* Prezzo e pagamento */}
-          <div style={{ padding: '0 22px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+          <div className="ac-manual-grid">
+            <div className="ac-field">
               <label className="ac-label">Prezzo (€) — auto-calcolato</label>
               <input className="ac-input" type="number" min="0" step="0.01"
                 value={f.prezzo_totale}
                 onChange={e => setManualForm(p => ({ ...p, prezzo_totale: e.target.value, _prezzoCambiato: true }))}
-                placeholder={String(calcPrezzoManual(f.tipo_noleggio, f.giorni))} />
+                placeholder={String(calcPrezzoManual(f.tipo_noleggio, f.giorni, f.data_ritiro, f.bike_type) || '—')} />
             </div>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+            <div className="ac-field">
               <label className="ac-label">Metodo pagamento</label>
               <select className="ac-select" value={f.note_pagamento}
                 onChange={e => setManualField('note_pagamento', e.target.value)}>
@@ -2265,23 +2300,23 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           {/* Dati cliente */}
-          <div style={{ padding: '0 22px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+          <div className="ac-manual-grid">
+            <div className="ac-field">
               <label className="ac-label">Nome cliente *</label>
               <input className="ac-input" type="text" placeholder="Mario Rossi"
                 value={f.cliente_nome} onChange={e => setManualField('cliente_nome', e.target.value)} autoFocus />
             </div>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+            <div className="ac-field">
               <label className="ac-label">Telefono *</label>
               <input className="ac-input" type="tel" placeholder="+39 345 1234567"
                 value={f.cliente_telefono} onChange={e => setManualField('cliente_telefono', e.target.value)} />
             </div>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+            <div className="ac-field">
               <label className="ac-label">Email (opzionale)</label>
               <input className="ac-input" type="email" placeholder="mario@email.com"
                 value={f.cliente_email} onChange={e => setManualField('cliente_email', e.target.value)} />
             </div>
-            <div className="ac-field" style={{ padding: 0, marginBottom: 12 }}>
+            <div className="ac-field">
               <label className="ac-label">Note</label>
               <input className="ac-input" type="text" placeholder="Richieste, taglia casco..."
                 value={f.cliente_note} onChange={e => setManualField('cliente_note', e.target.value)} />
@@ -2289,9 +2324,9 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           {/* Accessori */}
-          <div style={{ padding: '0 22px 4px' }}>
+          <div className="ac-manual-accessori">
             <label className="ac-label" style={{ marginBottom: 8 }}>Accessori inclusi</label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {accList.map(({ key, label }) => (
                 <button
                   key={key}
@@ -2303,9 +2338,9 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             </div>
           </div>
 
-          <div className="ac-modal-footer" style={{ marginTop: 8 }}>
+          <div className="ac-modal-footer">
             <button className="ac-btn primary full" onClick={handleManualBooking} disabled={manualLoading}>
-              {manualLoading ? 'Salvataggio…' : `✓ Crea Prenotazione — €${f.prezzo_totale || calcPrezzoManual(f.tipo_noleggio, f.giorni)}`}
+              {manualLoading ? 'Salvataggio…' : `✓ Crea Prenotazione${f.prezzo_totale ? ` — €${f.prezzo_totale}` : ''}`}
             </button>
             <button className="ac-btn ghost" onClick={() => setManualModal(false)} disabled={manualLoading}>Annulla</button>
           </div>

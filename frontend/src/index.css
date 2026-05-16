@@ -1514,6 +1514,18 @@ body {
   margin-top: auto;
 }
 
+/* Manual booking modal layout */
+.ac-manual-error { padding: 10px 22px 0; }
+.ac-manual-grid {
+  padding: 16px 22px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+}
+.ac-manual-grid + .ac-manual-grid { padding-top: 0; }
+.ac-manual-grid .ac-field { padding: 0; margin-bottom: 12px; }
+.ac-manual-accessori { padding: 0 22px 4px; }
+
 /* Photo upload */
 .ac-photo-section-label {
   padding: 14px 22px 4px;
@@ -2476,6 +2488,10 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .ac-photo-grid { padding: 10px 18px 0; grid-template-columns: 1fr; gap: 16px; }
   .ac-photo-upload { aspect-ratio: 3/2; }
   .ac-photo-empty { font-size: 0.85rem; gap: 8px; }
+  .ac-manual-error { padding: 10px 18px 0; }
+  .ac-manual-grid { padding: 14px 18px 0; grid-template-columns: 1fr; gap: 0; }
+  .ac-manual-grid .ac-field { margin-bottom: 10px; }
+  .ac-manual-accessori { padding: 4px 18px 8px; }
   .ac-photo-grid > div:first-child:last-child { grid-column: 1 / -1; }
 
   /* ── Login ── */
