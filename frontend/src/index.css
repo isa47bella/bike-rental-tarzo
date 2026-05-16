@@ -106,21 +106,26 @@ body {
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   position: relative;
   z-index: 1;
 }
 
-.header-logomark {
-  width: 46px;
-  height: 46px;
-  background: var(--primary);
-  border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.header-logo-img {
+  height: 54px;
+  width: auto;
+  display: block;
   flex-shrink: 0;
-  box-shadow: 0 3px 14px rgba(234,88,12,0.4), 0 1px 4px rgba(0,0,0,0.3);
+  /* Il logo bianco è progettato per fondo scuro: nessun filtro/sfondo necessario */
+}
+
+.header-sub-tagline {
+  margin-top: 0;
+  max-width: 160px;
+  display: none; /* default: nascosta, mostrata su breakpoint largo */
+}
+@media (min-width: 720px) {
+  .header-sub-tagline { display: inline; }
 }
 
 .header-wordmark {
@@ -2900,8 +2905,7 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .acc-card.selected::after { top: 14px; transform: none; right: 14px; }
   .acc-qty-btn { width: 42px; height: 42px; }
   .header { padding: 0 14px; height: auto; min-height: 60px; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
-  .header-logomark { width: 40px; height: 40px; border-radius: 11px; }
-  .header-title { font-size: 1.4rem; }
+  .header-logo-img { height: 40px; }
   .header-sub { font-size: 0.6rem; }
   .lang-btn { font-size: 0.65rem; padding: 3px 5px; }
 }

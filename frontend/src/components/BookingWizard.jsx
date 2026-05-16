@@ -54,27 +54,12 @@ export default function BookingWizard() {
     <div className="page-wrapper">
       <header className="header">
         <div className="header-brand">
-          <div className="header-logomark">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-              {/* Sun / wheel arc */}
-              <path d="M3.5 12 A9.5 9.5 0 0 1 22.5 12" stroke="white" strokeWidth="1.6" strokeLinecap="round" opacity="0.75"/>
-              {/* Spokes */}
-              <line x1="13" y1="2.5" x2="13" y2="6.5" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
-              <line x1="20.7" y1="5.3" x2="17.8" y2="7.7" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
-              <line x1="5.3" y1="5.3" x2="8.2" y2="7.7" stroke="white" strokeWidth="1.1" strokeLinecap="round" opacity="0.55"/>
-              {/* Hub */}
-              <circle cx="13" cy="12" r="1.8" fill="white" opacity="0.9"/>
-              {/* Rolling hill silhouette — Prosecco hills */}
-              <path d="M0 25 L4 16 L8 20 L13 10 L18 17 L22 12.5 L26 25 Z" fill="white"/>
-              {/* Warm accent on highest peak */}
-              <path d="M13 10 L17 17 L9 17 Z" fill="#EA580C" opacity="0.75"/>
-            </svg>
-          </div>
-          <div className="header-wordmark">
-            <span className="header-label">ARFANTA</span>
-            <span className="header-title">BIKE RENTAL</span>
-            <span className="header-sub">{t('header.subtitle')}</span>
-          </div>
+          <img
+            src="/logo-white.png"
+            alt="Arfanta Bike Rental"
+            className="header-logo-img"
+          />
+          <span className="header-sub header-sub-tagline">{t('header.subtitle')}</span>
         </div>
         <LanguageSwitcher />
       </header>
