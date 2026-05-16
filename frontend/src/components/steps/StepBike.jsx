@@ -158,7 +158,7 @@ export default function StepBike({ booking, onChange, onNext, onBack }) {
     const bici = BIKE_MODELS
       .filter(m => quantities[m.key] > 0)
       .map(m => ({ bike_type: m.key, bike_nome: m.nome, quantita: quantities[m.key] }));
-    onChange({ bici, tipo_noleggio: null, prezzo_base_totale: 0, prezzo_totale: 0, accessori: [] });
+    onChange({ bici, tipo_noleggio: null, prezzo_base_totale: 0, prezzo_totale: 0, accessori: [], accessori_qty: { casco: 0, lucchetto: 0 } });
     onNext();
   }
 

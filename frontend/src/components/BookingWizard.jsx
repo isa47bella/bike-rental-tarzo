@@ -21,7 +21,8 @@ const INITIAL_BOOKING = {
   orario_restituzione: null,
   prezzo_base_totale:  0,     // totale base senza accessori
   prezzo_totale:       0,
-  accessori:           [],    // ['casco', 'lucchetto']
+  accessori:           [],    // legacy: ['casco', 'lucchetto'] applicato a TUTTE le bici
+  accessori_qty:       { casco: 0, lucchetto: 0 }, // per-bici: max = totBici
   cliente_nome:        '',
   cliente_email:       '',
   cliente_telefono:    '',

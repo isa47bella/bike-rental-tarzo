@@ -31,25 +31,35 @@ const ACCESSORI = [
 
 export default function StepAccessori({ booking, onChange, onNext, onBack }) {
   const { t } = useTranslation();
-  const selected  = booking.accessori || [];
   const totalBici = (booking.bici || []).reduce((s, b) => s + b.quantita, 0) || 1;
 
-  // Sync prezzo_totale on mount (handles back-navigation case)
-  useEffect(() => {
+  // Migra legacy `accessori: ['casco']` → `accessori_qty: { casco: totalBici }` se necessario
+  const qty = booking.accessori_qty && typeof booking.accessori_qty === 'object'
+    ? { casco: Number(booking.accessori_qty.casco) || 0, lucchetto: Number(booking.accessori_qty.lucchetto) || 0 }
+    : (booking.accessori || []).reduce((acc, k) => { if (ACC_PREZZI[k]) acc[k] = totalBici; return acc; }, { casco: 0, lucchetto: 0 });
+
+  function computeTotal(nextQty) {
     const base    = booking.prezzo_base_totale ?? booking.prezzo_base ?? booking.prezzo_totale;
-    const accCost = selected.reduce((s, k) => s + (ACC_PREZZI[k] || 0), 0) * totalBici;
-    if (booking.prezzo_totale !== base + accCost) {
-      onChange({ prezzo_totale: base + accCost });
+    const accCost = Object.entries(nextQty).reduce((s, [k, n]) => s + (ACC_PREZZI[k] || 0) * n, 0);
+    return base + accCost;
+  }
+
+  // Sync prezzo_totale on mount (handles back-navigation and migration)
+  useEffect(() => {
+    const newTotal = computeTotal(qty);
+    if (booking.prezzo_totale !== newTotal || !booking.accessori_qty) {
+      onChange({ accessori_qty: qty, prezzo_totale: newTotal });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function toggle(key) {
-    const next    = selected.includes(key)
-      ? selected.filter(k => k !== key)
-      : [...selected, key];
-    const base    = booking.prezzo_base_totale ?? booking.prezzo_base ?? booking.prezzo_totale;
-    const accCost = next.reduce((s, k) => s + (ACC_PREZZI[k] || 0), 0) * totalBici;
-    onChange({ accessori: next, prezzo_totale: base + accCost });
+  function adjust(key, delta) {
+    const cur    = qty[key] || 0;
+    const newQty = Math.max(0, Math.min(totalBici, cur + delta));
+    if (newQty === cur) return;
+    const next   = { ...qty, [key]: newQty };
+    // Aggiorna anche il campo legacy `accessori` per compat con summary/altri lettori vecchi
+    const legacyArr = Object.entries(next).filter(([, n]) => n > 0).map(([k]) => k);
+    onChange({ accessori_qty: next, accessori: legacyArr, prezzo_totale: computeTotal(next) });
   }
 
   return (
@@ -59,22 +69,43 @@ export default function StepAccessori({ booking, onChange, onNext, onBack }) {
 
       <div className="acc-grid">
         {ACCESSORI.map(({ key, Icon, price }) => {
-          const isSel = selected.includes(key);
+          const n = qty[key] || 0;
           return (
-            <button
-              key={key}
-              className={`acc-card${isSel ? ' selected' : ''}`}
-              onClick={() => toggle(key)}
-              aria-pressed={isSel}
-            >
+            <div key={key} className={`acc-card${n > 0 ? ' selected' : ''}`}>
               <div className="acc-icon"><Icon /></div>
               <div className="acc-label">{t(`stepAccessori.items.${key}.label`)}</div>
               <div className="acc-desc">{t(`stepAccessori.items.${key}.desc`)}</div>
-              <div className="acc-badge">+€{price * totalBici}</div>
-            </button>
+              <div className="acc-badge">+€{price} {t('stepAccessori.each', 'cad.')}</div>
+              <div className="acc-qty">
+                <button
+                  type="button"
+                  className="acc-qty-btn"
+                  onClick={() => adjust(key, -1)}
+                  disabled={n === 0}
+                  aria-label={`Rimuovi ${key}`}
+                >−</button>
+                <span className="acc-qty-val">{n}</span>
+                <button
+                  type="button"
+                  className="acc-qty-btn"
+                  onClick={() => adjust(key, +1)}
+                  disabled={n >= totalBici}
+                  aria-label={`Aggiungi ${key}`}
+                >+</button>
+              </div>
+              {n > 0 && (
+                <div className="acc-line-total">+€{price * n}</div>
+              )}
+            </div>
           );
         })}
       </div>
+
+      {totalBici > 1 && (
+        <p className="acc-hint">
+          {t('stepAccessori.maxHint', { count: totalBici, defaultValue: `Max ${totalBici} per tipo (1 per bici)` })}
+        </p>
+      )}
 
       <div className="acc-cauzione-note">
         {t('stepAccessori.cauzioneNote')}

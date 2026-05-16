@@ -42,6 +42,7 @@ router.post('/checkout', async (req, res) => { try {
     tipo_noleggio, giorni = 1,
     data_ritiro,
     accessori: accessoriRaw = [],
+    accessori_qty: accessoriQtyInput,
     lingua = 'it',
   } = req.body;
 
@@ -49,7 +50,6 @@ router.post('/checkout', async (req, res) => { try {
   const ACC_PREZZI   = { casco: 2, lucchetto: 1 };
   const VALID_BIKE_TYPES = ['ecity', 'emtb', 'bimbo'];
   const accessoriArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => VALID_ACC.includes(a));
-  const accessoriStr = accessoriArr.join(',');
 
   // Normalizza input: supporta sia il nuovo formato bici:[{bike_type, quantita}]
   // che il legacy bike_type stringa per compatibilità admin/test
@@ -117,7 +117,6 @@ router.post('/checkout', async (req, res) => { try {
   const biciOccupate = new Set((conflitti || []).map(r => r.bicicletta_id));
 
   // Assegna bici per ciascun tipo richiesto
-  const accCostPerBike = accessoriArr.reduce((sum, a) => sum + (ACC_PREZZI[a] || 0), 0);
   const linguaValida   = ['it','en','de','es','fr'].includes(lingua) ? lingua : 'it';
 
   const assignedBikes = []; // {bicicletta_id, bike_type, prezzoBase}
@@ -141,8 +140,35 @@ router.post('/checkout', async (req, res) => { try {
     }
   }
 
+  // Accessori: due modalità (uguale a /bookings/manual)
+  //   (a) accessori_qty: { casco: N, lucchetto: M }  — quantità per-bici (max ≤ totBici)
+  //   (b) accessori: ['casco','lucchetto']            — uniforme su tutte le bici (legacy)
+  const totBici = assignedBikes.length;
+  const accessoriPerRow = assignedBikes.map(() => []);
+  const accCostPerRow   = assignedBikes.map(() => 0);
+  let   accCostTotal    = 0;
+
+  if (accessoriQtyInput && typeof accessoriQtyInput === 'object') {
+    for (const [acc, qty] of Object.entries(accessoriQtyInput)) {
+      if (!ACC_PREZZI[acc]) continue;
+      const n = Math.max(0, Math.min(Number(qty) || 0, totBici));
+      for (let i = 0; i < n; i++) {
+        accessoriPerRow[i].push(acc);
+        accCostPerRow[i] += ACC_PREZZI[acc];
+        accCostTotal     += ACC_PREZZI[acc];
+      }
+    }
+  } else {
+    const perBike = accessoriArr.reduce((sum, a) => sum + (ACC_PREZZI[a] || 0), 0);
+    for (let i = 0; i < totBici; i++) {
+      accessoriPerRow[i] = [...accessoriArr];
+      accCostPerRow[i]   = perBike;
+    }
+    accCostTotal = perBike * totBici;
+  }
+
   // Costruisci record prenotazione per ogni bici assegnata
-  const insertData = assignedBikes.map(b => ({
+  const insertData = assignedBikes.map((b, i) => ({
     cliente_nome,
     cliente_email,
     cliente_telefono,
@@ -156,8 +182,8 @@ router.post('/checkout', async (req, res) => { try {
     orario_restituzione,
     start_ts:            start.toISOString(),
     end_ts:              end.toISOString(),
-    prezzo_totale:       b.prezzoBase + accCostPerBike,
-    accessori:           accessoriStr,
+    prezzo_totale:       b.prezzoBase + accCostPerRow[i],
+    accessori:           accessoriPerRow[i].join(','),
     lingua:              linguaValida,
     pagamento_status:    'pending',
   }));
@@ -172,7 +198,9 @@ router.post('/checkout', async (req, res) => { try {
     return res.status(500).json({ error: 'Errore salvataggio prenotazione' });
   }
 
-  // Costruisci line items Stripe — una voce per tipo bici
+  // Costruisci line items Stripe — una voce per tipo bici (al prezzo base)
+  // + 1 voce aggregata per gli accessori (totale, non per-bici), così Stripe
+  // checkout resta leggibile anche con accessori distribuiti su solo alcune bici.
   const byType = {};
   for (const b of assignedBikes) {
     if (!byType[b.bike_type]) byType[b.bike_type] = { count: 0, prezzoBase: b.prezzoBase };
@@ -181,7 +209,7 @@ router.post('/checkout', async (req, res) => { try {
   const lineItems = Object.entries(byType).map(([bt, info]) => ({
     price_data: {
       currency:     'eur',
-      unit_amount:  (info.prezzoBase + accCostPerBike) * 100,
+      unit_amount:  info.prezzoBase * 100,
       product_data: {
         name:        `${BIKE_NOMI[bt]} — ${tipoLabel(tipo_noleggio)}`,
         description: `Noleggio e-bike — ${data_ritiro} ore ${orari.ritiro}`,
@@ -189,6 +217,26 @@ router.post('/checkout', async (req, res) => { try {
     },
     quantity: info.count,
   }));
+
+  if (accCostTotal > 0) {
+    const accSummary = accessoriPerRow
+      .flatMap(arr => arr)
+      .reduce((acc, k) => { acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+    const accDesc = Object.entries(accSummary)
+      .map(([k, n]) => `${n}× ${k}`)
+      .join(', ');
+    lineItems.push({
+      price_data: {
+        currency:    'eur',
+        unit_amount: accCostTotal * 100,
+        product_data: {
+          name:        'Accessori',
+          description: accDesc || 'Casco / Lucchetto',
+        },
+      },
+      quantity: 1,
+    });
+  }
 
   // Crea sessione Stripe Checkout
   try {

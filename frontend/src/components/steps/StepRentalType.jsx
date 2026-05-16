@@ -89,6 +89,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
       prezzo_base_totale:  prezzo,
       prezzo_totale:       prezzo,
       accessori:           [],
+      accessori_qty:       { casco: 0, lucchetto: 0 },
       orario_ritiro:       rest ? rest.ritiro : null,
       data_restituzione:   rest ? rest.data   : null,
       orario_restituzione: rest ? rest.orario : null,
@@ -106,6 +107,7 @@ export default function StepRentalType({ booking, onChange, onNext, onBack }) {
         prezzo_base_totale:  prezzo,
         prezzo_totale:       prezzo,
         accessori:           [],
+      accessori_qty:       { casco: 0, lucchetto: 0 },
         data_restituzione:   rest ? rest.data   : null,
         orario_restituzione: rest ? rest.orario : null,
       });

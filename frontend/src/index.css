@@ -2759,14 +2759,8 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   border: 2px solid var(--border);
   border-radius: 14px;
   background: #fff;
-  cursor: pointer;
-  transition: border-color 0.18s, box-shadow 0.18s, transform 0.15s, background 0.18s;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   position: relative;
-}
-.acc-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 2px 14px rgba(234,88,12,0.12);
-  transform: translateY(-2px);
 }
 .acc-card.selected {
   border-color: var(--verde);
@@ -2826,6 +2820,50 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   margin-bottom: 10px;
   line-height: 1.45;
 }
+.acc-qty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.acc-qty-btn {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  line-height: 1;
+}
+.acc-qty-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: rgba(234,88,12,0.06);
+}
+.acc-qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.acc-qty-val {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+.acc-card.selected .acc-qty-val { color: var(--verde); }
+.acc-line-total {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--verde);
+}
+.acc-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin: 0 0 10px;
+}
 
 /* ─── Firma card additions ───────────────────────────────────── */
 .ac-op-card-actions {
@@ -2845,9 +2883,22 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .footer-divider { display: none; }
   .custom-exp-card { padding: 20px 16px 16px; }
   .acc-grid { grid-template-columns: 1fr; }
-  .acc-card { flex-direction: row; text-align: left; padding: 14px 16px; gap: 12px; }
+  .acc-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    text-align: left;
+    padding: 14px 16px;
+    gap: 12px;
+    align-items: center;
+  }
   .acc-icon { flex-shrink: 0; }
-  .acc-card.selected::after { top: 50%; transform: translateY(-50%); right: 14px; }
+  .acc-card .acc-label,
+  .acc-card .acc-desc,
+  .acc-card .acc-badge { flex-basis: calc(100% - 70px); }
+  .acc-qty { width: 100%; margin-top: 6px; justify-content: flex-end; }
+  .acc-line-total { flex-basis: 100%; text-align: right; margin-top: 0; }
+  .acc-card.selected::after { top: 14px; transform: none; right: 14px; }
+  .acc-qty-btn { width: 42px; height: 42px; }
   .header { padding: 0 14px; height: auto; min-height: 60px; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
   .header-logomark { width: 40px; height: 40px; border-radius: 11px; }
   .header-title { font-size: 1.4rem; }

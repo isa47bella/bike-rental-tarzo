@@ -75,9 +75,17 @@ export default function StepSummary({ booking, onBack }) {
         <div className="summary-row">
           <span className="label">{t('stepSummary.fields.accessories')}</span>
           <span className="value">
-            {booking.accessori && booking.accessori.length > 0
-              ? booking.accessori.map(k => `${t(`stepAccessori.items.${k}.label`)} (+€${ACC_PREZZI[k] || 0})`).join(', ')
-              : t('stepSummary.fields.noAccessories')}
+            {(() => {
+              const q = booking.accessori_qty || {};
+              const parts = Object.entries(q)
+                .filter(([k, n]) => n > 0 && ACC_PREZZI[k])
+                .map(([k, n]) => `${n}× ${t(`stepAccessori.items.${k}.label`)} (+€${(ACC_PREZZI[k] || 0) * n})`);
+              if (parts.length) return parts.join(', ');
+              if (booking.accessori && booking.accessori.length > 0) {
+                return booking.accessori.map(k => `${t(`stepAccessori.items.${k}.label`)} (+€${ACC_PREZZI[k] || 0})`).join(', ');
+              }
+              return t('stepSummary.fields.noAccessories');
+            })()}
           </span>
         </div>
         <div className="summary-row">
