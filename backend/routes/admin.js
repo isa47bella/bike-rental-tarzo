@@ -593,6 +593,7 @@ router.post('/bookings/manual', async (req, res) => {
     giorni          = 1,
     bicicletta_id:  forcedBiciId,
     bike_type:      bikeTypeOverride,
+    bici:           biciArrayInput,
     accessori:      accessoriRaw = [],
     prezzo_totale:  prezzoOverride,
     note_pagamento  = '',
@@ -624,42 +625,69 @@ router.post('/bookings/manual', async (req, res) => {
 
   const occupate = new Set((conflitti || []).map(r => r.bicicletta_id));
 
-  // Filtra il pool della bici da assegnare per bike_type (se specificato).
-  // Se admin forza bicicletta_id, ignoriamo bikeTypeOverride e ricaviamo da id.
+  // Normalizza l'input: tre modi supportati
+  //   1) bici: [{ bike_type, quantita }, ...]                  → multi-bici (es. famiglia)
+  //   2) bicicletta_id: N                                       → singola bici forzata
+  //   3) bike_type: 'ecity' (legacy)                            → singola bici auto-assegnata
   const VALID_TYPES = ['ecity', 'emtb', 'bimbo'];
-  const bikeTypeReq = VALID_TYPES.includes(bikeTypeOverride) ? bikeTypeOverride : null;
+  let biciRequests; // array di { bike_type, quantita } da assegnare
 
-  let bicicletta_id;
+  if (Array.isArray(biciArrayInput) && biciArrayInput.length > 0) {
+    biciRequests = biciArrayInput
+      .filter(b => VALID_TYPES.includes(b.bike_type) && Number(b.quantita) > 0)
+      .map(b => ({ bike_type: b.bike_type, quantita: Math.min(Number(b.quantita), 10) }));
+    if (!biciRequests.length) {
+      return res.status(400).json({ error: 'Nessuna bici valida richiesta nel campo bici[]' });
+    }
+  } else if (forcedBiciId) {
+    biciRequests = null; // gestito separatamente sotto
+  } else {
+    const bt = VALID_TYPES.includes(bikeTypeOverride) ? bikeTypeOverride : 'ecity';
+    biciRequests = [{ bike_type: bt, quantita: 1 }];
+  }
+
+  // Assegnazione bici
+  const assignedBikes = []; // [{ bicicletta_id, bike_type }]
+
   if (forcedBiciId) {
     if (occupate.has(Number(forcedBiciId))) {
       return res.status(409).json({ error: `Bici #${forcedBiciId} già occupata in questa fascia oraria` });
     }
-    bicicletta_id = Number(forcedBiciId);
+    assignedBikes.push({
+      bicicletta_id: Number(forcedBiciId),
+      bike_type:     getBikeTypeFromId(forcedBiciId),
+    });
   } else {
-    const poolIds = bikeTypeReq ? TIPO_IDS_BICI[bikeTypeReq] : null;
-    let queryBici = supabase.from('biciclette').select('id').order('id');
-    if (poolIds) queryBici = queryBici.in('id', poolIds);
-    const { data: tutteLeBici } = await queryBici;
-    const libera = (tutteLeBici || []).find(b => !occupate.has(b.id));
-    if (!libera) {
-      return res.status(409).json({
-        error: bikeTypeReq
-          ? `Nessuna bici di tipo ${bikeTypeReq} disponibile per questa data/orario`
-          : 'Nessuna bici disponibile per questa data/orario',
-      });
+    for (const r of biciRequests) {
+      const pool   = TIPO_IDS_BICI[r.bike_type];
+      const libere = pool.filter(id => !occupate.has(id));
+      if (libere.length < r.quantita) {
+        return res.status(409).json({
+          error: `Non ci sono abbastanza bici di tipo ${r.bike_type} disponibili (richieste ${r.quantita}, disponibili ${libere.length})`,
+        });
+      }
+      for (let i = 0; i < r.quantita; i++) {
+        const bid = libere[i];
+        assignedBikes.push({ bicicletta_id: bid, bike_type: r.bike_type });
+        occupate.add(bid); // previene doppia assegnazione nella stessa richiesta
+      }
     }
-    bicicletta_id = libera.id;
   }
 
-  // Pricing allineato al sito: bike_type derivato da id + stagione + tipo noleggio.
-  const bikeType   = getBikeTypeFromId(bicicletta_id);
+  // Pricing: per ogni bici applichiamo SEASONAL_PRICES + accessori.
+  // prezzoOverride (se fornito) = prezzo totale per TUTTE le bici; viene distribuito
+  // equamente sulle righe (con eventuale resto sulla prima) per mantenere la somma esatta.
   const accessoriArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => ACC_PREZZI[a]);
   const accessoriStr = accessoriArr.join(',');
-  const accCost      = accessoriArr.reduce((sum, a) => sum + ACC_PREZZI[a], 0);
+  const accCostPerBike = accessoriArr.reduce((sum, a) => sum + ACC_PREZZI[a], 0);
 
-  let prezzo;
+  let prezziPerBici; // array stesso indice di assignedBikes
   if (prezzoOverride !== undefined && prezzoOverride !== null && prezzoOverride !== '') {
-    prezzo = parseFloat(prezzoOverride);
+    const totale = parseFloat(prezzoOverride);
+    const n      = assignedBikes.length;
+    const each   = Math.floor((totale / n) * 100) / 100;
+    const remainder = +(totale - each * n).toFixed(2);
+    prezziPerBici = assignedBikes.map((_, i) => i === 0 ? +(each + remainder).toFixed(2) : each);
   } else {
     const stagione = getStagione(data_ritiro);
     if (!stagione) {
@@ -668,46 +696,63 @@ router.post('/bookings/manual', async (req, res) => {
         fuori_stagione: true,
       });
     }
-    const prezzoBase = calcolaPrezzo(bikeType, tipo_noleggio, numGiorni, data_ritiro);
-    prezzo = prezzoBase + accCost;
+    prezziPerBici = assignedBikes.map(b => calcolaPrezzo(b.bike_type, tipo_noleggio, numGiorni, data_ritiro) + accCostPerBike);
   }
 
   const noteFinale = [cliente_note, note_pagamento ? `Pagamento: ${note_pagamento}` : ''].filter(Boolean).join(' | ');
 
-  const { data: prenotazione, error } = await supabase
-    .from('prenotazioni')
-    .insert({
-      cliente_nome:        cliente_nome.trim(),
-      cliente_email:       cliente_email.trim() || 'noemail@bikerentaltarzo.it',
-      cliente_telefono:    (cliente_telefono || '').trim(),
-      cliente_note:        noteFinale || null,
-      bicicletta_id,
-      tipo_noleggio,
-      giorni:              numGiorni,
-      data_ritiro,
-      orario_ritiro,
-      data_restituzione,
-      orario_restituzione,
-      start_ts:            start.toISOString(),
-      end_ts:              end.toISOString(),
-      prezzo_totale:       prezzo,
-      accessori:           accessoriStr,
-      pagamento_status:    'paid',
-      stripe_session_id:   null,
-    })
-    .select()
-    .single();
+  // Group id sintetico (riusa stripe_session_id) per legare le righe della stessa prenotazione
+  const groupId = `manual_${crypto.randomUUID()}`;
 
-  if (error) {
+  const insertData = assignedBikes.map((b, i) => ({
+    cliente_nome:        cliente_nome.trim(),
+    cliente_email:       cliente_email.trim() || 'noemail@bikerentaltarzo.it',
+    cliente_telefono:    (cliente_telefono || '').trim(),
+    cliente_note:        noteFinale || null,
+    bicicletta_id:       b.bicicletta_id,
+    tipo_noleggio,
+    giorni:              numGiorni,
+    data_ritiro,
+    orario_ritiro,
+    data_restituzione,
+    orario_restituzione,
+    start_ts:            start.toISOString(),
+    end_ts:              end.toISOString(),
+    prezzo_totale:       prezziPerBici[i],
+    accessori:           accessoriStr,
+    pagamento_status:    'paid',
+    stripe_session_id:   groupId,
+  }));
+
+  const { data: prenotazioni, error } = await supabase
+    .from('prenotazioni')
+    .insert(insertData)
+    .select();
+
+  if (error || !prenotazioni?.length) {
     console.error('Errore prenotazione manuale:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error?.message || 'Errore creazione prenotazioni' });
   }
 
-  // WhatsApp alert (non bloccante)
-  sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp manual:', e));
+  // WhatsApp alert sul lead (totale aggregato)
+  const totaleAggregato = prenotazioni.reduce((s, p) => s + Number(p.prezzo_totale), 0);
+  const leadAlert = { ...prenotazioni[0], prezzo_totale: totaleAggregato, _total_bikes: prenotazioni.length };
+  sendWhatsAppAlert(leadAlert).catch(e => console.error('WhatsApp manual:', e));
 
-  await logAction('manual_booking', prenotazione.id, { nome: prenotazione.cliente_nome, tipo: tipo_noleggio, data: data_ritiro, bici_id: bicicletta_id }, getIp(req));
-  return res.json({ success: true, booking: prenotazione });
+  await logAction('manual_booking', prenotazioni[0].id, {
+    nome: cliente_nome, tipo: tipo_noleggio, data: data_ritiro,
+    bici_count: prenotazioni.length,
+    bici_ids: prenotazioni.map(p => p.bicicletta_id),
+    group_id: groupId,
+  }, getIp(req));
+
+  // Backward compat: ritorniamo .booking (singola, lead) + .bookings (array completo)
+  return res.json({
+    success:  true,
+    booking:  prenotazioni[0],
+    bookings: prenotazioni,
+    total:    totaleAggregato,
+  });
 });
 
 // ─── GET /api/admin/chiusure ──────────────────────────────────────────────────

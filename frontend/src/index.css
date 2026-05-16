@@ -1526,6 +1526,59 @@ body {
 .ac-manual-grid .ac-field { padding: 0; margin-bottom: 12px; }
 .ac-manual-accessori { padding: 0 22px 4px; }
 
+.ac-manual-bici {
+  padding: 12px 22px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ac-manual-bici-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.ac-manual-bici-hint { font-size: 0.7rem; color: #6B8BAF; }
+.ac-bici-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #1A2840;
+  border-radius: 8px;
+}
+.ac-bici-info { min-width: 0; flex: 1; }
+.ac-bici-name { font-weight: 600; color: #E2EAF4; font-size: 0.92rem; }
+.ac-bici-sub { font-size: 0.72rem; color: #6B8BAF; margin-top: 2px; }
+.ac-bici-qty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.ac-qty-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid #2A3D58;
+  background: #0D1520;
+  color: #E2EAF4;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ac-qty-btn:hover:not(:disabled) { background: #1A2840; border-color: #EA580C; }
+.ac-qty-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.ac-qty-val {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #E2EAF4;
+}
+
 /* Photo upload */
 .ac-photo-section-label {
   padding: 14px 22px 4px;
@@ -2492,6 +2545,9 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .ac-manual-grid { padding: 14px 18px 0; grid-template-columns: 1fr; gap: 0; }
   .ac-manual-grid .ac-field { margin-bottom: 10px; }
   .ac-manual-accessori { padding: 4px 18px 8px; }
+  .ac-manual-bici { padding: 10px 18px 4px; }
+  .ac-bici-row { padding: 10px; }
+  .ac-qty-btn { width: 40px; height: 40px; }
   .ac-photo-grid > div:first-child:last-child { grid-column: 1 / -1; }
 
   /* ── Login ── */

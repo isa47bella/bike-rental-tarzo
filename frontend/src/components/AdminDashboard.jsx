@@ -463,8 +463,8 @@ async function handleClientiSearch(e) {
   const MANUAL_EMPTY = {
     cliente_nome: '', cliente_email: '', cliente_telefono: '', cliente_note: '',
     data_ritiro: '', tipo_noleggio: 'intera_giornata', giorni: 2,
-    bike_type: 'ecity',
-    bicicletta_id: '', accessori: [], prezzo_totale: '', note_pagamento: 'Contanti',
+    qty_ecity: 1, qty_emtb: 0, qty_bimbo: 0,
+    accessori: [], prezzo_totale: '', note_pagamento: 'Contanti',
   };
   const [manualModal,   setManualModal]   = useState(false);
   const [manualForm,    setManualForm]    = useState(MANUAL_EMPTY);
@@ -841,7 +841,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     return null;
   }
 
-  function calcPrezzoManual(tipo, giorni, dateStr, bikeType) {
+  function calcPrezzoPerBike(tipo, giorni, dateStr, bikeType) {
     const stagione = getStagioneFE(dateStr);
     if (!stagione || !bikeType) return 0;
     const p = SEASONAL_PRICES[stagione][bikeType];
@@ -856,17 +856,42 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     return 0;
   }
 
+  const ACC_PREZZI_FE = { casco: 2, lucchetto: 1 };
+
+  function calcPrezzoManualTotal(form) {
+    const accPerBike = (form.accessori || []).reduce((s, a) => s + (ACC_PREZZI_FE[a] || 0), 0);
+    const qty = { ecity: form.qty_ecity || 0, emtb: form.qty_emtb || 0, bimbo: form.qty_bimbo || 0 };
+    let total = 0;
+    for (const [bt, n] of Object.entries(qty)) {
+      if (n <= 0) continue;
+      const base = calcPrezzoPerBike(form.tipo_noleggio, form.giorni, form.data_ritiro, bt);
+      if (base <= 0) return 0;
+      total += (base + accPerBike) * n;
+    }
+    return total;
+  }
+
   function setManualField(key, value) {
     setManualForm(prev => {
       const next = { ...prev, [key]: value };
-      // Se admin sceglie una bici specifica, deriva il bike_type da lì
-      if (key === 'bicicletta_id' && value) {
-        const derived = getBikeTypeFromId(value);
-        if (derived) next.bike_type = derived;
-      }
       // Auto-update prezzo quando cambia qualsiasi input che lo influenza
-      if (['tipo_noleggio', 'giorni', 'data_ritiro', 'bike_type', 'bicicletta_id'].includes(key) && !prev._prezzoCambiato) {
-        const calc = calcPrezzoManual(next.tipo_noleggio, next.giorni, next.data_ritiro, next.bike_type);
+      const recalcKeys = ['tipo_noleggio', 'giorni', 'data_ritiro', 'qty_ecity', 'qty_emtb', 'qty_bimbo', 'accessori'];
+      if (recalcKeys.includes(key) && !prev._prezzoCambiato) {
+        const calc = calcPrezzoManualTotal(next);
+        next.prezzo_totale = calc > 0 ? String(calc) : '';
+      }
+      return next;
+    });
+  }
+
+  function adjustQty(key, delta) {
+    setManualForm(prev => {
+      const cur = Number(prev[key] || 0);
+      const newQty = Math.max(0, Math.min(10, cur + delta));
+      if (newQty === cur) return prev;
+      const next = { ...prev, [key]: newQty };
+      if (!prev._prezzoCambiato) {
+        const calc = calcPrezzoManualTotal(next);
         next.prezzo_totale = calc > 0 ? String(calc) : '';
       }
       return next;
@@ -878,14 +903,22 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       setManualError('Compila i campi obbligatori: nome, data, tipo noleggio');
       return;
     }
+    const bici = [
+      { bike_type: 'ecity', quantita: manualForm.qty_ecity || 0 },
+      { bike_type: 'emtb',  quantita: manualForm.qty_emtb  || 0 },
+      { bike_type: 'bimbo', quantita: manualForm.qty_bimbo || 0 },
+    ].filter(b => b.quantita > 0);
+    if (bici.length === 0) {
+      setManualError('Seleziona almeno una bici');
+      return;
+    }
     setManualLoading(true);
     setManualError(null);
     try {
       await adminApi.manualBooking({
         ...manualForm,
         giorni:        Number(manualForm.giorni),
-        bicicletta_id: manualForm.bicicletta_id || undefined,
-        bike_type:     manualForm.bike_type,
+        bici,
         prezzo_totale: manualForm.prezzo_totale || undefined,
       });
       setManualModal(false);
@@ -2258,34 +2291,45 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                   value={f.giorni} onChange={e => setManualField('giorni', e.target.value)} />
               </div>
             )}
-            <div className="ac-field">
-              <label className="ac-label">Tipo bici *</label>
-              <select className="ac-select" value={f.bike_type}
-                onChange={e => setManualField('bike_type', e.target.value)}
-                disabled={!!f.bicicletta_id}>
-                <option value="ecity">E-City</option>
-                <option value="emtb">E-MTB</option>
-                <option value="bimbo">E-MTB Bimbo</option>
-              </select>
+          </div>
+
+          {/* Selettore bici (multi-bici) */}
+          <div className="ac-manual-bici">
+            <div className="ac-manual-bici-title">
+              <span className="ac-label">Bici *</span>
+              <span className="ac-manual-bici-hint">Una prenotazione, più bici (es. famiglia)</span>
             </div>
-            <div className="ac-field">
-              <label className="ac-label">Bici specifica (opzionale)</label>
-              <select className="ac-select" value={f.bicicletta_id}
-                onChange={e => setManualField('bicicletta_id', e.target.value)}>
-                <option value="">Auto-assegna</option>
-                {BICI.map(b => <option key={b.id} value={b.id}>{b.nome}</option>)}
-              </select>
-            </div>
+            {[
+              { key: 'qty_ecity', label: 'E-City',      sub: 'KTM 500Wh',          bt: 'ecity' },
+              { key: 'qty_emtb',  label: 'E-MTB',       sub: 'KTM 625Wh BOSCH',    bt: 'emtb'  },
+              { key: 'qty_bimbo', label: 'E-MTB Bimbo', sub: 'Haibike Hardfour',   bt: 'bimbo' },
+            ].map(row => {
+              const qty   = f[row.key] || 0;
+              const price = calcPrezzoPerBike(f.tipo_noleggio, f.giorni, f.data_ritiro, row.bt);
+              return (
+                <div key={row.key} className="ac-bici-row">
+                  <div className="ac-bici-info">
+                    <div className="ac-bici-name">{row.label}</div>
+                    <div className="ac-bici-sub">{row.sub}{price > 0 ? ` · €${price}/bici` : ''}</div>
+                  </div>
+                  <div className="ac-bici-qty">
+                    <button type="button" className="ac-qty-btn" onClick={() => adjustQty(row.key, -1)} disabled={qty === 0}>−</button>
+                    <span className="ac-qty-val">{qty}</span>
+                    <button type="button" className="ac-qty-btn" onClick={() => adjustQty(row.key, +1)}>+</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Prezzo e pagamento */}
           <div className="ac-manual-grid">
             <div className="ac-field">
-              <label className="ac-label">Prezzo (€) — auto-calcolato</label>
+              <label className="ac-label">Prezzo totale (€)</label>
               <input className="ac-input" type="number" min="0" step="0.01"
                 value={f.prezzo_totale}
                 onChange={e => setManualForm(p => ({ ...p, prezzo_totale: e.target.value, _prezzoCambiato: true }))}
-                placeholder={String(calcPrezzoManual(f.tipo_noleggio, f.giorni, f.data_ritiro, f.bike_type) || '—')} />
+                placeholder={String(calcPrezzoManualTotal(f) || '—')} />
             </div>
             <div className="ac-field">
               <label className="ac-label">Metodo pagamento</label>
@@ -2340,7 +2384,12 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
           <div className="ac-modal-footer">
             <button className="ac-btn primary full" onClick={handleManualBooking} disabled={manualLoading}>
-              {manualLoading ? 'Salvataggio…' : `✓ Crea Prenotazione${f.prezzo_totale ? ` — €${f.prezzo_totale}` : ''}`}
+              {(() => {
+                if (manualLoading) return 'Salvataggio…';
+                const totBici = (f.qty_ecity || 0) + (f.qty_emtb || 0) + (f.qty_bimbo || 0);
+                const label   = totBici > 1 ? `${totBici} bici` : '1 bici';
+                return `✓ Crea Prenotazione (${label})${f.prezzo_totale ? ` — €${f.prezzo_totale}` : ''}`;
+              })()}
             </button>
             <button className="ac-btn ghost" onClick={() => setManualModal(false)} disabled={manualLoading}>Annulla</button>
           </div>
