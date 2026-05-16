@@ -471,6 +471,9 @@ async function handleClientiSearch(e) {
   const [manualForm,    setManualForm]    = useState(MANUAL_EMPTY);
   const [manualLoading, setManualLoading] = useState(false);
   const [manualError,   setManualError]   = useState(null);
+  // Disponibilità real-time per la prenotazione manuale
+  // { per_tipo: { ecity, emtb, bimbo }, blocked?, blockReason?, loading? }
+  const [manualAvail,   setManualAvail]   = useState(null);
 
   // ─── Data loaders ───────────────────────────────────────────────────────────
 
@@ -566,6 +569,48 @@ const loadOccupazione = useCallback(async () => {
     if (activeView === 'cauzioni') loadCauzioni();
     if (activeView === 'log') loadAuditLog();
   }, [activeView, authed]); // eslint-disable-line
+
+  // Fetch availability live nella prenotazione manuale quando cambiano data/tipo/giorni
+  useEffect(() => {
+    if (!manualModal) { setManualAvail(null); return; }
+    const { data_ritiro, tipo_noleggio, giorni } = manualForm;
+    if (!data_ritiro || !tipo_noleggio) { setManualAvail(null); return; }
+    const g = tipo_noleggio === 'multi_giorno' ? Math.max(2, Number(giorni) || 2) : 1;
+
+    let cancelled = false;
+    setManualAvail(prev => ({ ...(prev || {}), loading: true }));
+    api.getAvailability(data_ritiro, tipo_noleggio, g)
+      .then(res => {
+        if (cancelled) return;
+        const perTipo = res.per_tipo || { ecity: 0, emtb: 0, bimbo: 0 };
+        setManualAvail({ per_tipo: perTipo, blocked: false, loading: false });
+        // Clampa eventuali quantità sopra il nuovo cap
+        setManualForm(prev => {
+          const next = {
+            ...prev,
+            qty_ecity: Math.min(prev.qty_ecity || 0, perTipo.ecity || 0),
+            qty_emtb:  Math.min(prev.qty_emtb  || 0, perTipo.emtb  || 0),
+            qty_bimbo: Math.min(prev.qty_bimbo || 0, perTipo.bimbo || 0),
+          };
+          const clamped = clampAccessoriToBici(next);
+          return prev._prezzoCambiato ? clamped : { ...clamped, prezzo_totale: (() => {
+            const c = calcPrezzoManualTotal(clamped);
+            return c > 0 ? String(c) : '';
+          })() };
+        });
+      })
+      .catch(err => {
+        if (cancelled) return;
+        // L'endpoint ritorna 400 con fuori_stagione/chiuso → blocchiamo il submit
+        const msg = err?.message || 'Errore disponibilità';
+        const blockReason = /stagione/i.test(msg) ? 'Data fuori stagione (apertura 1 apr – 31 ott)'
+                          : /chius/i.test(msg)    ? 'Negozio chiuso in questa data'
+                          : msg;
+        setManualAvail({ per_tipo: { ecity: 0, emtb: 0, bimbo: 0 }, blocked: true, blockReason, loading: false });
+      });
+
+    return () => { cancelled = true; };
+  }, [manualModal, manualForm.data_ritiro, manualForm.tipo_noleggio, manualForm.giorni]); // eslint-disable-line
 
   // ─── Login ──────────────────────────────────────────────────────────────────
 
@@ -905,8 +950,12 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
   function adjustQty(key, delta) {
     setManualForm(prev => {
-      const cur = Number(prev[key] || 0);
-      const newQty = Math.max(0, Math.min(10, cur + delta));
+      const cur    = Number(prev[key] || 0);
+      // Rispetta il cap di disponibilità reale se conosciuto
+      const btMap  = { qty_ecity: 'ecity', qty_emtb: 'emtb', qty_bimbo: 'bimbo' };
+      const av     = manualAvail?.per_tipo;
+      const hardMax = av && btMap[key] ? (av[btMap[key]] || 0) : 10;
+      const newQty = Math.max(0, Math.min(hardMax, cur + delta));
       if (newQty === cur) return prev;
       let next = { ...prev, [key]: newQty };
       next = clampAccessoriToBici(next);
@@ -2273,6 +2322,11 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     const f = manualForm;
     const isMulti = f.tipo_noleggio === 'multi_giorno';
     const maxAcc  = totalBici(f);
+    const av      = manualAvail || {};
+    const perTipo = av.per_tipo || { ecity: 0, emtb: 0, bimbo: 0 };
+    const blocked = !!av.blocked;
+    const avLoading = !!av.loading;
+    const hasNoFleet = av.per_tipo && perTipo.ecity === 0 && perTipo.emtb === 0 && perTipo.bimbo === 0 && !blocked;
 
     return (
       <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setManualModal(false)}>
@@ -2286,6 +2340,18 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           {manualError && <div className="ac-manual-error"><div className="ac-error-banner">{manualError}</div></div>}
+          {blocked && (
+            <div className="ac-manual-error">
+              <div className="ac-error-banner">⚠️ {av.blockReason}</div>
+            </div>
+          )}
+          {!blocked && hasNoFleet && f.data_ritiro && (
+            <div className="ac-manual-error">
+              <div className="ac-error-banner" style={{ background: '#3A2A0E', color: '#FBBF24', borderColor: '#92760E' }}>
+                Tutte le bici sono già prenotate in questa data/orario
+              </div>
+            </div>
+          )}
 
           {/* Dati prenotazione */}
           <div className="ac-manual-grid">
@@ -2317,25 +2383,40 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           <div className="ac-manual-bici">
             <div className="ac-manual-bici-title">
               <span className="ac-label">Bici *</span>
-              <span className="ac-manual-bici-hint">Una prenotazione, più bici (es. famiglia)</span>
+              <span className="ac-manual-bici-hint">
+                {avLoading
+                  ? 'Verifica disponibilità…'
+                  : (!f.data_ritiro ? 'Seleziona prima la data' : 'Disponibilità calcolata dal calendario')}
+              </span>
             </div>
             {[
-              { key: 'qty_ecity', label: 'E-City',      sub: 'KTM 500Wh',          bt: 'ecity' },
-              { key: 'qty_emtb',  label: 'E-MTB',       sub: 'KTM 625Wh BOSCH',    bt: 'emtb'  },
-              { key: 'qty_bimbo', label: 'E-MTB Bimbo', sub: 'Haibike Hardfour',   bt: 'bimbo' },
+              { key: 'qty_ecity', label: 'E-City',      sub: 'KTM 500Wh',        bt: 'ecity' },
+              { key: 'qty_emtb',  label: 'E-MTB',       sub: 'KTM 625Wh BOSCH',  bt: 'emtb'  },
+              { key: 'qty_bimbo', label: 'E-MTB Bimbo', sub: 'Haibike Hardfour', bt: 'bimbo' },
             ].map(row => {
-              const qty   = f[row.key] || 0;
-              const price = calcPrezzoPerBike(f.tipo_noleggio, f.giorni, f.data_ritiro, row.bt);
+              const qty       = f[row.key] || 0;
+              const price     = calcPrezzoPerBike(f.tipo_noleggio, f.giorni, f.data_ritiro, row.bt);
+              const available = av.per_tipo ? (perTipo[row.bt] || 0) : null;
+              const maxQty    = available !== null ? available : 10;
+              const subText   = [
+                row.sub,
+                price > 0 ? `€${price}/bici` : null,
+                available !== null ? (available > 0 ? `${available} disponibili` : 'esaurita') : null,
+              ].filter(Boolean).join(' · ');
+              const dimmed = available === 0;
               return (
-                <div key={row.key} className="ac-bici-row">
+                <div key={row.key} className="ac-bici-row" style={dimmed ? { opacity: 0.5 } : undefined}>
                   <div className="ac-bici-info">
                     <div className="ac-bici-name">{row.label}</div>
-                    <div className="ac-bici-sub">{row.sub}{price > 0 ? ` · €${price}/bici` : ''}</div>
+                    <div className="ac-bici-sub">{subText}</div>
                   </div>
                   <div className="ac-bici-qty">
                     <button type="button" className="ac-qty-btn" onClick={() => adjustQty(row.key, -1)} disabled={qty === 0}>−</button>
                     <span className="ac-qty-val">{qty}</span>
-                    <button type="button" className="ac-qty-btn" onClick={() => adjustQty(row.key, +1)}>+</button>
+                    <button type="button" className="ac-qty-btn"
+                      onClick={() => adjustQty(row.key, +1)}
+                      disabled={blocked || qty >= maxQty}
+                    >+</button>
                   </div>
                 </div>
               );
@@ -2415,11 +2496,17 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           <div className="ac-modal-footer">
-            <button className="ac-btn primary full" onClick={handleManualBooking} disabled={manualLoading}>
+            <button
+              className="ac-btn primary full"
+              onClick={handleManualBooking}
+              disabled={manualLoading || blocked || avLoading || maxAcc === 0}
+            >
               {(() => {
-                if (manualLoading) return 'Salvataggio…';
-                const totBici = (f.qty_ecity || 0) + (f.qty_emtb || 0) + (f.qty_bimbo || 0);
-                const label   = totBici > 1 ? `${totBici} bici` : '1 bici';
+                if (manualLoading)   return 'Salvataggio…';
+                if (avLoading)       return 'Verifica disponibilità…';
+                if (blocked)         return 'Data non disponibile';
+                if (maxAcc === 0)    return 'Seleziona almeno una bici';
+                const label = maxAcc > 1 ? `${maxAcc} bici` : '1 bici';
                 return `✓ Crea Prenotazione (${label})${f.prezzo_totale ? ` — €${f.prezzo_totale}` : ''}`;
               })()}
             </button>
