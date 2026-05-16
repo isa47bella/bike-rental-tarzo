@@ -24,7 +24,8 @@
     "legend": {
       "available": "Disponibile",
       "partial": "Pochi posti",
-      "full": "Completo"
+      "full": "Completo",
+      "fuoriStagione": "Fuori stagione"
     },
     "months": [
       "Gennaio",
@@ -108,7 +109,26 @@
     "call": "Chiama",
     "halfDay": "giornata",
     "fullDay": "Intera giornata",
-    "multiFrom": "Multi-giorno da"
+    "multiFrom": "Multi-giorno da",
+    "bikeSelected": "bici selezionata",
+    "bikesSelected": "bici selezionate",
+    "models": {
+      "ecity": {
+        "tag": "City & Trekking",
+        "specs": "500Wh · Batteria esterna · Ruote 27.5\"",
+        "descrizione": "Ideale per strade e percorsi misti. Comoda e versatile per le Colline del Prosecco."
+      },
+      "emtb": {
+        "tag": "Mountain Bike",
+        "specs": "625Wh · Motore BOSCH CX · Full Power",
+        "descrizione": "Massima potenza per i sentieri delle colline. Motore BOSCH CX, il top di gamma."
+      },
+      "bimbo": {
+        "tag": "Bambini",
+        "specs": "400Wh · Haibike Hardfour · Ruota 24\"",
+        "descrizione": "Ruota 24\" con assistenza elettrica calibrata per i più piccoli."
+      }
+    }
   },
   "stepContact": {
     "title": "I tuoi contatti",
@@ -158,7 +178,7 @@
       "multi_giorno": "Multi-Giorno"
     },
     "paymentInfo": "💳 Il pagamento è <b>100% anticipato</b> tramite Stripe (carta di credito/debito). Riceverai conferma via email subito dopo il pagamento.",
-    "depositInfo": "🔒 <b>Cauzione di €1.000:</b> il blocco viene eseguito sulla tua carta <b>2 giorni prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato alla restituzione della bici e degli accessori in buone condizioni. In caso di danni o smarrimento, i costi saranno trattenuti dalla cauzione.",
+    "depositInfo": "🔒 <b>Cauzione di €500:</b> il blocco viene eseguito sulla tua carta <b>1 giorno prima del ritiro</b>, non al momento del pagamento. L'importo non viene addebitato e sarà sbloccato alla restituzione della bici e degli accessori in buone condizioni. In caso di danni o smarrimento, i costi saranno trattenuti dalla cauzione.",
     "modify": "← Modifica",
     "pay": "💳 Paga €{{amount}}",
     "processing": "⏳ Elaborazione...",
@@ -193,15 +213,14 @@
     "payAt": "Paga solo al checkout"
   },
   "stepAccessori": {
-    "title": "Accessori inclusi",
-    "subtitle": "Seleziona gli accessori di cui hai bisogno — inclusi nel prezzo, senza costi aggiuntivi",
+    "title": "Accessori opzionali",
+    "subtitle": "Seleziona gli accessori di cui hai bisogno",
     "included": "Incluso",
     "items": {
-      "casco":    { "label": "Casco",         "desc": "Casco omologato CE · Taglia regolabile" },
-      "lucchetto":{ "label": "Lucchetto",     "desc": "Lucchetto a combinazione numerica" },
-      "kit_foro": { "label": "Kit Foratura",  "desc": "Camera d'aria + leve + gonfiatore tascabile" }
+      "casco":    { "label": "Casco",     "desc": "Casco omologato CE · Taglia regolabile" },
+      "lucchetto":{ "label": "Lucchetto", "desc": "Lucchetto a combinazione numerica" }
     },
-    "cauzioneNote": "⚠️ In caso di smarrimento o danno agli accessori, i costi saranno coperti dalla cauzione di €1.000.",
+    "cauzioneNote": "⚠️ In caso di smarrimento o danno agli accessori, i costi saranno coperti dalla cauzione di €500.",
     "skipNote": "Non hai bisogno di accessori? Premi Continua per procedere senza."
   },
   "customExp": {
@@ -216,5 +235,12 @@
       "🌄 Multi-giorno"
     ],
     "note": "Risposta entro poche ore · Nessun impegno"
+  },
+  "cookie": {
+    "ariaLabel": "Informativa cookie",
+    "text": "Utilizziamo cookie tecnici necessari per il funzionamento del sito e del pagamento. Nessun cookie di profilazione. Maggiori info nella nostra",
+    "privacyLink": "Privacy e Cookie Policy",
+    "accept": "Accetta",
+    "refuse": "Solo necessari"
   }
 }

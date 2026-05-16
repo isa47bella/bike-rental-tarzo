@@ -45,7 +45,7 @@ app.use((err, req, res, _next) => {
 // Avvia il server solo in locale (non su Vercel serverless)
 if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
-    console.log(`\nBike Rental Tarzo — Backend`);
+    console.log(`\nArfanta Bike Rental — Backend`);
     console.log(`   Server:    http://localhost:${PORT}`);
     console.log(`   Health:    http://localhost:${PORT}/health`);
     console.log(`   Ambiente:  ${process.env.NODE_ENV || 'development'}\n`);

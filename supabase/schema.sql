@@ -78,3 +78,15 @@ ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS batteria_pct           INT      
 ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS note_admin             TEXT;
 ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS ultima_manutenzione    DATE;
 ALTER TABLE biciclette ADD COLUMN IF NOT EXISTS prossima_manutenzione  DATE;
+
+-- ─── Audit log azioni admin ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_log (
+  id         BIGSERIAL    PRIMARY KEY,
+  azione     TEXT         NOT NULL,
+  booking_id UUID,
+  dettagli   JSONB        DEFAULT '{}',
+  ip         TEXT,
+  created_at TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_log_booking_id ON audit_log(booking_id);

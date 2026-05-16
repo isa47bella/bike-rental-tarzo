@@ -24,7 +24,8 @@
     "legend": {
       "available": "Verfügbar",
       "partial": "Wenige Plätze",
-      "full": "Ausgebucht"
+      "full": "Ausgebucht",
+      "fuoriStagione": "Nebensaison"
     },
     "months": [
       "Januar",
@@ -108,7 +109,26 @@
     "call": "Anrufen",
     "halfDay": "Halbtag",
     "fullDay": "Ganzer Tag",
-    "multiFrom": "Mehrtägig ab"
+    "multiFrom": "Mehrtägig ab",
+    "bikeSelected": "Fahrrad ausgewählt",
+    "bikesSelected": "Fahrräder ausgewählt",
+    "models": {
+      "ecity": {
+        "tag": "City & Trekking",
+        "specs": "500Wh · Externer Akku · 27,5\" Räder",
+        "descrizione": "Ideal für Straßen und gemischte Wege. Komfortabel und vielseitig für die Prosecco-Hügel."
+      },
+      "emtb": {
+        "tag": "Mountain Bike",
+        "specs": "625Wh · BOSCH CX Motor · Full Power",
+        "descrizione": "Maximale Kraft für die Hügelwege. BOSCH CX Motor — das Beste seiner Klasse."
+      },
+      "bimbo": {
+        "tag": "Kinder",
+        "specs": "400Wh · Haibike Hardfour · 24\" Rad",
+        "descrizione": "24\" Rad mit elektrischer Unterstützung, speziell auf die Kleinsten abgestimmt."
+      }
+    }
   },
   "stepContact": {
     "title": "Ihre Kontaktdaten",
@@ -158,7 +178,7 @@
       "multi_giorno": "Mehrtägig"
     },
     "paymentInfo": "💳 Die Zahlung erfolgt <b>100% im Voraus</b> über Stripe (Kredit-/Debitkarte). Sie erhalten sofort nach der Zahlung eine Bestätigungs-E-Mail.",
-    "depositInfo": "🔒 <b>Kaution €1.000:</b> Der Betrag wird <b>2 Tage vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Er wird nach Rückgabe des Fahrrads und Zubehörs in einwandfreiem Zustand freigegeben. Bei Verlust oder Schaden werden die Kosten von der Kaution abgezogen.",
+    "depositInfo": "🔒 <b>Kaution €500:</b> Der Betrag wird <b>1 Tag vor der Abholung</b> auf Ihrer Karte reserviert, nicht bei der Zahlung. Er wird nach Rückgabe des Fahrrads und Zubehörs in einwandfreiem Zustand freigegeben. Bei Verlust oder Schaden werden die Kosten von der Kaution abgezogen.",
     "modify": "← Bearbeiten",
     "pay": "💳 Zahlen €{{amount}}",
     "processing": "⏳ Wird bearbeitet...",
@@ -193,15 +213,14 @@
     "payAt": "Zahlung beim Checkout"
   },
   "stepAccessori": {
-    "title": "Enthaltenes Zubehör",
-    "subtitle": "Wählen Sie das Zubehör, das Sie benötigen — im Preis inbegriffen, keine Zusatzkosten",
+    "title": "Optionales Zubehör",
+    "subtitle": "Wählen Sie das Zubehör, das Sie benötigen",
     "included": "Inklusive",
     "items": {
-      "casco":    { "label": "Helm",             "desc": "CE-zugelassener Helm · Verstellbare Größe" },
-      "lucchetto":{ "label": "Schloss",          "desc": "Zahlenkombinationsschloss" },
-      "kit_foro": { "label": "Pannenhilfe-Set",  "desc": "Schlauch + Reifenheber + Taschenpumpe" }
+      "casco":    { "label": "Helm",    "desc": "CE-zugelassener Helm · Verstellbare Größe" },
+      "lucchetto":{ "label": "Schloss", "desc": "Zahlenkombinationsschloss" }
     },
-    "cauzioneNote": "⚠️ Bei Verlust oder Beschädigung von Zubehör werden die Kosten durch die Kaution von €1.000 gedeckt.",
+    "cauzioneNote": "⚠️ Bei Verlust oder Beschädigung von Zubehör werden die Kosten durch die Kaution von €500 gedeckt.",
     "skipNote": "Kein Zubehör benötigt? Drücken Sie Weiter um ohne fortzufahren."
   },
   "customExp": {
@@ -216,5 +235,12 @@
       "🌄 Mehrtägig"
     ],
     "note": "Antwort in wenigen Stunden · Keine Verpflichtung"
+  },
+  "cookie": {
+    "ariaLabel": "Cookie-Hinweis",
+    "text": "Wir verwenden nur technisch notwendige Cookies. Keine Profilierung. Mehr Infos in unserer",
+    "privacyLink": "Datenschutz- und Cookie-Richtlinie",
+    "accept": "Akzeptieren",
+    "refuse": "Nur notwendige"
   }
 }

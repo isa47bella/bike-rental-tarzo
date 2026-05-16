@@ -4,6 +4,8 @@ import AdminDashboard  from './components/AdminDashboard.jsx';
 import SuccessPage     from './pages/Success.jsx';
 import CancelPage      from './pages/Cancel.jsx';
 import FirmaPage       from './pages/Firma.jsx';
+import PrivacyPage     from './pages/Privacy.jsx';
+import CookieBanner    from './components/CookieBanner.jsx';
 
 function Footer() {
   return (
@@ -22,6 +24,8 @@ function Footer() {
         </svg>
         arfantabikerental@gmail.com
       </a>
+      <span className="footer-divider">·</span>
+      <a href="/privacy" className="footer-contact">Privacy & Cookie</a>
     </footer>
   );
 }
@@ -31,6 +35,7 @@ function PublicLayout({ children }) {
     <>
       {children}
       <Footer />
+      <CookieBanner />
     </>
   );
 }
@@ -43,6 +48,7 @@ export default function App() {
       <Route path="/cancel"  element={<PublicLayout><CancelPage /></PublicLayout>} />
       <Route path="/admin"   element={<AdminDashboard />} />
       <Route path="/firma/:id" element={<FirmaPage />} />
+      <Route path="/privacy"   element={<PublicLayout><PrivacyPage /></PublicLayout>} />
     </Routes>
   );
 }

@@ -1,5 +1,5 @@
 /* ============================================================
-   BIKE RENTAL TARZO — Global CSS
+   ARFANTA BIKE RENTAL — Global CSS
    Design: Flat · Outdoor Sports · Barlow · Orange + Slate
    ============================================================ */
 
@@ -403,6 +403,7 @@ body {
 .cal-day.avail-partial { background: #FEF3C7; color: #92400E; }
 .cal-day.avail-none    { background: #FEE2E2; color: #9CA3AF; cursor: not-allowed; }
 .cal-day.past          { background: #F1F5F9; color: #CBD5E1; cursor: not-allowed; }
+.cal-day.fuori-stagione { background: #F1F5F9; color: #94A3B8; cursor: not-allowed; opacity: 0.45; }
 .cal-day.empty         { cursor: default; }
 .cal-day.selected      { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(234,88,12,0.2); }
 .cal-day.avail-full:hover,
@@ -539,6 +540,83 @@ body {
   font-weight: 700;
   color: var(--primary);
   margin-top: 4px;
+}
+
+/* ─── Quantity controls (multi-bike) ─── */
+.model-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.qty-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: white;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.qty-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-pale);
+}
+.qty-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.model-card.selected .qty-btn:not(:disabled) {
+  border-color: var(--primary);
+}
+.qty-num {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 28px;
+  text-align: center;
+  line-height: 1;
+}
+.model-card.selected .qty-num {
+  color: var(--primary);
+}
+.qty-avail {
+  font-size: 0.68rem;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+.model-qty-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bikes-selected-note {
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin: -8px 0 12px;
 }
 
 /* ─── Pannello contatto per modelli non disponibili ─── */
@@ -1211,6 +1289,8 @@ body {
 .ac-action-btn.damage:disabled { opacity: 0.3; cursor: not-allowed; }
 .ac-action-btn.email   { border-color: rgba(129,140,248,0.3); color: #818CF8; background: rgba(129,140,248,0.07); }
 .ac-action-btn.email:hover { background: rgba(129,140,248,0.15); }
+.ac-action-btn.warn    { border-color: rgba(234,88,12,0.4); color: #EA580C; background: rgba(234,88,12,0.08); }
+.ac-action-btn.warn:hover  { background: rgba(234,88,12,0.16); }
 .ac-action-btn.cancel  { border-color: rgba(248,113,113,0.3); color: #F87171; background: rgba(248,113,113,0.07); }
 .ac-action-btn.cancel:hover { background: rgba(248,113,113,0.15); }
 
@@ -3401,4 +3481,172 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+}
+
+/* ─── Cookie Banner ──────────────────────────────────────────── */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: white;
+  border-top: 2px solid var(--primary);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.10);
+  padding: 14px 20px;
+}
+.cookie-banner-content {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cookie-banner-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+  min-width: 200px;
+}
+.cookie-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.cookie-banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cookie-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+}
+.cookie-btn:hover { opacity: 0.85; }
+.cookie-btn-primary {
+  background: var(--primary);
+  color: white;
+}
+.cookie-btn-secondary {
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ─── Privacy Page ───────────────────────────────────────────── */
+.privacy-page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 24px 16px 60px;
+}
+.privacy-container {
+  max-width: 780px;
+  margin: 0 auto;
+}
+.privacy-back {
+  margin-bottom: 24px;
+}
+.privacy-back-link {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.privacy-back-link:hover { text-decoration: underline; }
+.privacy-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.privacy-meta {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-bottom: 32px;
+}
+.privacy-section {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+}
+.privacy-section h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.privacy-section h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.privacy-section p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+.privacy-section a {
+  color: var(--primary);
+  font-weight: 600;
+}
+.privacy-list {
+  padding-left: 20px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+.privacy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+.privacy-table th {
+  background: var(--bg);
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.privacy-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  vertical-align: top;
+}
+.privacy-table code {
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  color: var(--primary);
+}
+.privacy-footer {
+  text-align: center;
+  margin-top: 32px;
+  font-size: 0.78rem;
+  color: var(--text-light);
+}
+.privacy-footer a { color: var(--text-light); }
+
+@media (max-width: 600px) {
+  .cookie-banner-content { flex-direction: column; align-items: flex-start; }
+  .cookie-banner-actions { width: 100%; justify-content: flex-end; }
+  .privacy-table { font-size: 0.75rem; }
+  .privacy-table th, .privacy-table td { padding: 6px 8px; }
 }

@@ -24,7 +24,8 @@
     "legend": {
       "available": "Disponible",
       "partial": "Pocas plazas",
-      "full": "Completo"
+      "full": "Completo",
+      "fuoriStagione": "Fuera de temporada"
     },
     "months": [
       "Enero",
@@ -108,7 +109,26 @@
     "call": "Llamar",
     "halfDay": "medio día",
     "fullDay": "Día completo",
-    "multiFrom": "Varios días desde"
+    "multiFrom": "Varios días desde",
+    "bikeSelected": "bici seleccionada",
+    "bikesSelected": "bicis seleccionadas",
+    "models": {
+      "ecity": {
+        "tag": "City & Trekking",
+        "specs": "500Wh · Batería externa · Ruedas 27,5\"",
+        "descrizione": "Ideal para carreteras y senderos mixtos. Cómoda y versátil para las Colinas del Prosecco."
+      },
+      "emtb": {
+        "tag": "Mountain Bike",
+        "specs": "625Wh · Motor BOSCH CX · Full Power",
+        "descrizione": "Máxima potencia para los senderos de las colinas. Motor BOSCH CX, lo mejor de la gama."
+      },
+      "bimbo": {
+        "tag": "Niños",
+        "specs": "400Wh · Haibike Hardfour · Rueda 24\"",
+        "descrizione": "Rueda 24\" con asistencia eléctrica calibrada para los más pequeños."
+      }
+    }
   },
   "stepContact": {
     "title": "Tus datos",
@@ -158,7 +178,7 @@
       "multi_giorno": "Varios Días"
     },
     "paymentInfo": "💳 El pago es <b>100% anticipado</b> mediante Stripe (tarjeta de crédito/débito). Recibirás un email de confirmación inmediatamente después del pago.",
-    "depositInfo": "🔒 <b>Depósito de €1.000:</b> el bloqueo se realiza en tu tarjeta <b>2 días antes de la recogida</b>, no en el momento del pago. Se liberará al devolver la bici y los accesorios en buen estado. En caso de pérdida o daño, los costes se deducirán del depósito.",
+    "depositInfo": "🔒 <b>Depósito de €500:</b> el bloqueo se realiza en tu tarjeta <b>1 día antes de la recogida</b>, no en el momento del pago. Se liberará al devolver la bici y los accesorios en buen estado. En caso de pérdida o daño, los costes se deducirán del depósito.",
     "modify": "← Modificar",
     "pay": "💳 Pagar €{{amount}}",
     "processing": "⏳ Procesando...",
@@ -193,15 +213,14 @@
     "payAt": "Pagar en checkout"
   },
   "stepAccessori": {
-    "title": "Accesorios incluidos",
-    "subtitle": "Selecciona los accesorios que necesitas — incluidos en el precio, sin coste adicional",
+    "title": "Accesorios opcionales",
+    "subtitle": "Selecciona los accesorios que necesitas",
     "included": "Incluido",
     "items": {
-      "casco":    { "label": "Casco",              "desc": "Casco homologado CE · Talla ajustable" },
-      "lucchetto":{ "label": "Candado",            "desc": "Candado de combinación numérica" },
-      "kit_foro": { "label": "Kit de Pinchazo",    "desc": "Cámara + desmontables + bomba de bolsillo" }
+      "casco":    { "label": "Casco",   "desc": "Casco homologado CE · Talla ajustable" },
+      "lucchetto":{ "label": "Candado", "desc": "Candado de combinación numérica" }
     },
-    "cauzioneNote": "⚠️ En caso de pérdida o daño de los accesorios, los costes serán cubiertos por el depósito de €1.000.",
+    "cauzioneNote": "⚠️ En caso de pérdida o daño de los accesorios, los costes serán cubiertos por el depósito de €500.",
     "skipNote": "¿No necesitas accesorios? Pulsa Continuar para proceder sin ellos."
   },
   "customExp": {
@@ -216,5 +235,12 @@
       "🌄 Varios días"
     ],
     "note": "Respuesta en pocas horas · Sin compromiso"
+  },
+  "cookie": {
+    "ariaLabel": "Aviso de cookies",
+    "text": "Usamos cookies técnicas estrictamente necesarias. Sin seguimiento. Más info en nuestra",
+    "privacyLink": "Política de Privacidad y Cookies",
+    "accept": "Aceptar",
+    "refuse": "Solo necesarias"
   }
 }

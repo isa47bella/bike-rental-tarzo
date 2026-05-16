@@ -2,37 +2,35 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api.js';
 
+const SEASONAL_PRICES = {
+  bassa: {
+    ecity: { mezza: 35, intera: 45, due_giorni: 84  },
+    emtb:  { mezza: 40, intera: 55, due_giorni: 100 },
+    bimbo: { mezza: 8,  intera: 11, due_giorni: 20  },
+  },
+  alta: {
+    ecity: { mezza: 40, intera: 50, due_giorni: 95  },
+    emtb:  { mezza: 45, intera: 55, due_giorni: 100 },
+    bimbo: { mezza: 10, intera: 14, due_giorni: 26  },
+  },
+};
+
+function getStagione(dateStr) {
+  if (!dateStr) return 'bassa';
+  const [, mm, dd] = dateStr.split('-').map(Number);
+  const mmdd = mm * 100 + dd;
+  if (mmdd >= 401 && mmdd <= 630) return 'bassa';
+  if (mmdd >= 701 && mmdd <= 831) return 'alta';
+  if (mmdd >= 901 && mmdd <= 1031) return 'bassa';
+  return 'bassa';
+}
+
 const BIKE_MODELS = [
-  {
-    key:    'ecity',
-    nome:   'E-City Bike KTM',
-    specs:  '500Wh · Batteria esterna · Ruote 27.5"',
-    tag:    'City & Trekking',
-    descrizione: 'Ideale per strade e percorsi misti. Comoda e versatile per le Colline del Prosecco.',
-    prezzi: { mezza: 35, intera: 45, multiDa: 84 },
-    ids:    [1, 2],
-  },
-  {
-    key:    'emtb',
-    nome:   'E-MTB KTM Bosch CX',
-    specs:  '625Wh · Motore BOSCH CX · Full Power',
-    tag:    'Mountain Bike',
-    descrizione: 'Massima potenza per i sentieri delle colline. Motore BOSCH CX, il top di gamma.',
-    prezzi: { mezza: 35, intera: 45, multiDa: 84 },
-    ids:    [3, 4, 5, 6, 7, 8, 9],
-  },
-  {
-    key:    'bimbo',
-    nome:   'E-MTB Bimbo Haibike',
-    specs:  '400Wh · Haibike Hardfour · Ruota 24"',
-    tag:    'Bambini',
-    descrizione: 'Ruota 24" con assistenza elettrica calibrata per i più piccoli.',
-    prezzi: { mezza: 28, intera: 40, multiDa: 75 },
-    ids:    [10],
-  },
+  { key: 'ecity', nome: 'E-City Bike KTM',    ids: [1, 2] },
+  { key: 'emtb',  nome: 'E-MTB KTM Bosch CX', ids: [3, 4, 5, 6, 7, 8, 9] },
+  { key: 'bimbo', nome: 'E-MTB Bimbo Haibike', ids: [10] },
 ];
 
-// SVG icons
 const ICONS = {
   ecity: (
     <svg viewBox="0 0 160 100" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
@@ -118,64 +116,86 @@ const IconPhone = () => (
   </svg>
 );
 
-export default function StepBike({ booking, onChange, onNext, onBack, prezziConfig }) {
+export default function StepBike({ booking, onChange, onNext, onBack }) {
   const { t } = useTranslation();
-  const [perTipo,  setPerTipo]  = useState(null); // { ecity: N, emtb: N, bimbo: N }
+  const [perTipo,  setPerTipo]  = useState(null);
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState(null);
+
+  // Initialize quantities from booking.bici
+  const [quantities, setQuantities] = useState(() => {
+    const q = { ecity: 0, emtb: 0, bimbo: 0 };
+    (booking.bici || []).forEach(b => { if (b.bike_type in q) q[b.bike_type] = b.quantita; });
+    return q;
+  });
 
   useEffect(() => {
     if (booking.data_ritiro) checkAvailability();
-  }, [booking.data_ritiro]);
+  }, [booking.data_ritiro]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkAvailability() {
     setLoading(true);
-    setError(null);
     try {
       const res = await api.getAvailability(booking.data_ritiro, 'intera_giornata', 1);
       setPerTipo(res.per_tipo || { ecity: 2, emtb: 7, bimbo: 1 });
     } catch {
-      setPerTipo({ ecity: 2, emtb: 7, bimbo: 1 }); // fallback
+      setPerTipo({ ecity: 2, emtb: 7, bimbo: 1 });
     } finally {
       setLoading(false);
     }
   }
 
-  function selectModel(model) {
-    onChange({ bike_type: model.key, bike_nome: model.nome, bicicletta_id: null, modello_nome: model.nome, prezzo_totale: 0, tipo_noleggio: null });
+  function adjustQty(key, delta) {
+    const maxForType = perTipo?.[key] ?? 10;
+    setQuantities(prev => ({
+      ...prev,
+      [key]: Math.max(0, Math.min(maxForType, (prev[key] || 0) + delta)),
+    }));
   }
 
-  const selectedKey = booking.bike_type;
+  const totalBici = Object.values(quantities).reduce((s, q) => s + q, 0);
+
+  function handleContinue() {
+    const bici = BIKE_MODELS
+      .filter(m => quantities[m.key] > 0)
+      .map(m => ({ bike_type: m.key, bike_nome: m.nome, quantita: quantities[m.key] }));
+    onChange({ bici, tipo_noleggio: null, prezzo_base_totale: 0, prezzo_totale: 0, accessori: [] });
+    onNext();
+  }
 
   return (
     <div>
       <h2 className="step-title">{t('stepBike.title')}</h2>
       <p className="step-subtitle">{t('stepBike.subtitle')}</p>
 
-      {loading && <div className="loading-overlay"><div className="spinner" />{t('stepBike.checking')}</div>}
+      {loading && (
+        <div className="loading-overlay">
+          <div className="spinner" />{t('stepBike.checking')}
+        </div>
+      )}
 
       {!loading && (
         <div className="model-grid">
           {BIKE_MODELS.map(model => {
-            const count    = perTipo ? (perTipo[model.key] ?? 0) : null;
-            const isAvail  = count === null || count > 0;
-            const isSel    = selectedKey === model.key;
+            const count   = perTipo ? (perTipo[model.key] ?? 0) : null;
+            const isAvail = count === null || count > 0;
+            const qty     = quantities[model.key] || 0;
+            const maxQty  = count ?? 10;
 
             if (!isAvail) {
               return (
                 <div key={model.key} className="model-card unavailable" aria-label={`${model.nome} — non disponibile`}>
-                  <div className="model-tag">{model.tag}</div>
+                  <div className="model-tag">{t(`stepBike.models.${model.key}.tag`)}</div>
                   <div className="model-icon">{ICONS[model.key]}</div>
                   <div className="model-nome">{model.nome}</div>
-                  <div className="model-specs">{model.specs}</div>
+                  <div className="model-specs">{t(`stepBike.models.${model.key}.specs`)}</div>
                   <div className="model-contact-panel">
                     <div className="model-contact-msg">{t('stepBike.unavailable')}</div>
                     <div className="model-contact-sub">{t('stepBike.unavailableSub')}</div>
                     <div className="model-contact-btns">
-                      <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="contact-btn whatsapp" onClick={e => e.stopPropagation()}>
+                      <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="contact-btn whatsapp">
                         <IconWhatsApp /> {t('stepBike.whatsapp')}
                       </a>
-                      <a href={PHONE_URL} className="contact-btn phone" onClick={e => e.stopPropagation()}>
+                      <a href={PHONE_URL} className="contact-btn phone">
                         <IconPhone /> {t('stepBike.call')}
                       </a>
                     </div>
@@ -185,33 +205,62 @@ export default function StepBike({ booking, onChange, onNext, onBack, prezziConf
             }
 
             return (
-              <button key={model.key} className={`model-card${isSel ? ' selected' : ''}`} onClick={() => selectModel(model)}>
-                <div className="model-tag">{model.tag}</div>
+              <div
+                key={model.key}
+                className={`model-card${qty > 0 ? ' selected' : ''}`}
+                style={{ cursor: qty === 0 ? 'pointer' : 'default' }}
+                onClick={() => qty === 0 && adjustQty(model.key, 1)}
+              >
+                {qty > 0 && <div className="model-qty-badge">{qty}</div>}
+                <div className="model-tag">{t(`stepBike.models.${model.key}.tag`)}</div>
                 <div className="model-icon">{ICONS[model.key]}</div>
                 <div className="model-nome">{model.nome}</div>
-                <div className="model-specs">{model.specs}</div>
-                <div className="model-desc">{model.descrizione}</div>
+                <div className="model-specs">{t(`stepBike.models.${model.key}.specs`)}</div>
+                <div className="model-desc">{t(`stepBike.models.${model.key}.descrizione`)}</div>
                 <div className="model-prices">
                   {(() => {
-                    const p = prezziConfig?.[model.key] || model.prezzi;
-                    const multiDa = prezziConfig?.[model.key]?.multi?.[2] || model.prezzi.multiDa;
+                    const p = SEASONAL_PRICES[getStagione(booking.data_ritiro)][model.key];
                     return (<>
                       <span>½ {t('stepBike.halfDay')} <strong>€{p.mezza}</strong></span>
                       <span>{t('stepBike.fullDay')} <strong>€{p.intera}</strong></span>
-                      <span>{t('stepBike.multiFrom')} <strong>€{multiDa}</strong></span>
+                      <span>{t('stepBike.multiFrom')} <strong>€{p.due_giorni}</strong></span>
                     </>);
                   })()}
                 </div>
-                {isSel && <div className="model-check">{t('stepBike.selected')}</div>}
-              </button>
+
+                <div className="model-qty-row" onClick={e => e.stopPropagation()}>
+                  <button
+                    className="qty-btn"
+                    onClick={() => adjustQty(model.key, -1)}
+                    disabled={qty <= 0}
+                    aria-label="Rimuovi bici"
+                  >−</button>
+                  <span className="qty-num">{qty}</span>
+                  <button
+                    className="qty-btn"
+                    onClick={() => adjustQty(model.key, 1)}
+                    disabled={qty >= maxQty}
+                    aria-label="Aggiungi bici"
+                  >+</button>
+                  {count !== null && count <= 3 && qty < maxQty && (
+                    <span className="qty-avail">max {count}</span>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
       )}
 
+      {totalBici > 0 && (
+        <p className="bikes-selected-note">
+          {totalBici} {totalBici === 1 ? t('stepBike.bikeSelected') : t('stepBike.bikesSelected', { n: totalBici })}
+        </p>
+      )}
+
       <div className="btn-nav-row">
         <button className="btn btn-secondary" onClick={onBack}>{t('common.back')}</button>
-        <button className="btn btn-primary" onClick={onNext} disabled={!booking.bike_type}>
+        <button className="btn btn-primary" onClick={handleContinue} disabled={totalBici === 0 || loading}>
           {t('common.continue')}
         </button>
       </div>

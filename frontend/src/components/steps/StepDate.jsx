@@ -67,8 +67,9 @@ export default function StepDate({ booking, onChange, onNext }) {
     if (date < minDate) return 'cal-day past';
     const avail = calendario[ds];
     if (!avail) return 'cal-day avail-full';
-    if (avail.disponibili === 0) return 'cal-day avail-none';
-    if (avail.disponibili <= 2)  return 'cal-day avail-partial';
+    if (avail.fuori_stagione) return 'cal-day fuori-stagione';
+    if (avail.chiuso || avail.disponibili === 0) return 'cal-day avail-none';
+    if (avail.disponibili <= 2) return 'cal-day avail-partial';
     return 'cal-day avail-full';
   }
 
@@ -78,6 +79,8 @@ export default function StepDate({ booking, onChange, onNext }) {
     const date = new Date(ds + 'T00:00:00');
     if (date < minDate) return;
     const avail = calendario[ds];
+    if (avail?.fuori_stagione) return;
+    if (avail?.chiuso) return;
     if (avail && avail.disponibili === 0) return;
     onChange({ data_ritiro: ds });
   }
@@ -91,9 +94,10 @@ export default function StepDate({ booking, onChange, onNext }) {
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         {[
-          { cls: 'cal-day avail-full',    label: t('stepDate.legend.available') },
-          { cls: 'cal-day avail-partial', label: t('stepDate.legend.partial') },
-          { cls: 'cal-day avail-none',    label: t('stepDate.legend.full') },
+          { cls: 'cal-day avail-full',      label: t('stepDate.legend.available') },
+          { cls: 'cal-day avail-partial',   label: t('stepDate.legend.partial') },
+          { cls: 'cal-day avail-none',      label: t('stepDate.legend.full') },
+          { cls: 'cal-day fuori-stagione',  label: t('stepDate.legend.fuoriStagione') },
         ].map(({ cls, label }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-light)' }}>
             <div className={cls} style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0 }} />

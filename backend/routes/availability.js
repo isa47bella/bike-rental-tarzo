@@ -8,35 +8,50 @@ const express  = require('express');
 const router   = express.Router();
 const supabase = require('../lib/supabase');
 
-// ─── Prezzi default + caricamento da config DB ────────────────────────────────
+// ─── Prezzi stagionali ────────────────────────────────────────────────────────
+// Bassa stagione: 01/04–30/06 e 01/09–31/10
+// Alta stagione:  01/07–31/08
+// Fuori stagione: novembre–marzo (nessuna prenotazione)
 
-const PREZZI_DEFAULTS = {
-  ecity: { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
-  emtb:  { mezza: 35, intera: 45, multi: { 2:84,3:120,4:152,5:180,6:205,7:225 }, extra: 20 },
-  bimbo: { mezza: 28, intera: 40, multi: { 2:75,3:107,4:136,5:163,6:187,7:208 }, extra: 20 },
+const SEASONAL_PRICES = {
+  bassa: {
+    ecity: { mezza: 35, intera: 45, due_giorni: 84,  extra: 40 },
+    emtb:  { mezza: 40, intera: 55, due_giorni: 100, extra: 50 },
+    bimbo: { mezza: 8,  intera: 11, due_giorni: 20,  extra: 9  },
+  },
+  alta: {
+    ecity: { mezza: 40, intera: 50, due_giorni: 95,  extra: 45 },
+    emtb:  { mezza: 45, intera: 55, due_giorni: 100, extra: 50 },
+    bimbo: { mezza: 10, intera: 14, due_giorni: 26,  extra: 12 },
+  },
 };
 
-async function loadPrezziFromConfig() {
-  try {
-    const { data } = await supabase.from('config').select('chiave, valore');
-    if (!data || data.length === 0) return PREZZI_DEFAULTS;
-    const cfg = {};
-    data.forEach(r => { const v = Number(r.valore); if (v > 0) cfg[r.chiave] = v; });
-    const result = JSON.parse(JSON.stringify(PREZZI_DEFAULTS));
-    for (const bike of ['ecity', 'emtb', 'bimbo']) {
-      if (cfg[`price_${bike}_mezza`])  result[bike].mezza  = cfg[`price_${bike}_mezza`];
-      if (cfg[`price_${bike}_intera`]) result[bike].intera = cfg[`price_${bike}_intera`];
-      for (let n = 2; n <= 7; n++) {
-        if (cfg[`price_${bike}_multi_${n}`]) result[bike].multi[n] = cfg[`price_${bike}_multi_${n}`];
-      }
-    }
-    return result;
-  } catch {
-    return PREZZI_DEFAULTS;
-  }
+function getStagione(dateStr) {
+  const [, mm, dd] = dateStr.split('-').map(Number);
+  const mmdd = mm * 100 + dd;
+  if (mmdd >= 401 && mmdd <= 630) return 'bassa';
+  if (mmdd >= 701 && mmdd <= 831) return 'alta';
+  if (mmdd >= 901 && mmdd <= 1031) return 'bassa';
+  return null; // nov–mar: fuori stagione
 }
 
-// Mappa tipo_noleggio → orari fissi
+function calcolaPrezzo(bike_type, tipo_noleggio, giorni, data_ritiro) {
+  const stagione = getStagione(data_ritiro);
+  if (!stagione) return 0;
+  const p = SEASONAL_PRICES[stagione][bike_type];
+  if (!p) return 0;
+  if (tipo_noleggio === 'mezza_mattina' || tipo_noleggio === 'mezza_pomeriggio') return p.mezza;
+  if (tipo_noleggio === 'intera_giornata') return p.intera;
+  if (tipo_noleggio === 'multi_giorno') {
+    const n = Number(giorni);
+    if (n < 2) return 0;
+    return p.due_giorni + (n - 2) * p.extra;
+  }
+  return 0;
+}
+
+// ─── Helpers di calcolo ───────────────────────────────────────────────────────
+
 function getOrari(tipo_noleggio) {
   if (tipo_noleggio === 'mezza_mattina')    return { ritiro: '09:00', restituzione: '13:00' };
   if (tipo_noleggio === 'mezza_pomeriggio') return { ritiro: '14:00', restituzione: '18:00' };
@@ -94,7 +109,10 @@ router.post('/', async (req, res) => {
   const { data_ritiro, tipo_noleggio, giorni = 1 } = req.body;
   if (!data_ritiro || !tipo_noleggio) return res.status(400).json({ error: 'Parametri mancanti' });
 
-  // Verifica chiusure
+  if (!getStagione(data_ritiro)) {
+    return res.status(400).json({ error: 'Data fuori stagione — apertura dal 1 aprile al 31 ottobre', fuori_stagione: true });
+  }
+
   const { data: chiusureRows } = await supabase.from('chiusure').select('data');
   const chiusureSet = new Set((chiusureRows || []).map(c => c.data));
   const numGiorniReq = Number(giorni);
@@ -122,7 +140,6 @@ router.post('/', async (req, res) => {
   const tutti        = [1,2,3,4,5,6,7,8,9,10];
   const disponibili  = tutti.filter(id => !biciOccupate.has(id));
 
-  // Conta per tipo
   const PER_TIPO = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
   const per_tipo = {};
   for (const [tipo, ids] of Object.entries(PER_TIPO)) {
@@ -170,6 +187,12 @@ router.post('/calendario', async (req, res) => {
     const dayStart = new Date(dataStr + 'T00:00:00+01:00');
     const dayEnd   = new Date(dataStr + 'T23:59:59+01:00');
 
+    if (!getStagione(dataStr)) {
+      risultati[dataStr] = { disponibili: 0, occupate: 0, chiuso: false, fuori_stagione: true };
+      continue;
+    }
+
+    const chiuso = chiusureCalSet.has(dataStr);
     const occupate = new Set(
       prenotazioni
         .filter(p => new Date(p.start_ts) < dayEnd && new Date(p.end_ts) > dayStart)
@@ -177,23 +200,18 @@ router.post('/calendario', async (req, res) => {
     );
 
     risultati[dataStr] = {
-      disponibili: TOTALE - occupate.size,
+      disponibili: chiuso ? 0 : TOTALE - occupate.size,
       occupate:    occupate.size,
-      chiuso:      chiusureCalSet.has(dataStr),
+      chiuso,
     };
   }
 
   return res.json(risultati);
 });
 
-// ─── GET /api/availability/prezzi ─────────────────────────────────────────────
-// Endpoint pubblico — restituisce prezzi correnti per il wizard di prenotazione
-
-router.get('/prezzi', async (req, res) => {
-  res.json(await loadPrezziFromConfig());
-});
-
 module.exports = router;
-module.exports.calcRange             = calcRange;
-module.exports.calcRestituzione      = calcRestituzione;
-module.exports.loadPrezziFromConfig  = loadPrezziFromConfig;
+module.exports.calcRange        = calcRange;
+module.exports.calcRestituzione = calcRestituzione;
+module.exports.getStagione      = getStagione;
+module.exports.calcolaPrezzo    = calcolaPrezzo;
+module.exports.SEASONAL_PRICES  = SEASONAL_PRICES;

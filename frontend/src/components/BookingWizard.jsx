@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../lib/api.js';
 import ProgressBar      from './ProgressBar.jsx';
 import LanguageSwitcher from './LanguageSwitcher.jsx';
 import StepDate         from './steps/StepDate.jsx';
@@ -14,33 +13,25 @@ const TOTAL_STEPS = 6;
 
 const INITIAL_BOOKING = {
   data_ritiro:         null,
-  bike_type:           null,   // 'ecity' | 'emtb' | 'bimbo'
-  bike_nome:           '',     // nome display
-  tipo_noleggio:       null,   // 'mezza_mattina' | 'mezza_pomeriggio' | 'intera_giornata' | 'multi_giorno'
+  bici:                [],    // [{bike_type, bike_nome, quantita}]
+  tipo_noleggio:       null,  // 'mezza_mattina' | 'mezza_pomeriggio' | 'intera_giornata' | 'multi_giorno'
   giorni:              1,
-  orario_ritiro:       null,   // derivato da tipo_noleggio
+  orario_ritiro:       null,
   data_restituzione:   null,
   orario_restituzione: null,
+  prezzo_base_totale:  0,     // totale base senza accessori
   prezzo_totale:       0,
-  accessori:           [],  // 'casco' | 'lucchetto' | 'kit_foro'
+  accessori:           [],    // ['casco', 'lucchetto']
   cliente_nome:        '',
   cliente_email:       '',
   cliente_telefono:    '',
   cliente_note:        '',
-  // assegnati al checkout:
-  bicicletta_id:       null,
-  modello_nome:        '',
 };
 
 export default function BookingWizard() {
   const { t } = useTranslation();
-  const [step,         setStep]         = useState(1);
-  const [booking,      setBooking]      = useState(INITIAL_BOOKING);
-  const [prezziConfig, setPrezziConfig] = useState(null);
-
-  useEffect(() => {
-    api.getPrezzi().then(p => setPrezziConfig(p)).catch(() => {});
-  }, []);
+  const [step,    setStep]    = useState(1);
+  const [booking, setBooking] = useState(INITIAL_BOOKING);
 
   function updateBooking(partial) {
     setBooking(b => ({ ...b, ...partial }));
@@ -56,7 +47,7 @@ export default function BookingWizard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const stepProps = { booking, onChange: updateBooking, onNext: next, onBack: back, prezziConfig };
+  const stepProps = { booking, onChange: updateBooking, onNext: next, onBack: back };
 
   return (
     <div className="page-wrapper">
@@ -79,8 +70,8 @@ export default function BookingWizard() {
             </svg>
           </div>
           <div className="header-wordmark">
-            <span className="header-label">BIKE RENTAL</span>
-            <span className="header-title">TARZO</span>
+            <span className="header-label">ARFANTA</span>
+            <span className="header-title">BIKE RENTAL</span>
             <span className="header-sub">{t('header.subtitle')}</span>
           </div>
         </div>

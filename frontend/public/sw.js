@@ -22,7 +22,7 @@ self.addEventListener('fetch', function (e) {
 self.addEventListener('push', function (e) {
   const data = e.data ? e.data.json() : {};
   e.waitUntil(
-    self.registration.showNotification(data.title || 'Bike Rental Tarzo', {
+    self.registration.showNotification(data.title || 'Arfanta Bike Rental', {
       body:  data.body  || 'Nuova attività',
       icon:  '/icon-192.png',
       badge: '/icon-192.png',

@@ -2,14 +2,18 @@
   "installCommand": "npm install",
   "buildCommand": "mkdir -p api/routes api/lib && cp backend/routes/*.js api/routes/ && cp backend/lib/*.js api/lib/ && cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.js": { "maxDuration": 60 }
+  },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/cron/deposit",        "schedule": "0 7 * * *" },
+    { "path": "/api/cron/deposit",        "schedule": "0 7 * * *"  },
     { "path": "/api/cron/firma-reminder", "schedule": "0 18 * * *" },
-    { "path": "/api/cron/reminder",       "schedule": "0 9 * * *"  }
+    { "path": "/api/cron/reminder",       "schedule": "0 9 * * *"  },
+    { "path": "/api/cron/gdpr-cleanup",   "schedule": "0 3 1 * *"  }
   ]
 }

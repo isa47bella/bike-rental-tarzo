@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const IconHelmet = () => (
@@ -21,37 +22,34 @@ const IconLock = () => (
   </svg>
 );
 
-const IconKit = () => (
-  <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" width="52" height="52">
-    <circle cx="32" cy="32" r="20" strokeWidth="2.5"/>
-    <circle cx="32" cy="32" r="10" strokeWidth="2"/>
-    <circle cx="32" cy="32" r="3" fill="currentColor" stroke="none"/>
-    <line x1="32" y1="12" x2="32" y2="22" strokeWidth="2.5"/>
-    <line x1="32" y1="42" x2="32" y2="52" strokeWidth="2.5"/>
-    <line x1="12" y1="32" x2="22" y2="32" strokeWidth="2.5"/>
-    <line x1="42" y1="32" x2="52" y2="32" strokeWidth="2.5"/>
-    <path d="M8 8l6 6" strokeWidth="2" opacity="0.4"/>
-    <path d="M50 8l-6 6" strokeWidth="2" opacity="0.4"/>
-    <path d="M8 56l6-6" strokeWidth="2" opacity="0.4"/>
-    <path d="M56 56l-6-6" strokeWidth="2" opacity="0.4"/>
-  </svg>
-);
+const ACC_PREZZI = { casco: 2, lucchetto: 1 };
 
 const ACCESSORI = [
-  { key: 'casco',    Icon: IconHelmet },
-  { key: 'lucchetto', Icon: IconLock  },
-  { key: 'kit_foro', Icon: IconKit    },
+  { key: 'casco',     Icon: IconHelmet, price: 2 },
+  { key: 'lucchetto', Icon: IconLock,   price: 1 },
 ];
 
 export default function StepAccessori({ booking, onChange, onNext, onBack }) {
   const { t } = useTranslation();
-  const selected = booking.accessori || [];
+  const selected  = booking.accessori || [];
+  const totalBici = (booking.bici || []).reduce((s, b) => s + b.quantita, 0) || 1;
+
+  // Sync prezzo_totale on mount (handles back-navigation case)
+  useEffect(() => {
+    const base    = booking.prezzo_base_totale ?? booking.prezzo_base ?? booking.prezzo_totale;
+    const accCost = selected.reduce((s, k) => s + (ACC_PREZZI[k] || 0), 0) * totalBici;
+    if (booking.prezzo_totale !== base + accCost) {
+      onChange({ prezzo_totale: base + accCost });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggle(key) {
-    const next = selected.includes(key)
+    const next    = selected.includes(key)
       ? selected.filter(k => k !== key)
       : [...selected, key];
-    onChange({ accessori: next });
+    const base    = booking.prezzo_base_totale ?? booking.prezzo_base ?? booking.prezzo_totale;
+    const accCost = next.reduce((s, k) => s + (ACC_PREZZI[k] || 0), 0) * totalBici;
+    onChange({ accessori: next, prezzo_totale: base + accCost });
   }
 
   return (
@@ -60,7 +58,7 @@ export default function StepAccessori({ booking, onChange, onNext, onBack }) {
       <p className="step-subtitle">{t('stepAccessori.subtitle')}</p>
 
       <div className="acc-grid">
-        {ACCESSORI.map(({ key, Icon }) => {
+        {ACCESSORI.map(({ key, Icon, price }) => {
           const isSel = selected.includes(key);
           return (
             <button
@@ -72,7 +70,7 @@ export default function StepAccessori({ booking, onChange, onNext, onBack }) {
               <div className="acc-icon"><Icon /></div>
               <div className="acc-label">{t(`stepAccessori.items.${key}.label`)}</div>
               <div className="acc-desc">{t(`stepAccessori.items.${key}.desc`)}</div>
-              <div className="acc-badge">{t('stepAccessori.included')}</div>
+              <div className="acc-badge">+€{price * totalBici}</div>
             </button>
           );
         })}

@@ -10,24 +10,11 @@ const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 const { sendConfirmationToCliente, sendNotificationToGestore, sendWhatsAppAlert } = require('../lib/email');
-const { calcRange, calcRestituzione, loadPrezziFromConfig } = require('./availability');
+const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { sendPushToAll } = require('../lib/push');
 
 const TIPO_IDS_BICI = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
 
-function calcolaPrezzo(bike_type, tipo_noleggio, giorni = 1, prezzi) {
-  const p = prezzi[bike_type];
-  if (!p) throw new Error('Tipo bici non valido');
-  if (tipo_noleggio === 'mezza_mattina' || tipo_noleggio === 'mezza_pomeriggio') return p.mezza;
-  if (tipo_noleggio === 'intera_giornata') return p.intera;
-  if (tipo_noleggio === 'multi_giorno') {
-    const n = Number(giorni);
-    if (n >= 2 && n <= 7) return p.multi[n];
-    if (n > 7) return p.multi[7] + (n - 7) * p.extra;
-    throw new Error('Multi-giorno richiede almeno 2 giorni');
-  }
-  throw new Error('Tipo noleggio non valido');
-}
 
 function tipoLabel(tipo) {
   const labels = {
@@ -45,32 +32,50 @@ function getOrariFromTipo(tipo_noleggio) {
   return { ritiro: '09:00', restituzione: '18:00' };
 }
 
+const BIKE_NOMI = { ecity: 'E-City Bike', emtb: 'E-MTB', bimbo: 'E-MTB Bimbo' };
+
 // ─── POST /api/payments/checkout ─────────────────────────────────────────────
 
-router.post('/checkout', async (req, res) => {
+router.post('/checkout', async (req, res) => { try {
   const {
     cliente_nome, cliente_email, cliente_telefono, cliente_note,
-    bike_type,
     tipo_noleggio, giorni = 1,
     data_ritiro,
     accessori: accessoriRaw = [],
     lingua = 'it',
   } = req.body;
 
-  const VALID_ACC = ['casco', 'lucchetto', 'kit_foro'];
-  const accessoriStr = (Array.isArray(accessoriRaw) ? accessoriRaw : [])
-    .filter(a => VALID_ACC.includes(a))
-    .join(',');
+  const VALID_ACC    = ['casco', 'lucchetto'];
+  const ACC_PREZZI   = { casco: 2, lucchetto: 1 };
+  const VALID_BIKE_TYPES = ['ecity', 'emtb', 'bimbo'];
+  const accessoriArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => VALID_ACC.includes(a));
+  const accessoriStr = accessoriArr.join(',');
+
+  // Normalizza input: supporta sia il nuovo formato bici:[{bike_type, quantita}]
+  // che il legacy bike_type stringa per compatibilità admin/test
+  let biciArr;
+  if (Array.isArray(req.body.bici) && req.body.bici.length > 0) {
+    biciArr = req.body.bici;
+  } else if (req.body.bike_type) {
+    biciArr = [{ bike_type: req.body.bike_type, quantita: 1 }];
+  } else {
+    return res.status(400).json({ error: 'Dati bici mancanti' });
+  }
 
   // Validazione
   if (!cliente_nome || !cliente_email || !cliente_telefono) {
     return res.status(400).json({ error: 'Dati cliente mancanti' });
   }
-  if (!bike_type || !tipo_noleggio || !data_ritiro) {
+  if (!tipo_noleggio || !data_ritiro) {
     return res.status(400).json({ error: 'Dati prenotazione mancanti' });
   }
-  if (!PREZZI[bike_type]) {
-    return res.status(400).json({ error: 'Tipo bici non valido' });
+  for (const b of biciArr) {
+    if (!VALID_BIKE_TYPES.includes(b.bike_type)) {
+      return res.status(400).json({ error: 'Tipo bici non valido' });
+    }
+    if (!Number.isInteger(Number(b.quantita)) || Number(b.quantita) < 1) {
+      return res.status(400).json({ error: 'Quantità bici non valida' });
+    }
   }
   const tipiValidi = ['mezza_mattina','mezza_pomeriggio','intera_giornata','multi_giorno'];
   if (!tipiValidi.includes(tipo_noleggio)) {
@@ -88,62 +93,102 @@ router.post('/checkout', async (req, res) => {
     return res.status(400).json({ error: 'La prenotazione richiede almeno 2 giorni di anticipo' });
   }
 
+  // Verifica stagione
+  if (!getStagione(data_ritiro)) {
+    return res.status(400).json({ error: 'Data non disponibile — apertura dal 1 aprile al 31 ottobre' });
+  }
+
   // Calcola orari e range temporale
-  const orari    = getOrariFromTipo(tipo_noleggio);
+  const orari     = getOrariFromTipo(tipo_noleggio);
   const numGiorni = Number(giorni);
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
   const { data_restituzione, orario_restituzione } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
 
-  // Trova bici disponibili del tipo richiesto
-  const idsCandidati = TIPO_IDS_BICI[bike_type];
+  // Trova bici occupate nel range (tutti i tipi in un'unica query)
+  const tuttiGliId = Object.values(TIPO_IDS_BICI).flat();
   const { data: conflitti } = await supabase
     .from('prenotazioni')
     .select('bicicletta_id')
     .eq('pagamento_status', 'paid')
     .lt('start_ts', end.toISOString())
     .gt('end_ts', start.toISOString())
-    .in('bicicletta_id', idsCandidati);
+    .in('bicicletta_id', tuttiGliId);
 
-  const biciOccupate  = new Set((conflitti || []).map(r => r.bicicletta_id));
-  const biciLibere    = idsCandidati.filter(id => !biciOccupate.has(id));
+  const biciOccupate = new Set((conflitti || []).map(r => r.bicicletta_id));
 
-  if (biciLibere.length === 0) {
-    return res.status(409).json({ error: `Nessuna ${bike_type === 'bimbo' ? 'E-MTB Bimbo' : bike_type === 'ecity' ? 'E-City Bike' : 'E-MTB'} disponibile per questa data. Scegli un altro modello o contattaci.` });
+  // Assegna bici per ciascun tipo richiesto
+  const accCostPerBike = accessoriArr.reduce((sum, a) => sum + (ACC_PREZZI[a] || 0), 0);
+  const linguaValida   = ['it','en','de','es','fr'].includes(lingua) ? lingua : 'it';
+
+  const assignedBikes = []; // {bicicletta_id, bike_type, prezzoBase}
+
+  for (const bItem of biciArr) {
+    const bt  = bItem.bike_type;
+    const qty = Number(bItem.quantita);
+    const idsCandidati = TIPO_IDS_BICI[bt];
+    const biciLibere   = idsCandidati.filter(id => !biciOccupate.has(id));
+
+    if (biciLibere.length < qty) {
+      return res.status(409).json({
+        error: `Non ci sono abbastanza ${BIKE_NOMI[bt]} disponibili per questa data. Scegli un altro modello o contattaci.`,
+      });
+    }
+    const prezzoBase = calcolaPrezzo(bt, tipo_noleggio, numGiorni, data_ritiro);
+    for (let i = 0; i < qty; i++) {
+      const bid = biciLibere[i];
+      assignedBikes.push({ bicicletta_id: bid, bike_type: bt, prezzoBase });
+      biciOccupate.add(bid); // previene doppia assegnazione nella stessa richiesta
+    }
   }
 
-  const bicicletta_id = biciLibere[0]; // assegna la prima libera
-  const prezziConfig  = await loadPrezziFromConfig();
-  const prezzo        = calcolaPrezzo(bike_type, tipo_noleggio, numGiorni, prezziConfig);
+  // Costruisci record prenotazione per ogni bici assegnata
+  const insertData = assignedBikes.map(b => ({
+    cliente_nome,
+    cliente_email,
+    cliente_telefono,
+    cliente_note:        cliente_note || null,
+    bicicletta_id:       b.bicicletta_id,
+    tipo_noleggio,
+    giorni:              numGiorni,
+    data_ritiro,
+    orario_ritiro:       orari.ritiro,
+    data_restituzione,
+    orario_restituzione,
+    start_ts:            start.toISOString(),
+    end_ts:              end.toISOString(),
+    prezzo_totale:       b.prezzoBase + accCostPerBike,
+    accessori:           accessoriStr,
+    lingua:              linguaValida,
+    pagamento_status:    'pending',
+  }));
 
-  // Crea prenotazione PENDING
-  const { data: prenotazione, error: dbError } = await supabase
+  const { data: prenotazioni, error: dbError } = await supabase
     .from('prenotazioni')
-    .insert({
-      cliente_nome,
-      cliente_email,
-      cliente_telefono,
-      cliente_note:        cliente_note || null,
-      bicicletta_id,
-      tipo_noleggio,
-      giorni:              numGiorni,
-      data_ritiro,
-      orario_ritiro:       orari.ritiro,
-      data_restituzione,
-      orario_restituzione,
-      start_ts:            start.toISOString(),
-      end_ts:              end.toISOString(),
-      prezzo_totale:       prezzo,
-      accessori:           accessoriStr,
-      lingua:              ['it','en','de','es','fr'].includes(lingua) ? lingua : 'it',
-      pagamento_status:    'pending',
-    })
-    .select()
-    .single();
+    .insert(insertData)
+    .select();
 
-  if (dbError) {
-    console.error('Errore creazione prenotazione:', dbError);
+  if (dbError || !prenotazioni?.length) {
+    console.error('Errore creazione prenotazioni:', dbError);
     return res.status(500).json({ error: 'Errore salvataggio prenotazione' });
   }
+
+  // Costruisci line items Stripe — una voce per tipo bici
+  const byType = {};
+  for (const b of assignedBikes) {
+    if (!byType[b.bike_type]) byType[b.bike_type] = { count: 0, prezzoBase: b.prezzoBase };
+    byType[b.bike_type].count++;
+  }
+  const lineItems = Object.entries(byType).map(([bt, info]) => ({
+    price_data: {
+      currency:     'eur',
+      unit_amount:  (info.prezzoBase + accCostPerBike) * 100,
+      product_data: {
+        name:        `${BIKE_NOMI[bt]} — ${tipoLabel(tipo_noleggio)}`,
+        description: `Noleggio e-bike — ${data_ritiro} ore ${orari.ritiro}`,
+      },
+    },
+    quantity: info.count,
+  }));
 
   // Crea sessione Stripe Checkout
   try {
@@ -157,31 +202,32 @@ router.post('/checkout', async (req, res) => {
       payment_method_types: ['card'],
       mode:                 'payment',
       customer:             customer.id,
-      line_items: [{
-        price_data: {
-          currency:     'eur',
-          unit_amount:  prezzo * 100,
-          product_data: {
-            name:        tipoLabel(tipo_noleggio),
-            description: `Noleggio e-bike — ${data_ritiro} ore ${orari.ritiro}`,
-            images:      [],
-          },
-        },
-        quantity: 1,
-      }],
-      payment_intent_data: { setup_future_usage: 'off_session' },
-      metadata: { prenotazione_id: prenotazione.id, bicicletta_id: String(bicicletta_id), tipo_noleggio },
+      line_items:           lineItems,
+      payment_intent_data:  { setup_future_usage: 'off_session' },
+      metadata: {
+        prenotazione_ids: prenotazioni.map(p => p.id).join(','),
+        tipo_noleggio,
+        total_bikes: String(assignedBikes.length),
+      },
       success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${process.env.FRONTEND_URL}/cancel`,
     });
 
-    await supabase.from('prenotazioni').update({ stripe_session_id: session.id }).eq('id', prenotazione.id);
+    await supabase
+      .from('prenotazioni')
+      .update({ stripe_session_id: session.id })
+      .in('id', prenotazioni.map(p => p.id));
+
     return res.json({ url: session.url, session_id: session.id });
 
   } catch (stripeError) {
     console.error('Errore Stripe:', stripeError);
-    await supabase.from('prenotazioni').delete().eq('id', prenotazione.id);
-    return res.status(500).json({ error: 'Errore pagamento: ' + stripeError.message });
+    await supabase.from('prenotazioni').delete().in('id', prenotazioni.map(p => p.id));
+    return res.status(500).json({ error: 'Errore durante la creazione del pagamento. Riprova o contatta l\'assistenza.' });
+  }
+  } catch (err) {
+    console.error('Errore checkout inatteso:', err);
+    return res.status(500).json({ error: 'Errore interno del server' });
   }
 });
 
@@ -202,8 +248,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
-    // Aggiorna prenotazione a PAID
-    const { data: prenotazione, error } = await supabase
+    // Aggiorna tutte le prenotazioni legate a questa sessione a PAID
+    const { data: prenotazioni, error } = await supabase
       .from('prenotazioni')
       .update({
         pagamento_status:  'paid',
@@ -211,25 +257,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         stripe_payment_id: session.payment_intent,
       })
       .eq('stripe_session_id', session.id)
-      .select()
-      .single();
+      .eq('pagamento_status', 'pending')
+      .select();
 
     if (error) {
-      console.error('Errore update prenotazione:', error);
+      console.error('Errore update prenotazioni:', error);
       return res.status(500).send('DB error');
     }
 
-    // Salva customer_id e payment_method
-    let paymentMethodId = null;
+    // Salva customer_id e payment_method su tutte le prenotazioni della sessione
     if (session.payment_intent) {
       try {
         const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
-        paymentMethodId = paymentIntent.payment_method;
         await supabase
           .from('prenotazioni')
           .update({
             stripe_customer_id:       session.customer,
-            stripe_payment_method_id: paymentMethodId,
+            stripe_payment_method_id: paymentIntent.payment_method,
           })
           .eq('stripe_session_id', session.id);
       } catch (e) {
@@ -237,19 +281,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       }
     }
 
-    // Cauzione: il blocco €1.000 avviene tramite cron job 2 giorni prima del ritiro
+    // Cauzione: il blocco €500 avviene tramite cron job 1 giorno prima del ritiro
     // (cauzione_status rimane 'pending' fino all'esecuzione del cron)
 
-    // Invia email + WhatsApp (non bloccante — ignora errori)
-    if (prenotazione) {
+    // Invia email + notifiche solo per la prima prenotazione (lead)
+    const lead = prenotazioni?.[0];
+    if (lead) {
       const tipoMap = { mezza_mattina: '½ Mattina', mezza_pomeriggio: '½ Pomeriggio', intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno' };
+      const totalBici = prenotazioni.length;
+      const totalPrezzo = prenotazioni.reduce((s, p) => s + Number(p.prezzo_totale), 0);
+      const leadWithTotal = { ...lead, prezzo_totale: totalPrezzo };
       Promise.all([
-        sendConfirmationToCliente(prenotazione).catch(e => console.error('Email cliente:', e)),
-        sendNotificationToGestore(prenotazione).catch(e => console.error('Email gestore:', e)),
-        sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp alert:', e)),
+        sendConfirmationToCliente(leadWithTotal).catch(e => console.error('Email cliente:', e)),
+        sendNotificationToGestore(leadWithTotal).catch(e => console.error('Email gestore:', e)),
+        sendWhatsAppAlert(leadWithTotal).catch(e => console.error('WhatsApp alert:', e)),
         sendPushToAll({
           title: '🚲 Nuova prenotazione!',
-          body:  `${prenotazione.cliente_nome} — ${tipoMap[prenotazione.tipo_noleggio] || prenotazione.tipo_noleggio} · ${prenotazione.data_ritiro} · €${prenotazione.prezzo_totale}`,
+          body:  `${lead.cliente_nome} — ${tipoMap[lead.tipo_noleggio] || lead.tipo_noleggio} · ${lead.data_ritiro} · ${totalBici > 1 ? `${totalBici} bici · ` : ''}€${totalPrezzo}`,
           url:   '/admin',
         }).catch(e => console.error('Push:', e)),
       ]);
@@ -283,13 +331,14 @@ router.get('/session/:sessionId', async (req, res) => {
     `)
     .eq('stripe_session_id', sessionId)
     .eq('pagamento_status', 'paid')
-    .single();
+    .order('created_at', { ascending: true });
 
-  if (error || !data) {
+  if (error || !data?.length) {
     return res.status(404).json({ error: 'Prenotazione non trovata' });
   }
 
-  return res.json(data);
+  const totalPrezzo = data.reduce((s, p) => s + Number(p.prezzo_totale), 0);
+  return res.json({ ...data[0], prezzo_totale: totalPrezzo, total_bikes: data.length });
 });
 
 module.exports = router;

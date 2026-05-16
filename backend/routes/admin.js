@@ -15,6 +15,9 @@ const { CONTRATTO_TERMS, TIPO_LABEL, CONTRATTO_TITLE, CONTRATTO_FIELDS, LOCALE_M
 const { sendPushToAll } = require('../lib/push');
 const { sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione }       = require('./availability');
+const { logAction }                         = require('../lib/auditLog');
+
+const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
@@ -83,6 +86,7 @@ router.post('/bookings/:id/cancel', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('cancel', req.params.id, { nome: data.cliente_nome }, getIp(req));
   return res.json({ success: true, booking: data });
 });
 
@@ -152,10 +156,87 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
       .update({ danno_status: 'charged', danno_amount: amountNum })
       .eq('id', req.params.id);
 
+    await logAction('charge_damage', req.params.id, { amount: amountNum, motivo: motivo || '', pi_id: paymentIntent.id }, getIp(req));
     return res.json({ success: true, payment_intent_id: paymentIntent.id });
   } catch (stripeError) {
     console.error('Stripe charge-damage error:', stripeError);
     return res.status(402).json({ error: stripeError.message || 'Pagamento rifiutato dalla carta' });
+  }
+});
+
+// ─── POST /api/admin/bookings/:id/autorizza-cauzione ─────────────────────────
+// Autorizza manualmente la cauzione (per prenotazioni pending/failed)
+
+router.post('/bookings/:id/autorizza-cauzione', async (req, res) => {
+  const { data: prenotazione, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, stripe_customer_id, stripe_payment_method_id, cauzione_status, cauzione_pi_id, pagamento_status')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !prenotazione) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (prenotazione.pagamento_status !== 'paid') return res.status(400).json({ error: 'Prenotazione non pagata' });
+  if (prenotazione.cauzione_status === 'authorized')  return res.status(400).json({ error: 'Cauzione già autorizzata' });
+  if (prenotazione.cauzione_status === 'captured')    return res.status(400).json({ error: 'Cauzione già incassata' });
+  if (prenotazione.cauzione_status === 'authorizing') return res.status(409).json({ error: 'Autorizzazione già in corso — riprova tra qualche secondo' });
+  if (prenotazione.cauzione_status === 'no_card')     return res.status(400).json({ error: 'Nessuna carta Stripe salvata (prenotazione manuale)' });
+
+  if (!prenotazione.stripe_customer_id || !prenotazione.stripe_payment_method_id) {
+    return res.status(400).json({ error: 'Metodo di pagamento non disponibile — il cliente deve ricontattarci' });
+  }
+
+  // Se esiste già un cauzione_pi_id, verifica su Stripe prima di crearne un altro
+  if (prenotazione.cauzione_pi_id) {
+    try {
+      const existingPi = await stripe.paymentIntents.retrieve(prenotazione.cauzione_pi_id);
+      if (existingPi.status === 'requires_capture') {
+        // PI già autorizzato su Stripe ma DB non aggiornato (crash precedente)
+        await supabase.from('prenotazioni').update({ cauzione_status: 'authorized' }).eq('id', req.params.id);
+        await logAction('autorizza_cauzione', req.params.id, { status: 'authorized', note: 'recuperato da Stripe', pi_id: existingPi.id }, getIp(req));
+        return res.json({ success: true, status: 'authorized', note: 'recuperato da Stripe', payment_intent_id: existingPi.id });
+      }
+      // PI esiste ma non è valido (canceled/failed) → procedi a crearne uno nuovo
+    } catch (_) {
+      // PI non trovato su Stripe → procedi a crearne uno nuovo
+    }
+  }
+
+  // LOCK ATOMICO: impedisce doppio click o esecuzione contemporanea con il cron
+  const { data: locked } = await supabase
+    .from('prenotazioni')
+    .update({ cauzione_status: 'authorizing' })
+    .eq('id', req.params.id)
+    .or('cauzione_status.eq.pending,cauzione_status.is.null,cauzione_status.eq.failed')
+    .select('id')
+    .single();
+
+  if (!locked) {
+    return res.status(409).json({ error: 'Autorizzazione già in corso — riprova tra qualche secondo' });
+  }
+
+  try {
+    const pi = await stripe.paymentIntents.create({
+      amount:         50000,
+      currency:       'eur',
+      customer:       prenotazione.stripe_customer_id,
+      payment_method: prenotazione.stripe_payment_method_id,
+      capture_method: 'manual',
+      confirm:        true,
+      off_session:    true,
+      description:    `Cauzione bici — ${prenotazione.cliente_nome} (${prenotazione.id.substring(0, 8)})`,
+    });
+
+    const status = pi.status === 'requires_capture' ? 'authorized' : 'failed';
+    await supabase
+      .from('prenotazioni')
+      .update({ cauzione_pi_id: pi.id, cauzione_status: status })
+      .eq('id', req.params.id);
+
+    await logAction('autorizza_cauzione', req.params.id, { status, pi_id: pi.id }, getIp(req));
+    return res.json({ success: true, status, payment_intent_id: pi.id });
+  } catch (e) {
+    await supabase.from('prenotazioni').update({ cauzione_status: 'failed' }).eq('id', req.params.id);
+    return res.status(402).json({ error: e.message || 'Errore Stripe' });
   }
 });
 
@@ -181,6 +262,7 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
       .from('prenotazioni')
       .update({ cauzione_status: 'cancelled' })
       .eq('id', req.params.id);
+    await logAction('release_deposit', req.params.id, { pi_id: prenotazione.cauzione_pi_id }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     console.error('Errore release deposit:', e);
@@ -189,13 +271,13 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
 });
 
 // ─── POST /api/admin/bookings/:id/capture-deposit ────────────────────────────
-// Incassa la cauzione per danni (importo ≤ €1.000)
+// Incassa la cauzione per danni (importo ≤ €500)
 
 router.post('/bookings/:id/capture-deposit', async (req, res) => {
   const { amount, motivo } = req.body;
   const amountNum = parseFloat(amount);
-  if (!amountNum || amountNum <= 0 || amountNum > 1000) {
-    return res.status(400).json({ error: 'Importo non valido (max €1.000)' });
+  if (!amountNum || amountNum <= 0 || amountNum > 500) {
+    return res.status(400).json({ error: 'Importo non valido (max €500)' });
   }
 
   const { data: prenotazione, error } = await supabase
@@ -221,6 +303,7 @@ router.post('/bookings/:id/capture-deposit', async (req, res) => {
         cauzione_captured_amount:  amountNum,
       })
       .eq('id', req.params.id);
+    await logAction('capture_deposit', req.params.id, { amount: amountNum, motivo: motivo || '' }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     console.error('Errore capture deposit:', e);
@@ -250,6 +333,7 @@ router.post('/bookings/:id/send-email', async (req, res) => {
   try {
     await sendAdminEmail(prenotazione, subject.trim(), message.trim());
     console.log(`[admin send-email] Email inviata a ${prenotazione.cliente_email} — "${subject}"`);
+    await logAction('send_email', req.params.id, { subject: subject.trim(), to: prenotazione.cliente_email }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     console.error('[admin send-email] Errore:', e.message);
@@ -273,6 +357,7 @@ router.post('/bookings/:id/send-firma', async (req, res) => {
 
   try {
     await sendFirmaLinkEmail(p);
+    await logAction('send_firma', req.params.id, { email: p.cliente_email }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     console.error('[send-firma]', e.message);
@@ -330,20 +415,23 @@ router.patch('/flotta/:id', async (req, res) => {
   }
   const { data, error } = await supabase.from('biciclette').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('flotta_update', null, { bici_id: req.params.id, changes: update }, getIp(req));
   return res.json(data);
 });
 
 // ─── POST /api/admin/bookings/:id/checkin ────────────────────────────────────
 
 router.post('/bookings/:id/checkin', async (req, res) => {
-  const { checkin_note, documento_foto, bici_foto_consegna } = req.body;
+  const { checkin_note, documento_foto, documento_foto_retro, bici_foto_consegna } = req.body;
   const update = { checkin_at: new Date().toISOString() };
-  if (checkin_note)      update.checkin_note      = checkin_note;
-  if (documento_foto)    update.documento_foto    = documento_foto;
-  if (bici_foto_consegna) update.bici_foto_consegna = bici_foto_consegna;
+  if (checkin_note)          update.checkin_note          = checkin_note;
+  if (documento_foto)        update.documento_foto        = documento_foto;
+  if (documento_foto_retro)  update.documento_foto_retro  = documento_foto_retro;
+  if (bici_foto_consegna)    update.bici_foto_consegna    = bici_foto_consegna;
 
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('checkin', req.params.id, {}, getIp(req));
   return res.json(data);
 });
 
@@ -357,6 +445,7 @@ router.post('/bookings/:id/checkout', async (req, res) => {
 
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('checkout_bici', req.params.id, {}, getIp(req));
   return res.json(data);
 });
 
@@ -469,7 +558,7 @@ router.post('/bookings/manual', async (req, res) => {
     bicicletta_id = libera.id;
   }
 
-  const VALID_ACC   = ['casco', 'lucchetto', 'kit_foro'];
+  const VALID_ACC   = ['casco', 'lucchetto'];
   const accessoriStr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => VALID_ACC.includes(a)).join(',');
   const prezzo      = prezzoOverride ? parseFloat(prezzoOverride) : calcolaPrezzoManual(tipo_noleggio, numGiorni);
 
@@ -507,6 +596,7 @@ router.post('/bookings/manual', async (req, res) => {
   // WhatsApp alert (non bloccante)
   sendWhatsAppAlert(prenotazione).catch(e => console.error('WhatsApp manual:', e));
 
+  await logAction('manual_booking', prenotazione.id, { nome: prenotazione.cliente_nome, tipo: tipo_noleggio, data: data_ritiro, bici_id: bicicletta_id }, getIp(req));
   return res.json({ success: true, booking: prenotazione });
 });
 
@@ -537,6 +627,7 @@ router.post('/chiusure', async (req, res) => {
     if (error.code === '23505') return res.status(409).json({ error: 'Questa data è già bloccata' });
     return res.status(500).json({ error: error.message });
   }
+  await logAction('chiusura_add', null, { data: dateInput, motivo: motivo.trim() }, getIp(req));
   return res.json({ success: true, chiusura: data });
 });
 
@@ -548,17 +639,25 @@ router.delete('/chiusure/:id', async (req, res) => {
     .delete()
     .eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('chiusura_delete', null, { chiusura_id: req.params.id }, getIp(req));
   return res.json({ success: true });
 });
 
 // ─── GET /api/admin/cauzioni ─────────────────────────────────────────────────
 
 router.get('/cauzioni', async (req, res) => {
+  // Mostra tutte le prenotazioni paid degli ultimi 90 giorni + prossimi 30
+  const from = new Date();
+  from.setDate(from.getDate() - 90);
+  const to = new Date();
+  to.setDate(to.getDate() + 30);
+
   const { data, error } = await supabase
     .from('prenotazioni')
-    .select('id, cliente_nome, bicicletta_id, data_ritiro, data_restituzione, cauzione_status, cauzione_pi_id, cauzione_captured_amount, pagamento_status, prezzo_totale')
+    .select('id, cliente_nome, cliente_email, bicicletta_id, data_ritiro, data_restituzione, cauzione_status, cauzione_pi_id, cauzione_captured_amount, pagamento_status, prezzo_totale, tipo_noleggio')
     .eq('pagamento_status', 'paid')
-    .not('cauzione_status', 'is', null)
+    .gte('data_ritiro', from.toISOString().split('T')[0])
+    .lte('data_ritiro', to.toISOString().split('T')[0])
     .order('data_ritiro', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
   return res.json({ cauzioni: data || [] });
@@ -590,6 +689,7 @@ router.put('/config', async (req, res) => {
   try {
     const { error } = await supabase.from('config').upsert(rows, { onConflict: 'chiave' });
     if (error) throw error;
+    await logAction('config_update', null, { keys: Object.keys(req.body) }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     return res.status(500).json({ error: e.message, needs_migration: true });
@@ -666,6 +766,7 @@ router.patch('/bookings/:id/note', async (req, res) => {
     .update({ note_admin: note_admin ?? null })
     .eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
+  await logAction('note_update', req.params.id, { has_note: !!(note_admin?.trim()) }, getIp(req));
   return res.json({ success: true });
 });
 
@@ -696,7 +797,8 @@ router.delete('/push/subscribe', async (req, res) => {
 
 router.post('/push/test', async (req, res) => {
   try {
-    const result = await sendPushToAll({ title: '🚲 Test Notifica', body: 'Bike Rental Tarzo — notifiche push attive!', url: '/admin' });
+    const result = await sendPushToAll({ title: '🚲 Test Notifica', body: 'Arfanta Bike Rental — notifiche push attive!', url: '/admin' });
+    await logAction('push_test', null, {}, getIp(req));
     return res.json({ success: true, result });
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -751,7 +853,7 @@ router.get('/bookings/:id/contratto', async (req, res) => {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)} — ${shortId} — Bike Rental Tarzo</title>
+<title>${esc(title)} — ${shortId} — Arfanta Bike Rental</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 @page{margin:18mm 14mm;size:A4}
@@ -800,7 +902,7 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
     <div class="hdr-logo">🚲</div>
     <div class="hdr-text">
       <h1>${esc(title)}</h1>
-      <p>Bike Rental Tarzo &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
+      <p>Arfanta Bike Rental &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
     </div>
   </div>
   <div class="body">
@@ -827,7 +929,7 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
         <div class="cert-seal">✍️</div>
         <div>
           <div class="cert-htitle">${esc(f.cert)}</div>
-          <div class="cert-hsub">Bike Rental Tarzo — ${shortId}</div>
+          <div class="cert-hsub">Arfanta Bike Rental — ${shortId}</div>
         </div>
       </div>
       <table class="cert-table">
@@ -841,7 +943,7 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
     </div>
 
     <div class="doc-foot">
-      Bike Rental Tarzo &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
+      Arfanta Bike Rental &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
       arfantabikerental@gmail.com &nbsp;·&nbsp; Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO
     </div>
   </div>
@@ -891,6 +993,7 @@ router.post('/bookings/:id/refund', async (req, res) => {
     if (isTotal) await supabase.from('prenotazioni').update({ pagamento_status: 'cancelled' }).eq('id', req.params.id);
 
     console.log(`[admin refund] ${req.params.id} — €${refund.amount / 100} rimborsati`);
+    await logAction('refund', req.params.id, { amount: refund.amount / 100, refund_id: refund.id, motivo: motivo || '' }, getIp(req));
     return res.json({ success: true, refund_id: refund.id, amount: refund.amount / 100 });
   } catch (e) {
     console.error('[admin refund] Stripe error:', e);
@@ -941,6 +1044,7 @@ router.patch('/bookings/:id/reschedule', async (req, res) => {
     .select().single();
 
   if (uErr) return res.status(500).json({ error: uErr.message });
+  await logAction('reschedule', req.params.id, { data_ritiro, tipo_noleggio, giorni: numGiorni }, getIp(req));
   return res.json({ success: true, booking: data });
 });
 
@@ -979,7 +1083,33 @@ router.patch('/bookings/:id/assegna-bici', async (req, res) => {
     .select().single();
 
   if (uErr) return res.status(500).json({ error: uErr.message });
+  await logAction('assegna_bici', req.params.id, { bici_id: newBiciId }, getIp(req));
   return res.json({ success: true, booking: data });
+});
+
+// ─── GET /api/admin/audit-log ─────────────────────────────────────────────────
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+router.get('/audit-log', async (req, res) => {
+  const limit  = Math.min(Math.max(parseInt(req.query.limit,  10) || 100, 1), 500);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+  if (req.query.booking_id && !UUID_RE.test(req.query.booking_id)) {
+    return res.status(400).json({ error: 'booking_id non valido' });
+  }
+
+  let query = supabase
+    .from('audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (req.query.booking_id) query = query.eq('booking_id', req.query.booking_id);
+
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ log: data || [] });
 });
 
 // ─── Helper: tipo noleggio abbreviato (per dashboard admin) ──────────────────

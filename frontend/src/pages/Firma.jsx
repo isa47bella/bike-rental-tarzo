@@ -7,7 +7,7 @@ const TERMS = {
   it: [
     {
       title: 'Art. 1 — Oggetto e Parti',
-      text: 'Il presente contratto regola il noleggio di una bicicletta elettrica da parte di Bike Rental Tarzo (di seguito "Noleggiatore"), con sede in Via Pecol 22, Arfanta di Tarzo (TV), email: arfantabikerental@gmail.com, nei confronti del cliente (di seguito "Conduttore").',
+      text: 'Il presente contratto regola il noleggio di una bicicletta elettrica da parte di Arfanta Bike Rental (di seguito "Noleggiatore"), con sede in Via Pecol 22, Arfanta di Tarzo (TV), email: arfantabikerental@gmail.com, nei confronti del cliente (di seguito "Conduttore").',
     },
     {
       title: 'Art. 2 — Requisiti del Conduttore',
@@ -23,7 +23,7 @@ const TERMS = {
     },
     {
       title: 'Art. 5 — Responsabilità per Danni e Furto',
-      text: 'Il Conduttore è responsabile di qualsiasi danno alla bicicletta (ammaccature, rotture, graffi profondi) causato per negligenza, uso improprio o incidente durante il periodo di noleggio, indipendentemente dall\'autore del sinistro. In caso di furto, il Conduttore è responsabile per il valore integrale del mezzo. Una cauzione di €1.000 viene pre-autorizzata sulla carta di credito al momento del ritiro e sbloccata alla restituzione senza danni. L\'usura fisiologica derivante dal normale utilizzo non è addebitata.',
+      text: 'Il Conduttore è responsabile di qualsiasi danno alla bicicletta (ammaccature, rotture, graffi profondi) causato per negligenza, uso improprio o incidente durante il periodo di noleggio, indipendentemente dall\'autore del sinistro. In caso di furto, il Conduttore è responsabile per il valore integrale del mezzo. Una cauzione di €500 viene pre-autorizzata sulla carta di credito al momento del ritiro e sbloccata alla restituzione senza danni. L\'usura fisiologica derivante dal normale utilizzo non è addebitata.',
     },
     {
       title: 'Art. 6 — Esclusioni di Responsabilità',
@@ -35,7 +35,7 @@ const TERMS = {
     },
     {
       title: 'Art. 8 — Trattamento dei Dati Personali (GDPR)',
-      text: 'Ai sensi del Regolamento UE 2016/679 (GDPR) e del D.lgs. 196/2003, i dati personali del Conduttore (nome, cognome, email, telefono, dati di prenotazione) sono trattati da Bike Rental Tarzo in qualità di Titolare del trattamento per le seguenti finalità: (a) esecuzione del contratto di noleggio; (b) invio di comunicazioni relative alla prenotazione; (c) adempimento di obblighi legali e fiscali. I dati non sono ceduti a terzi, ad eccezione dei soggetti strettamente necessari all\'erogazione del servizio (es. gestore pagamenti Stripe). Sono conservati per un periodo massimo di 5 anni dalla data della prenotazione, dopodiché vengono cancellati in modo sicuro. Il Conduttore ha diritto di accedere, rettificare, cancellare i propri dati, opporsi al trattamento, richiederne la portabilità e revocare il consenso in qualsiasi momento, scrivendo a arfantabikerental@gmail.com.',
+      text: 'Ai sensi del Regolamento UE 2016/679 (GDPR) e del D.lgs. 196/2003, i dati personali del Conduttore (nome, cognome, email, telefono, dati di prenotazione) sono trattati da Arfanta Bike Rental in qualità di Titolare del trattamento per le seguenti finalità: (a) esecuzione del contratto di noleggio; (b) invio di comunicazioni relative alla prenotazione; (c) adempimento di obblighi legali e fiscali. I dati non sono ceduti a terzi, ad eccezione dei soggetti strettamente necessari all\'erogazione del servizio (es. gestore pagamenti Stripe). Sono conservati per un periodo massimo di 5 anni dalla data della prenotazione, dopodiché vengono cancellati in modo sicuro. Il Conduttore ha diritto di accedere, rettificare, cancellare i propri dati, opporsi al trattamento, richiederne la portabilità e revocare il consenso in qualsiasi momento, scrivendo a arfantabikerental@gmail.com.',
     },
     {
       title: 'Art. 9 — Legge Applicabile e Foro Competente',
@@ -46,7 +46,7 @@ const TERMS = {
   en: [
     {
       title: 'Art. 1 — Subject and Parties',
-      text: 'This agreement governs the rental of an electric bicycle by Bike Rental Tarzo (hereinafter "Lessor"), located at Via Pecol 22, Arfanta di Tarzo (TV), Italy, email: arfantabikerental@gmail.com, to the customer (hereinafter "Renter").',
+      text: 'This agreement governs the rental of an electric bicycle by Arfanta Bike Rental (hereinafter "Lessor"), located at Via Pecol 22, Arfanta di Tarzo (TV), Italy, email: arfantabikerental@gmail.com, to the customer (hereinafter "Renter").',
     },
     {
       title: 'Art. 2 — Requirements',
@@ -62,7 +62,7 @@ const TERMS = {
     },
     {
       title: 'Art. 5 — Liability for Damage and Theft',
-      text: 'The Renter is liable for any damage to the bicycle (dents, breakages, deep scratches) caused by negligence, improper use, or accident during the rental period, regardless of who caused the incident. In the event of theft, the Renter is liable for the full replacement value of the bicycle. A €1,000 security deposit is pre-authorized on the credit card at pickup and released upon undamaged return. Normal wear and tear from ordinary use is not charged.',
+      text: 'The Renter is liable for any damage to the bicycle (dents, breakages, deep scratches) caused by negligence, improper use, or accident during the rental period, regardless of who caused the incident. In the event of theft, the Renter is liable for the full replacement value of the bicycle. A €500 security deposit is pre-authorized on the credit card at pickup and released upon undamaged return. Normal wear and tear from ordinary use is not charged.',
     },
     {
       title: 'Art. 6 — Limitation of Liability',
@@ -74,7 +74,7 @@ const TERMS = {
     },
     {
       title: 'Art. 8 — Personal Data Processing (GDPR)',
-      text: 'Pursuant to EU Regulation 2016/679 (GDPR), the Renter\'s personal data (name, email, telephone, booking details) are processed by Bike Rental Tarzo as Data Controller for the following purposes: (a) performance of the rental agreement; (b) sending booking-related communications; (c) fulfilment of legal and fiscal obligations. Data are not shared with third parties, except those strictly necessary for service delivery (e.g. Stripe payment processor). Data are retained for a maximum of 5 years from the booking date, after which they are securely deleted. The Renter has the right to access, rectify, delete, object to processing, request portability and withdraw consent at any time by writing to arfantabikerental@gmail.com.',
+      text: 'Pursuant to EU Regulation 2016/679 (GDPR), the Renter\'s personal data (name, email, telephone, booking details) are processed by Arfanta Bike Rental as Data Controller for the following purposes: (a) performance of the rental agreement; (b) sending booking-related communications; (c) fulfilment of legal and fiscal obligations. Data are not shared with third parties, except those strictly necessary for service delivery (e.g. Stripe payment processor). Data are retained for a maximum of 5 years from the booking date, after which they are securely deleted. The Renter has the right to access, rectify, delete, object to processing, request portability and withdraw consent at any time by writing to arfantabikerental@gmail.com.',
     },
     {
       title: 'Art. 9 — Governing Law and Jurisdiction',
@@ -85,7 +85,7 @@ const TERMS = {
   de: [
     {
       title: 'Art. 1 — Gegenstand und Parteien',
-      text: 'Dieser Vertrag regelt die Vermietung eines Elektrofahrrads durch Bike Rental Tarzo (im Folgenden „Vermieter"), mit Sitz in Via Pecol 22, Arfanta di Tarzo (TV), Italien, E-Mail: arfantabikerental@gmail.com, an den Kunden (im Folgenden „Mieter").',
+      text: 'Dieser Vertrag regelt die Vermietung eines Elektrofahrrads durch Arfanta Bike Rental (im Folgenden „Vermieter"), mit Sitz in Via Pecol 22, Arfanta di Tarzo (TV), Italien, E-Mail: arfantabikerental@gmail.com, an den Kunden (im Folgenden „Mieter").',
     },
     {
       title: 'Art. 2 — Anforderungen',
@@ -101,7 +101,7 @@ const TERMS = {
     },
     {
       title: 'Art. 5 — Haftung für Schäden und Diebstahl',
-      text: 'Der Mieter haftet für alle Schäden am Fahrrad (Dellen, Brüche, tiefe Kratzer), die durch Fahrlässigkeit, unsachgemäßen Gebrauch oder einen Unfall während der Mietzeit verursacht wurden, unabhängig davon, wer den Schaden verursacht hat. Im Falle eines Diebstahls haftet der Mieter für den vollen Wiederbeschaffungswert des Fahrrads. Eine Kaution von €1.000 wird bei der Abholung auf der Kreditkarte vor授权 und nach unbeschädigter Rückgabe freigegeben. Normaler Verschleiß durch übliche Nutzung wird nicht in Rechnung gestellt.',
+      text: 'Der Mieter haftet für alle Schäden am Fahrrad (Dellen, Brüche, tiefe Kratzer), die durch Fahrlässigkeit, unsachgemäßen Gebrauch oder einen Unfall während der Mietzeit verursacht wurden, unabhängig davon, wer den Schaden verursacht hat. Im Falle eines Diebstahls haftet der Mieter für den vollen Wiederbeschaffungswert des Fahrrads. Eine Kaution von €500 wird bei der Abholung auf der Kreditkarte vorläufig autorisiert und nach unbeschädigter Rückgabe freigegeben. Normaler Verschleiß durch übliche Nutzung wird nicht in Rechnung gestellt.',
     },
     {
       title: 'Art. 6 — Haftungsausschluss',
@@ -113,7 +113,7 @@ const TERMS = {
     },
     {
       title: 'Art. 8 — Datenschutz (DSGVO)',
-      text: 'Gemäß der EU-Verordnung 2016/679 (DSGVO) werden die personenbezogenen Daten des Mieters (Name, E-Mail, Telefon, Buchungsdaten) von Bike Rental Tarzo als Verantwortlichem für folgende Zwecke verarbeitet: (a) Erfüllung des Mietvertrags; (b) Zusendung buchungsbezogener Mitteilungen; (c) Erfüllung rechtlicher und steuerlicher Pflichten. Die Daten werden nicht an Dritte weitergegeben, außer an jene, die zur Erbringung des Dienstes unbedingt erforderlich sind (z.B. Stripe für die Zahlungsabwicklung). Die Daten werden maximal 5 Jahre ab dem Buchungsdatum aufbewahrt und anschließend sicher gelöscht. Der Mieter hat das Recht auf Auskunft, Berichtigung, Löschung, Widerspruch, Datenübertragbarkeit und Widerruf der Einwilligung, durch Schreiben an arfantabikerental@gmail.com.',
+      text: 'Gemäß der EU-Verordnung 2016/679 (DSGVO) werden die personenbezogenen Daten des Mieters (Name, E-Mail, Telefon, Buchungsdaten) von Arfanta Bike Rental als Verantwortlichem für folgende Zwecke verarbeitet: (a) Erfüllung des Mietvertrags; (b) Zusendung buchungsbezogener Mitteilungen; (c) Erfüllung rechtlicher und steuerlicher Pflichten. Die Daten werden nicht an Dritte weitergegeben, außer an jene, die zur Erbringung des Dienstes unbedingt erforderlich sind (z.B. Stripe für die Zahlungsabwicklung). Die Daten werden maximal 5 Jahre ab dem Buchungsdatum aufbewahrt und anschließend sicher gelöscht. Der Mieter hat das Recht auf Auskunft, Berichtigung, Löschung, Widerspruch, Datenübertragbarkeit und Widerruf der Einwilligung, durch Schreiben an arfantabikerental@gmail.com.',
     },
     {
       title: 'Art. 9 — Anwendbares Recht und Gerichtsstand',
@@ -124,7 +124,7 @@ const TERMS = {
   es: [
     {
       title: 'Art. 1 — Objeto y Partes',
-      text: 'El presente contrato regula el alquiler de una bicicleta eléctrica por parte de Bike Rental Tarzo (en adelante "Arrendador"), con sede en Via Pecol 22, Arfanta di Tarzo (TV), Italia, email: arfantabikerental@gmail.com, al cliente (en adelante "Arrendatario").',
+      text: 'El presente contrato regula el alquiler de una bicicleta eléctrica por parte de Arfanta Bike Rental (en adelante "Arrendador"), con sede en Via Pecol 22, Arfanta di Tarzo (TV), Italia, email: arfantabikerental@gmail.com, al cliente (en adelante "Arrendatario").',
     },
     {
       title: 'Art. 2 — Requisitos',
@@ -140,7 +140,7 @@ const TERMS = {
     },
     {
       title: 'Art. 5 — Responsabilidad por Daños y Robo',
-      text: 'El Arrendatario es responsable de cualquier daño a la bicicleta (abolladuras, roturas, arañazos profundos) causado por negligencia, uso indebido o accidente durante el período de alquiler, independientemente de quién haya causado el incidente. En caso de robo, el Arrendatario es responsable del valor íntegro del vehículo. Una fianza de €1.000 se preautoriza en la tarjeta de crédito al recoger y se libera al devolver sin daños. El desgaste normal por uso ordinario no se factura.',
+      text: 'El Arrendatario es responsable de cualquier daño a la bicicleta (abolladuras, roturas, arañazos profundos) causado por negligencia, uso indebido o accidente durante el período de alquiler, independientemente de quién haya causado el incidente. En caso de robo, el Arrendatario es responsable del valor íntegro del vehículo. Una fianza de €500 se preautoriza en la tarjeta de crédito al recoger y se libera al devolver sin daños. El desgaste normal por uso ordinario no se factura.',
     },
     {
       title: 'Art. 6 — Limitación de Responsabilidad',
@@ -152,7 +152,7 @@ const TERMS = {
     },
     {
       title: 'Art. 8 — Protección de Datos (RGPD)',
-      text: 'De conformidad con el Reglamento UE 2016/679 (RGPD), los datos personales del Arrendatario (nombre, email, teléfono, datos de reserva) son tratados por Bike Rental Tarzo como Responsable del tratamiento con las siguientes finalidades: (a) ejecución del contrato de alquiler; (b) envío de comunicaciones relacionadas con la reserva; (c) cumplimiento de obligaciones legales y fiscales. Los datos no se ceden a terceros, salvo los estrictamente necesarios para la prestación del servicio (p. ej. Stripe para el pago). Se conservan un máximo de 5 años desde la fecha de reserva, tras los cuales se eliminan de forma segura. El Arrendatario tiene derecho a acceder, rectificar, suprimir, oponerse al tratamiento, solicitar la portabilidad y revocar el consentimiento en cualquier momento escribiendo a arfantabikerental@gmail.com.',
+      text: 'De conformidad con el Reglamento UE 2016/679 (RGPD), los datos personales del Arrendatario (nombre, email, teléfono, datos de reserva) son tratados por Arfanta Bike Rental como Responsable del tratamiento con las siguientes finalidades: (a) ejecución del contrato de alquiler; (b) envío de comunicaciones relacionadas con la reserva; (c) cumplimiento de obligaciones legales y fiscales. Los datos no se ceden a terceros, salvo los estrictamente necesarios para la prestación del servicio (p. ej. Stripe para el pago). Se conservan un máximo de 5 años desde la fecha de reserva, tras los cuales se eliminan de forma segura. El Arrendatario tiene derecho a acceder, rectificar, suprimir, oponerse al tratamiento, solicitar la portabilidad y revocar el consentimiento en cualquier momento escribiendo a arfantabikerental@gmail.com.',
     },
     {
       title: 'Art. 9 — Ley Aplicable y Jurisdicción',
@@ -163,7 +163,7 @@ const TERMS = {
   fr: [
     {
       title: 'Art. 1 — Objet et Parties',
-      text: 'Le présent contrat régit la location d\'un vélo électrique par Bike Rental Tarzo (ci-après « Loueur »), dont le siège est Via Pecol 22, Arfanta di Tarzo (TV), Italie, email : arfantabikerental@gmail.com, au profit du client (ci-après « Locataire »).',
+      text: 'Le présent contrat régit la location d\'un vélo électrique par Arfanta Bike Rental (ci-après « Loueur »), dont le siège est Via Pecol 22, Arfanta di Tarzo (TV), Italie, email : arfantabikerental@gmail.com, au profit du client (ci-après « Locataire »).',
     },
     {
       title: 'Art. 2 — Conditions requises',
@@ -179,7 +179,7 @@ const TERMS = {
     },
     {
       title: 'Art. 5 — Responsabilité pour Dommages et Vol',
-      text: 'Le Locataire est responsable de tout dommage au vélo (bosses, casses, griffures profondes) causé par négligence, mauvais usage ou accident pendant la période de location, quel que soit l\'auteur du sinistre. En cas de vol, le Locataire est responsable de la valeur intégrale du vélo. Une caution de €1 000 est pré-autorisée sur la carte de crédit lors de la prise en charge et débloquée à la restitution sans dommage. L\'usure normale due à une utilisation ordinaire n\'est pas facturée.',
+      text: 'Le Locataire est responsable de tout dommage au vélo (bosses, casses, griffures profondes) causé par négligence, mauvais usage ou accident pendant la période de location, quel que soit l\'auteur du sinistre. En cas de vol, le Locataire est responsable de la valeur intégrale du vélo. Une caution de €500 est pré-autorisée sur la carte de crédit lors de la prise en charge et débloquée à la restitution sans dommage. L\'usure normale due à une utilisation ordinaire n\'est pas facturée.',
     },
     {
       title: 'Art. 6 — Limitation de Responsabilité',
@@ -191,7 +191,7 @@ const TERMS = {
     },
     {
       title: 'Art. 8 — Protection des Données (RGPD)',
-      text: 'Conformément au Règlement UE 2016/679 (RGPD), les données personnelles du Locataire (nom, email, téléphone, données de réservation) sont traitées par Bike Rental Tarzo en qualité de Responsable du traitement aux fins suivantes : (a) exécution du contrat de location ; (b) envoi de communications relatives à la réservation ; (c) respect des obligations légales et fiscales. Les données ne sont pas transmises à des tiers, sauf à ceux strictement nécessaires à la prestation du service (ex. Stripe pour les paiements). Elles sont conservées pendant 5 ans maximum à compter de la date de réservation, puis supprimées de manière sécurisée. Le Locataire dispose des droits d\'accès, de rectification, d\'effacement, d\'opposition, de portabilité et de retrait du consentement à tout moment en écrivant à arfantabikerental@gmail.com.',
+      text: 'Conformément au Règlement UE 2016/679 (RGPD), les données personnelles du Locataire (nom, email, téléphone, données de réservation) sont traitées par Arfanta Bike Rental en qualité de Responsable du traitement aux fins suivantes : (a) exécution du contrat de location ; (b) envoi de communications relatives à la réservation ; (c) respect des obligations légales et fiscales. Les données ne sont pas transmises à des tiers, sauf à ceux strictement nécessaires à la prestation du service (ex. Stripe pour les paiements). Elles sont conservées pendant 5 ans maximum à compter de la date de réservation, puis supprimées de manière sécurisée. Le Locataire dispose des droits d\'accès, de rectification, d\'effacement, d\'opposition, de portabilité et de retrait du consentement à tout moment en écrivant à arfantabikerental@gmail.com.',
     },
     {
       title: 'Art. 9 — Droit Applicable et Juridiction',
@@ -205,7 +205,7 @@ const TERMS = {
 const T = {
   it: {
     title: 'Contratto di Noleggio',
-    subtitle: 'Bicicletta Elettrica — Bike Rental Tarzo',
+    subtitle: 'Bicicletta Elettrica — Arfanta Bike Rental',
     summary: 'Riepilogo Prenotazione',
     code: 'Codice prenotazione',
     fCliente: 'Cliente', fTipo: 'Tipo noleggio', fRitiro: 'Ritiro', fRestituzione: 'Restituzione', fPrezzo: 'Importo pagato',
@@ -215,7 +215,7 @@ const T = {
     checks: [
       'Ho letto e accetto integralmente i <strong>Termini e Condizioni</strong> di noleggio sopra riportati (Artt. 1–7).',
       'Mi impegno a restituire la bicicletta in perfette condizioni <strong>entro l\'orario concordato</strong> (Art. 4).',
-      'Sono consapevole della mia <strong>responsabilità per danni e furto</strong> e della cauzione di €1.000 (Art. 5).',
+      'Sono consapevole della mia <strong>responsabilità per danni e furto</strong> e della cauzione di €500 (Art. 5).',
       'Acconsento al <strong>trattamento dei miei dati personali</strong> ai sensi del GDPR per la gestione del noleggio (Art. 8).',
     ],
     nameLabel: 'Il tuo nome completo', namePlaceholder: 'Es. Mario Rossi',
@@ -230,7 +230,7 @@ const T = {
     scrollRead: 'Scorri ↓',
   },
   en: {
-    title: 'Rental Agreement', subtitle: 'Electric Bicycle — Bike Rental Tarzo',
+    title: 'Rental Agreement', subtitle: 'Electric Bicycle — Arfanta Bike Rental',
     summary: 'Booking Summary', code: 'Booking code',
     fCliente: 'Customer', fTipo: 'Rental type', fRitiro: 'Pickup', fRestituzione: 'Return', fPrezzo: 'Amount paid',
     types: { mezza_mattina: 'Half Day Morning (09:00–13:00)', mezza_pomeriggio: 'Half Day Afternoon (14:00–18:00)', intera_giornata: 'Full Day (09:00–18:00)', multi_giorno: 'Multi-Day' },
@@ -239,7 +239,7 @@ const T = {
     checks: [
       'I have read and fully accept the <strong>Terms and Conditions</strong> above (Arts. 1–7).',
       'I commit to returning the bicycle in perfect condition <strong>by the agreed return time</strong> (Art. 4).',
-      'I acknowledge my <strong>liability for damage and theft</strong> and the €1,000 security deposit (Art. 5).',
+      'I acknowledge my <strong>liability for damage and theft</strong> and the €500 security deposit (Art. 5).',
       'I consent to the <strong>processing of my personal data</strong> under GDPR for rental management purposes (Art. 8).',
     ],
     nameLabel: 'Your full name', namePlaceholder: 'E.g. John Smith',
@@ -253,7 +253,7 @@ const T = {
     location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italy', giorni: 'days', scrollRead: 'Scroll ↓',
   },
   de: {
-    title: 'Mietvertrag', subtitle: 'Elektrofahrrad — Bike Rental Tarzo',
+    title: 'Mietvertrag', subtitle: 'Elektrofahrrad — Arfanta Bike Rental',
     summary: 'Buchungsübersicht', code: 'Buchungscode',
     fCliente: 'Kunde', fTipo: 'Mietart', fRitiro: 'Abholung', fRestituzione: 'Rückgabe', fPrezzo: 'Bezahlter Betrag',
     types: { mezza_mattina: 'Halbtag Vormittag (09:00–13:00)', mezza_pomeriggio: 'Halbtag Nachmittag (14:00–18:00)', intera_giornata: 'Ganztag (09:00–18:00)', multi_giorno: 'Mehrtägig' },
@@ -262,7 +262,7 @@ const T = {
     checks: [
       'Ich habe die <strong>Allgemeinen Geschäftsbedingungen</strong> (Art. 1–7) vollständig gelesen und akzeptiere sie.',
       'Ich verpflichte mich, das Fahrrad in einwandfreiem Zustand <strong>bis zur vereinbarten Rückgabezeit</strong> zurückzugeben (Art. 4).',
-      'Ich bin mir meiner <strong>Haftung für Schäden und Diebstahl</strong> und der Kaution von €1.000 bewusst (Art. 5).',
+      'Ich bin mir meiner <strong>Haftung für Schäden und Diebstahl</strong> und der Kaution von €500 bewusst (Art. 5).',
       'Ich stimme der <strong>Verarbeitung meiner personenbezogenen Daten</strong> gemäß DSGVO zum Zweck der Mietverwaltung zu (Art. 8).',
     ],
     nameLabel: 'Ihr vollständiger Name', namePlaceholder: 'z.B. Max Mustermann',
@@ -276,7 +276,7 @@ const T = {
     location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italien', giorni: 'Tage', scrollRead: 'Scrollen ↓',
   },
   es: {
-    title: 'Contrato de Alquiler', subtitle: 'Bicicleta Eléctrica — Bike Rental Tarzo',
+    title: 'Contrato de Alquiler', subtitle: 'Bicicleta Eléctrica — Arfanta Bike Rental',
     summary: 'Resumen de la Reserva', code: 'Código de reserva',
     fCliente: 'Cliente', fTipo: 'Tipo de alquiler', fRitiro: 'Recogida', fRestituzione: 'Devolución', fPrezzo: 'Importe pagado',
     types: { mezza_mattina: 'Medio Día Mañana (09:00–13:00)', mezza_pomeriggio: 'Medio Día Tarde (14:00–18:00)', intera_giornata: 'Día Completo (09:00–18:00)', multi_giorno: 'Varios Días' },
@@ -285,7 +285,7 @@ const T = {
     checks: [
       'He leído y acepto íntegramente los <strong>Términos y Condiciones</strong> anteriores (Arts. 1–7).',
       'Me comprometo a devolver la bicicleta en perfectas condiciones <strong>antes del horario acordado</strong> (Art. 4).',
-      'Soy consciente de mi <strong>responsabilidad por daños y robo</strong> y de la fianza de €1.000 (Art. 5).',
+      'Soy consciente de mi <strong>responsabilidad por daños y robo</strong> y de la fianza de €500 (Art. 5).',
       'Consiento el <strong>tratamiento de mis datos personales</strong> según el RGPD para la gestión del alquiler (Art. 8).',
     ],
     nameLabel: 'Su nombre completo', namePlaceholder: 'Ej. Juan García',
@@ -299,7 +299,7 @@ const T = {
     location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italia', giorni: 'días', scrollRead: 'Desplazar ↓',
   },
   fr: {
-    title: 'Contrat de Location', subtitle: 'Vélo Électrique — Bike Rental Tarzo',
+    title: 'Contrat de Location', subtitle: 'Vélo Électrique — Arfanta Bike Rental',
     summary: 'Récapitulatif de Réservation', code: 'Code de réservation',
     fCliente: 'Client', fTipo: 'Type de location', fRitiro: 'Prise en charge', fRestituzione: 'Retour', fPrezzo: 'Montant payé',
     types: { mezza_mattina: 'Demi-Journée Matin (09h00–13h00)', mezza_pomeriggio: 'Demi-Journée Après-midi (14h00–18h00)', intera_giornata: 'Journée Complète (09h00–18h00)', multi_giorno: 'Plusieurs Jours' },
@@ -308,7 +308,7 @@ const T = {
     checks: [
       'J\'ai lu et j\'accepte intégralement les <strong>Conditions Générales</strong> ci-dessus (Art. 1–7).',
       'Je m\'engage à restituer le vélo en parfait état <strong>avant l\'heure de retour convenue</strong> (Art. 4).',
-      'Je reconnais ma <strong>responsabilité en cas de dommages et de vol</strong> et la caution de €1 000 (Art. 5).',
+      'Je reconnais ma <strong>responsabilité en cas de dommages et de vol</strong> et la caution de €500 (Art. 5).',
       'Je consens au <strong>traitement de mes données personnelles</strong> au titre du RGPD pour la gestion de la location (Art. 8).',
     ],
     nameLabel: 'Votre nom complet', namePlaceholder: 'Ex. Jean Dupont',
@@ -578,7 +578,7 @@ export default function FirmaPage() {
         {/* Footer */}
         <div style={S.footer}>
           📍 {t.location}<br />
-          Bike Rental Tarzo · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO<br />
+          Arfanta Bike Rental · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO<br />
           <a href="mailto:arfantabikerental@gmail.com" style={{ color: '#2D8659' }}>arfantabikerental@gmail.com</a>
         </div>
       </div>

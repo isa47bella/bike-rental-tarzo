@@ -24,7 +24,8 @@
     "legend": {
       "available": "Disponible",
       "partial": "Peu de places",
-      "full": "Complet"
+      "full": "Complet",
+      "fuoriStagione": "Hors saison"
     },
     "months": [
       "Janvier",
@@ -108,7 +109,26 @@
     "call": "Appeler",
     "halfDay": "demi-journée",
     "fullDay": "Journée complète",
-    "multiFrom": "Multi-jours à partir de"
+    "multiFrom": "Multi-jours à partir de",
+    "bikeSelected": "vélo sélectionné",
+    "bikesSelected": "vélos sélectionnés",
+    "models": {
+      "ecity": {
+        "tag": "City & Trekking",
+        "specs": "500Wh · Batterie externe · Roues 27,5\"",
+        "descrizione": "Idéale pour les routes et les chemins mixtes. Confortable et polyvalente pour les Collines du Prosecco."
+      },
+      "emtb": {
+        "tag": "Mountain Bike",
+        "specs": "625Wh · Moteur BOSCH CX · Full Power",
+        "descrizione": "Puissance maximale pour les sentiers des collines. Moteur BOSCH CX, le haut de gamme."
+      },
+      "bimbo": {
+        "tag": "Enfants",
+        "specs": "400Wh · Haibike Hardfour · Roue 24\"",
+        "descrizione": "Roue 24\" avec assistance électrique calibrée pour les plus petits."
+      }
+    }
   },
   "stepContact": {
     "title": "Vos coordonnées",
@@ -158,7 +178,7 @@
       "multi_giorno": "Multi-Jours"
     },
     "paymentInfo": "💳 Le paiement est <b>100% anticipé</b> via Stripe (carte de crédit/débit). Vous recevrez un email de confirmation immédiatement après le paiement.",
-    "depositInfo": "🔒 <b>Caution de 1 000 € :</b> le blocage est effectué sur votre carte <b>2 jours avant le retrait</b>, pas au moment du paiement. Il sera libéré à la restitution du vélo et des accessoires en bon état. En cas de perte ou dommage, les frais seront déduits de la caution.",
+    "depositInfo": "🔒 <b>Caution de 500 € :</b> le blocage est effectué sur votre carte <b>1 jour avant le retrait</b>, pas au moment du paiement. Il sera libéré à la restitution du vélo et des accessoires en bon état. En cas de perte ou dommage, les frais seront déduits de la caution.",
     "modify": "← Modifier",
     "pay": "💳 Payer €{{amount}}",
     "processing": "⏳ Traitement...",
@@ -193,15 +213,14 @@
     "payAt": "Payer au checkout"
   },
   "stepAccessori": {
-    "title": "Accessoires inclus",
-    "subtitle": "Sélectionnez les accessoires dont vous avez besoin — inclus dans le prix, sans frais supplémentaires",
+    "title": "Accessoires optionnels",
+    "subtitle": "Sélectionnez les accessoires dont vous avez besoin",
     "included": "Inclus",
     "items": {
-      "casco":    { "label": "Casque",      "desc": "Casque homologué CE · Taille réglable" },
-      "lucchetto":{ "label": "Antivol",     "desc": "Antivol à code numérique" },
-      "kit_foro": { "label": "Kit Crevaison","desc": "Chambre à air + démonte-pneu + pompe de poche" }
+      "casco":    { "label": "Casque",  "desc": "Casque homologué CE · Taille réglable" },
+      "lucchetto":{ "label": "Antivol", "desc": "Antivol à code numérique" }
     },
-    "cauzioneNote": "⚠️ En cas de perte ou de dommage aux accessoires, les frais seront couverts par la caution de 1 000 €.",
+    "cauzioneNote": "⚠️ En cas de perte ou de dommage aux accessoires, les frais seront couverts par la caution de 500 €.",
     "skipNote": "Vous n'avez pas besoin d'accessoires ? Appuyez sur Continuer pour procéder sans."
   },
   "customExp": {
@@ -216,5 +235,12 @@
       "🌄 Multi-jours"
     ],
     "note": "Réponse en quelques heures · Sans engagement"
+  },
+  "cookie": {
+    "ariaLabel": "Avis sur les cookies",
+    "text": "Nous utilisons uniquement des cookies techniques nécessaires. Aucun profilage. Plus dans notre",
+    "privacyLink": "Politique de Confidentialité et Cookies",
+    "accept": "Accepter",
+    "refuse": "Nécessaires uniquement"
   }
 }

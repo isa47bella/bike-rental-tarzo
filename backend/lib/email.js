@@ -13,6 +13,10 @@ const transporter = nodemailer.createTransport({
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 const BICI_NOMI = {
   1: 'E-City KTM #1',  2: 'E-City KTM #2',
   3: 'E-MTB KTM #1',   4: 'E-MTB KTM #2',   5: 'E-MTB KTM #3',
@@ -41,7 +45,7 @@ function tipoLabel(tipo) {
 }
 
 function accLabel(key) {
-  const labels = { casco: 'Casco', lucchetto: 'Lucchetto', kit_foro: 'Kit Foratura' };
+  const labels = { casco: 'Casco (+€2)', lucchetto: 'Lucchetto (+€1)' };
   return labels[key] || key;
 }
 
@@ -57,7 +61,7 @@ function buildClienteHtml(p) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Conferma Prenotazione — Bike Rental Tarzo</title>
+  <title>Conferma Prenotazione — Arfanta Bike Rental</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
@@ -70,7 +74,7 @@ function buildClienteHtml(p) {
           <td style="background:#2D8659;padding:32px 40px;text-align:center;">
             <div style="font-size:40px;">🚲</div>
             <h1 style="color:#fff;margin:8px 0 4px;font-size:24px;">Prenotazione Confermata!</h1>
-            <p style="color:#b7e4c7;margin:0;font-size:14px;">Bike Rental Tarzo — Colline Prosecco UNESCO</p>
+            <p style="color:#b7e4c7;margin:0;font-size:14px;">Arfanta Bike Rental — Colline Prosecco UNESCO</p>
           </td>
         </tr>
 
@@ -78,7 +82,7 @@ function buildClienteHtml(p) {
         <tr>
           <td style="padding:32px 40px;">
             <p style="font-size:16px;color:#333;margin:0 0 24px;">
-              Ciao <strong>${p.cliente_nome}</strong>,<br>
+              Ciao <strong>${esc(p.cliente_nome)}</strong>,<br>
               la tua prenotazione è confermata e il pagamento ricevuto. Ti aspettiamo!
             </p>
 
@@ -98,12 +102,12 @@ function buildClienteHtml(p) {
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
               ${row('🚲 Tipo Noleggio',   tipoLabel(p.tipo_noleggio))}
               ${row('📅 Giorno Ritiro',   formatDate(p.data_ritiro))}
-              ${row('🕗 Orario Ritiro',   p.orario_ritiro.substring(0,5))}
+              ${row('🕗 Orario Ritiro',   esc(p.orario_ritiro.substring(0,5)))}
               ${row('📅 Giorno Restituzione', formatDate(p.data_restituzione))}
-              ${row('🕔 Orario Restituzione', p.orario_restituzione.substring(0,5))}
+              ${row('🕔 Orario Restituzione', esc(p.orario_restituzione.substring(0,5)))}
               ${p.giorni > 1 ? row('📆 Numero Giorni', p.giorni + ' giorni') : ''}
               ${row('💶 Totale Pagato',   '€' + Number(p.prezzo_totale).toFixed(2))}
-              ${row('🚲 Bicicletta',      biciLabel(p.bicicletta_id))}
+              ${row('🚲 Bicicletta',      esc(biciLabel(p.bicicletta_id)))}
               ${parseAccessori(p.accessori).length > 0 ? row('🎒 Accessori inclusi', parseAccessori(p.accessori).map(accLabel).join(', ')) : ''}
             </table>
 
@@ -133,9 +137,8 @@ function buildClienteHtml(p) {
               <ul style="color:#555;font-size:14px;margin:8px 0 0;padding-left:20px;">
                 <li>Documento di identità</li>
                 <li>Questo codice prenotazione: <strong>${p.id.toUpperCase().substring(0, 8)}</strong></li>
-                ${parseAccessori(p.accessori).includes('casco') ? '<li>Casco <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : '<li>Casco <span style="color:#888;">(consigliato, non incluso)</span></li>'}
-                ${parseAccessori(p.accessori).includes('lucchetto') ? '<li>Lucchetto <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : ''}
-                ${parseAccessori(p.accessori).includes('kit_foro') ? '<li>Kit foratura <span style="color:#2D8659;font-weight:600;">(incluso nel noleggio ✓)</span></li>' : ''}
+                ${parseAccessori(p.accessori).includes('casco') ? '<li>Casco <span style="color:#2D8659;font-weight:600;">(prenotato +€2 ✓)</span></li>' : '<li>Casco <span style="color:#888;">(consigliato, non prenotato)</span></li>'}
+                ${parseAccessori(p.accessori).includes('lucchetto') ? '<li>Lucchetto <span style="color:#2D8659;font-weight:600;">(prenotato +€1 ✓)</span></li>' : ''}
               </ul>
             </div>
 
@@ -150,7 +153,7 @@ function buildClienteHtml(p) {
         <tr>
           <td style="background:#f0faf4;padding:20px 40px;text-align:center;
                      color:#888;font-size:12px;">
-            Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV)<br>
+            Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)<br>
             Colline del Prosecco di Conegliano e Valdobbiadene — Patrimonio UNESCO
           </td>
         </tr>
@@ -178,18 +181,18 @@ function buildGestoreHtml(p) {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
   <div style="background:#fff;border-radius:8px;padding:24px;max-width:500px;">
     <h2 style="color:#2D8659;margin:0 0 16px;">🚲 Nuova Prenotazione!</h2>
-    <p><strong>Codice:</strong> ${p.id.toUpperCase().substring(0, 8)}</p>
-    <p><strong>Cliente:</strong> ${p.cliente_nome}</p>
-    <p><strong>Email:</strong> ${p.cliente_email}</p>
-    <p><strong>Telefono:</strong> ${p.cliente_telefono}</p>
+    <p><strong>Codice:</strong> ${esc(p.id.toUpperCase().substring(0, 8))}</p>
+    <p><strong>Cliente:</strong> ${esc(p.cliente_nome)}</p>
+    <p><strong>Email:</strong> ${esc(p.cliente_email)}</p>
+    <p><strong>Telefono:</strong> ${esc(p.cliente_telefono)}</p>
     <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
     <p><strong>Tipo:</strong> ${tipoLabel(p.tipo_noleggio)}</p>
-    <p><strong>Ritiro:</strong> ${formatDate(p.data_ritiro)} alle ${p.orario_ritiro.substring(0,5)}</p>
-    <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${p.orario_restituzione.substring(0,5)}</p>
-    <p><strong>Bicicletta:</strong> #${p.bicicletta_id}</p>
+    <p><strong>Ritiro:</strong> ${formatDate(p.data_ritiro)} alle ${esc(p.orario_ritiro.substring(0,5))}</p>
+    <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${esc(p.orario_restituzione.substring(0,5))}</p>
+    <p><strong>Bicicletta:</strong> #${Number(p.bicicletta_id)}</p>
     <p><strong>Totale:</strong> €${Number(p.prezzo_totale).toFixed(2)} — <span style="color:#2D8659;font-weight:bold;">PAGATO ✓</span></p>
     ${parseAccessori(p.accessori).length > 0 ? `<p><strong>Accessori richiesti:</strong> ${parseAccessori(p.accessori).map(accLabel).join(', ')}</p>` : '<p><strong>Accessori:</strong> Nessuno</p>'}
-    ${p.cliente_note ? `<p><strong>Note:</strong> ${p.cliente_note}</p>` : ''}
+    ${p.cliente_note ? `<p><strong>Note:</strong> ${esc(p.cliente_note)}</p>` : ''}
   </div>
 </body></html>`;
 }
@@ -200,7 +203,7 @@ async function sendConfirmationToCliente(prenotazione) {
   await transporter.sendMail({
     from:    process.env.EMAIL_FROM,
     to:      prenotazione.cliente_email,
-    subject: `✅ Prenotazione confermata — ${formatDate(prenotazione.data_ritiro)} | Bike Rental Tarzo`,
+    subject: `✅ Prenotazione confermata — ${formatDate(prenotazione.data_ritiro)} | Arfanta Bike Rental`,
     html:    buildClienteHtml(prenotazione),
   });
 }
@@ -222,17 +225,17 @@ async function sendAdminEmail(prenotazione, subject, messageText) {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
   <div style="background:#fff;border-radius:8px;padding:24px;max-width:560px;margin:0 auto;">
     <div style="background:#2D8659;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;margin:-24px -24px 20px;">
-      <h2 style="margin:0;font-size:18px;">🚲 Bike Rental Tarzo</h2>
+      <h2 style="margin:0;font-size:18px;">🚲 Arfanta Bike Rental</h2>
     </div>
     <p style="font-size:16px;color:#333;margin:0 0 16px;">
-      Gentile <strong>${prenotazione.cliente_nome}</strong>,
+      Gentile <strong>${esc(prenotazione.cliente_nome)}</strong>,
     </p>
     <div style="background:#f8f8f8;border-radius:8px;padding:16px 20px;font-size:15px;color:#444;line-height:1.65;">
-      ${messageText.replace(/\n/g, '<br>')}
+      ${esc(messageText).replace(/\n/g, '<br>')}
     </div>
     <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
     <p style="font-size:12px;color:#aaa;margin:0;">
-      Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV)<br>
+      Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)<br>
       Per risposta: <a href="mailto:arfantabikerental@gmail.com" style="color:#2D8659;">arfantabikerental@gmail.com</a>
       · WhatsApp: <a href="https://wa.me/393928614635" style="color:#2D8659;">+39 392 8614635</a>
     </p>
@@ -288,11 +291,11 @@ async function sendFirmaLinkEmail(prenotazione) {
   const lang = prenotazione.lingua || 'it';
 
   const subjects = {
-    it: `✍️ Firma il contratto di noleggio — Bike Rental Tarzo`,
-    en: `✍️ Please sign your rental agreement — Bike Rental Tarzo`,
-    de: `✍️ Mietvertrag unterzeichnen — Bike Rental Tarzo`,
-    es: `✍️ Firma tu contrato de alquiler — Bike Rental Tarzo`,
-    fr: `✍️ Signez votre contrat de location — Bike Rental Tarzo`,
+    it: `✍️ Firma il contratto di noleggio — Arfanta Bike Rental`,
+    en: `✍️ Please sign your rental agreement — Arfanta Bike Rental`,
+    de: `✍️ Mietvertrag unterzeichnen — Arfanta Bike Rental`,
+    es: `✍️ Firma tu contrato de alquiler — Arfanta Bike Rental`,
+    fr: `✍️ Signez votre contrat de location — Arfanta Bike Rental`,
   };
   const messages = {
     it: `Ti chiediamo di firmare il contratto di noleggio prima del ritiro della bicicletta.\n\nÈ sufficiente aprire il link, leggere i termini e condizioni e apporre la firma digitale. Bastano meno di 2 minuti.\n\n→ ${firmaUrl}\n\nGrazie per la collaborazione.\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).`,
@@ -312,7 +315,7 @@ async function sendFirmaLinkEmail(prenotazione) {
 // ─── Email promemoria ritiro (cron giorno prima) ──────────────────────────────
 
 async function sendReminderEmail(prenotazione) {
-  const subject = `🚲 Il tuo noleggio è domani — Bike Rental Tarzo`;
+  const subject = `🚲 Il tuo noleggio è domani — Arfanta Bike Rental`;
   const message = `Ti ricordiamo che domani è il giorno del tuo noleggio!\n\n📋 Codice prenotazione: ${prenotazione.id.toUpperCase().substring(0, 8)}\n📅 Ritiro: ${formatDate(prenotazione.data_ritiro)} alle ${(prenotazione.orario_ritiro || '').substring(0, 5)}\n📍 Dove: Via Pecol 22, Arfanta di Tarzo (TV)\n\nRicorda di portare:\n• Documento di identità valido\n• Il codice prenotazione sopra\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.\n\nTi aspettiamo!`;
   await sendAdminEmail(prenotazione, subject, message);
 }

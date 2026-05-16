@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api.js';
 
+const ACC_PREZZI = { casco: 2, lucchetto: 1 };
+
 const LOCALE_MAP = { it: 'it-IT', en: 'en-GB', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
 
 function formatDate(dateStr, locale) {
@@ -64,13 +66,17 @@ export default function StepSummary({ booking, onBack }) {
         </div>
         <div className="summary-row">
           <span className="label">{t('stepSummary.fields.bike')}</span>
-          <span className="value">{booking.bike_nome || booking.modello_nome || `Bici #${booking.bicicletta_id}`}</span>
+          <span className="value">
+            {(booking.bici && booking.bici.length > 0)
+              ? booking.bici.map(b => `${b.quantita}× ${b.bike_nome}`).join(', ')
+              : booking.bike_nome || booking.modello_nome || `Bici #${booking.bicicletta_id}`}
+          </span>
         </div>
         <div className="summary-row">
           <span className="label">{t('stepSummary.fields.accessories')}</span>
           <span className="value">
             {booking.accessori && booking.accessori.length > 0
-              ? booking.accessori.map(k => t(`stepAccessori.items.${k}.label`)).join(', ')
+              ? booking.accessori.map(k => `${t(`stepAccessori.items.${k}.label`)} (+€${ACC_PREZZI[k] || 0})`).join(', ')
               : t('stepSummary.fields.noAccessories')}
           </span>
         </div>

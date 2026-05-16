@@ -55,7 +55,7 @@ function tipoShort(tipo) {
 
 function parseAccessori(raw) {
   if (!raw) return [];
-  const labels = { casco: 'Casco', lucchetto: 'Lucchetto', kit_foro: 'Kit Foratura' };
+  const labels = { casco: 'Casco (+€2)', lucchetto: 'Lucchetto (+€1)' };
   return raw.split(',').filter(Boolean).map(k => labels[k] || k);
 }
 
@@ -117,6 +117,7 @@ const IconDeposit      = IC(<><rect x="1" y="4" width="22" height="16" rx="2"/><
 const IconBell         = IC(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>);
 const IconDownload     = IC(<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>);
 const IconNote         = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="10" y1="17" x2="8" y2="17"/></>);
+const IconLog          = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/><circle cx="16" cy="17" r="2"/></>);
 
 // ─── Bike catalog ────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ const NAV = [
   { id: 'clienti',      label: 'Clienti',       Icon: IconUsers      },
   { id: 'report',       label: 'Report',        Icon: IconReport     },
   { id: 'impostazioni', label: 'Impostazioni',  Icon: IconSettings   },
+  { id: 'log',          label: 'Log Azioni',    Icon: IconLog        },
 ];
 
 const VIEW_TITLES = {
@@ -159,6 +161,7 @@ const VIEW_TITLES = {
   clienti:      'Storico Clienti',
   report:       'Report & Statistiche',
   impostazioni: 'Impostazioni',
+  log:          'Log Azioni Admin',
 };
 
 // ─── Email templates ──────────────────────────────────────────────────────────
@@ -166,52 +169,52 @@ const VIEW_TITLES = {
 const EMAIL_TEMPLATES = [
   {
     label: 'Promemoria ritiro domani',
-    subject: 'Promemoria: il tuo noleggio è domani — Bike Rental Tarzo',
+    subject: 'Promemoria: il tuo noleggio è domani — Arfanta Bike Rental',
     message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
   },
   {
     label: 'Conferma rimborso',
-    subject: 'Rimborso confermato — Bike Rental Tarzo',
+    subject: 'Rimborso confermato — Arfanta Bike Rental',
     message: `Abbiamo elaborato il rimborso per la tua prenotazione.\n\nI fondi torneranno sul tuo conto entro 5-10 giorni lavorativi, a seconda della tua banca.\n\nCi dispiace non aver potuto ospitarti questa volta. Speriamo di vederti presto sulle Colline del Prosecco!\n\nPer qualsiasi dubbio contattaci via WhatsApp al +39 392 8614635.`,
   },
   {
     label: 'Cauzione non autorizzata',
-    subject: 'Importante: cauzione non autorizzata — Bike Rental Tarzo',
-    message: `Abbiamo tentato di bloccare la cauzione di €1.000 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine.\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email.\n\nGrazie per la comprensione.`,
+    subject: 'Importante: cauzione non autorizzata — Arfanta Bike Rental',
+    message: `Abbiamo tentato di bloccare la cauzione di €500 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine.\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email.\n\nGrazie per la comprensione.`,
   },
   {
     label: 'Cambio bicicletta',
-    subject: 'Aggiornamento prenotazione: cambio bicicletta — Bike Rental Tarzo',
+    subject: 'Aggiornamento prenotazione: cambio bicicletta — Arfanta Bike Rental',
     message: `Ti informiamo che per la tua prenotazione è stato necessario assegnarti una bicicletta diversa rispetto a quella originale.\n\nLa bicicletta che riceverai è della stessa tipologia e qualità. Il tuo noleggio non subisce altre modifiche.\n\nPer qualsiasi domanda siamo disponibili via WhatsApp al +39 392 8614635.`,
   },
   {
     label: 'Ritardo restituzione',
-    subject: 'Promemoria restituzione bicicletta — Bike Rental Tarzo',
+    subject: 'Promemoria restituzione bicicletta — Arfanta Bike Rental',
     message: `Ci risulta che la bicicletta noleggiata non sia stata ancora restituita all'orario previsto.\n\nTi chiediamo di riconsegnare la bici il prima possibile in Via Pecol 22, Arfanta di Tarzo (TV).\n\nIn caso di difficoltà contattaci subito via WhatsApp al +39 392 8614635.\n\nGrazie per la collaborazione.`,
   },
   {
     label: 'Danni rilevati',
-    subject: 'Comunicazione danni — Bike Rental Tarzo',
+    subject: 'Comunicazione danni — Arfanta Bike Rental',
     message: `A seguito dell'ispezione della bicicletta restituita, abbiamo rilevato dei danni che non erano presenti al momento della consegna.\n\nAbbiamo proceduto con l'addebito del costo di riparazione sulla tua carta, come previsto dal contratto di noleggio firmato.\n\nPer qualsiasi chiarimento siamo disponibili via WhatsApp al +39 392 8614635 o via email.\n\nGrazie per la comprensione.`,
   },
   {
     label: 'Ringraziamento post-noleggio',
-    subject: 'Grazie per aver scelto Bike Rental Tarzo!',
-    message: `Grazie per aver noleggiato con noi! Speriamo che tu abbia trascorso una splendida giornata sulle Colline del Prosecco.\n\nSe ti è piaciuta l'esperienza, ti saremmo grati se lasciassi una recensione su Google — ci aiuta molto a far conoscere questo posto magico!\n\nSperiamo di rivederti presto!\n\nLo staff di Bike Rental Tarzo 🚲`,
+    subject: 'Grazie per aver scelto Arfanta Bike Rental!',
+    message: `Grazie per aver noleggiato con noi! Speriamo che tu abbia trascorso una splendida giornata sulle Colline del Prosecco.\n\nSe ti è piaciuta l'esperienza, ti saremmo grati se lasciassi una recensione su Google — ci aiuta molto a far conoscere questo posto magico!\n\nSperiamo di rivederti presto!\n\nLo staff di Arfanta Bike Rental 🚲`,
   },
   {
     label: 'Avviso meteo avverso',
-    subject: 'Avviso meteo per il tuo noleggio — Bike Rental Tarzo',
+    subject: 'Avviso meteo per il tuo noleggio — Arfanta Bike Rental',
     message: `Ti informiamo che per la data del tuo noleggio sono previste condizioni meteo avverse (pioggia/temporale).\n\nSe desideri spostare la data, contattaci il prima possibile via WhatsApp al +39 392 8614635 e troveremo insieme una soluzione.\n\nIn alternativa, puoi comunque effettuare il noleggio: le nostre bici sono adatte anche a condizioni umide, ma ti consigliamo abbigliamento impermeabile.\n\nGrazie per la comprensione.`,
   },
   {
     label: 'Richiesta recensione',
-    subject: 'Come è andata la tua esperienza? — Bike Rental Tarzo',
+    subject: 'Come è andata la tua esperienza? — Arfanta Bike Rental',
     message: `Speriamo che il tuo noleggio sia stato di tuo gradimento!\n\nLa tua opinione è molto importante per noi. Se hai 2 minuti, lascia una recensione su Google — ci aiuta enormemente:\n\nhttps://g.page/r/[LINK_GOOGLE]\n\nE se qualcosa non ha funzionato al meglio, scrivici direttamente via WhatsApp al +39 392 8614635: vogliamo sempre migliorare.\n\nGrazie e a presto!`,
   },
   {
     label: 'Richiesta modifica',
-    subject: 'Modifica prenotazione — Bike Rental Tarzo',
+    subject: 'Modifica prenotazione — Arfanta Bike Rental',
     message: `In merito alla tua prenotazione, vorremmo chiederti di contattarci per definire alcuni dettagli.\n\nPuoi raggiungerci via WhatsApp al +39 392 8614635 oppure rispondendo a questa email.\n\nGrazie.`,
   },
   { label: 'Messaggio libero', subject: '', message: '' },
@@ -247,10 +250,12 @@ export default function AdminDashboard() {
   const [checkinModal,   setCheckinModal]   = useState(null);
   const [checkinNote,    setCheckinNote]    = useState('');
   const [docFoto,        setDocFoto]        = useState(null);
+  const [docFotoRetro,   setDocFotoRetro]   = useState(null);
   const [biciFotoOut,    setBiciFotoOut]    = useState(null);
   const [checkinLoading, setCheckinLoading] = useState(false);
-  const docFotoRef  = useRef();
-  const bikeOutRef  = useRef();
+  const docFotoRef      = useRef();
+  const docFotoRetroRef = useRef();
+  const bikeOutRef      = useRef();
 
   // Checkout modal
   const [checkoutModal,   setCheckoutModal]   = useState(null);
@@ -310,11 +315,6 @@ export default function AdminDashboard() {
   const [clientiLoading, setClientiLoading] = useState(false);
 
   // Config prezzi
-  const [config,       setConfig]       = useState(null);
-  const [configEdit,   setConfigEdit]   = useState({});
-  const [configLoading,setConfigLoading]= useState(false);
-  const [configSaved,  setConfigSaved]  = useState(false);
-  const [configMigration, setConfigMigration] = useState(false);
 
   // Occupazione (in Report)
   const [occupazione,        setOccupazione]        = useState(null);
@@ -330,8 +330,15 @@ export default function AdminDashboard() {
   const [pushLoading, setPushLoading] = useState(false);
   const [pushStatus,  setPushStatus]  = useState('idle'); // idle | enabled | error | unsupported
 
+  // Audit log
+  const [auditLog,        setAuditLog]        = useState([]);
+  const [auditLogLoading, setAuditLogLoading] = useState(false);
+
   // Action sheet (⋮) in prenotazioni table — modal, no clipping issues
   const [actionSheet, setActionSheet] = useState(null); // booking object or null
+
+  // Foto modal
+  const [fotoModal, setFotoModal] = useState(null); // null | { loading, nome, foto: {documento, consegna, rientro} }
 
   // Refund modal
   const [refundModal,   setRefundModal]   = useState(null); // {id, nome, email, prezzo}
@@ -393,22 +400,7 @@ export default function AdminDashboard() {
     finally { setNoteSaving(false); }
   }
 
-  async function handleSaveConfig() {
-    setConfigLoading(true);
-    setConfigSaved(false);
-    try {
-      await adminApi.saveConfig(configEdit);
-      setConfig(configEdit);
-      setConfigSaved(true);
-      setTimeout(() => setConfigSaved(false), 3000);
-    } catch (e) {
-      if (e.message.includes('migration') || e.message.includes('does not exist')) setConfigMigration(true);
-      else alert('Errore: ' + e.message);
-    }
-    finally { setConfigLoading(false); }
-  }
-
-  async function handleClientiSearch(e) {
+async function handleClientiSearch(e) {
     e?.preventDefault();
     if (clientiQuery.trim().length < 2) return;
     setClientiLoading(true);
@@ -538,21 +530,16 @@ export default function AdminDashboard() {
     finally { setCauzioniLoading(false); }
   }, []);
 
-  const loadConfig = useCallback(async () => {
-    setConfigLoading(true);
-    try {
-      const d = await adminApi.getConfig();
-      setConfig(d.config);
-      setConfigEdit(d.config);
-      setConfigMigration(d.needs_migration || false);
-    } catch (_) {}
-    finally { setConfigLoading(false); }
-  }, []);
-
-  const loadOccupazione = useCallback(async () => {
+const loadOccupazione = useCallback(async () => {
     setOccupazioneLoading(true);
     try { const d = await adminApi.getOccupazione(); setOccupazione(d.months || []); } catch (_) {}
     finally { setOccupazioneLoading(false); }
+  }, []);
+
+  const loadAuditLog = useCallback(async () => {
+    setAuditLogLoading(true);
+    try { const d = await adminApi.getAuditLog(); setAuditLog(d.log || []); } catch (_) {}
+    finally { setAuditLogLoading(false); }
   }, []);
 
   // Load data when switching views
@@ -575,7 +562,7 @@ export default function AdminDashboard() {
     if (activeView === 'report') { if (!report) loadReport(); if (!occupazione) loadOccupazione(); }
     if (activeView === 'calendario') { loadCalendario(calYear, calMonth); loadChiusure(); }
     if (activeView === 'cauzioni') loadCauzioni();
-    if (activeView === 'impostazioni' && !config) loadConfig();
+    if (activeView === 'log') loadAuditLog();
   }, [activeView, authed]); // eslint-disable-line
 
   // ─── Login ──────────────────────────────────────────────────────────────────
@@ -629,11 +616,12 @@ export default function AdminDashboard() {
     setCheckinLoading(true);
     try {
       await adminApi.checkin(checkinModal.id, {
-        checkin_note:      checkinNote  || undefined,
-        documento_foto:    docFoto      || undefined,
-        bici_foto_consegna: biciFotoOut || undefined,
+        checkin_note:          checkinNote   || undefined,
+        documento_foto:        docFoto       || undefined,
+        documento_foto_retro:  docFotoRetro  || undefined,
+        bici_foto_consegna:    biciFotoOut   || undefined,
       });
-      setCheckinModal(null); setCheckinNote(''); setDocFoto(null); setBiciFotoOut(null);
+      setCheckinModal(null); setCheckinNote(''); setDocFoto(null); setDocFotoRetro(null); setBiciFotoOut(null);
       await loadOggi();
     } catch (e) { alert('Errore check-in: ' + e.message); }
     finally { setCheckinLoading(false); }
@@ -692,12 +680,12 @@ export default function AdminDashboard() {
     setDepositLoading(true);
     try {
       if (depositModal.action === 'release') {
-        if (!confirm(`Rilasciare la cauzione di €1.000 a ${depositModal.nome}?`)) return;
+        if (!confirm(`Rilasciare la cauzione di €500 a ${depositModal.nome}?`)) return;
         await adminApi.releaseDeposit(depositModal.id);
-        alert('Cauzione rilasciata — €1.000 sbloccati');
+        alert('Cauzione rilasciata — €500 sbloccati');
       } else {
         const amount = parseFloat(depositAmount);
-        if (!amount || amount <= 0 || amount > 1000) return alert('Importo non valido (max €1.000)');
+        if (!amount || amount <= 0 || amount > 500) return alert('Importo non valido (max €500)');
         if (!confirm(`Incassare €${amount.toFixed(2)} dalla cauzione di ${depositModal.nome}?`)) return;
         await adminApi.captureDeposit(depositModal.id, amount);
         alert(`€${amount.toFixed(2)} addebitati dalla cauzione`);
@@ -725,7 +713,7 @@ export default function AdminDashboard() {
     const tel = (b.cliente_telefono || '').replace(/[\s\-()]/g, '').replace(/^\+/, '');
     if (!tel) return alert('Numero di telefono non disponibile');
     const msg = encodeURIComponent(
-      `Ciao ${b.cliente_nome}, ti scrivo riguardo alla tua prenotazione bici del ${b.data_ritiro} — Bike Rental Tarzo.`
+      `Ciao ${b.cliente_nome}, ti scrivo riguardo alla tua prenotazione bici del ${b.data_ritiro} — Arfanta Bike Rental.`
     );
     window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
   }
@@ -736,10 +724,10 @@ export default function AdminDashboard() {
     const fmtD = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '—';
     const shortId = b.id.toUpperCase().slice(0, 8);
     const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
-<title>Riepilogo ${shortId} — Bike Rental Tarzo</title>
+<title>Riepilogo ${shortId} — Arfanta Bike Rental</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}@page{margin:20mm 16mm;size:A4}body{font-family:Arial,sans-serif;font-size:11pt;color:#1a1a1a;background:#f0f4f0}.page{max-width:700px;margin:0 auto;background:#fff}.hdr{background:#2D8659;color:#fff;padding:24px 32px}.hdr h1{font-size:1.2rem;margin-bottom:4px}.hdr p{font-size:.76rem;opacity:.82}.body{padding:24px 32px}.row{display:flex;border-bottom:1px solid #eee;padding:9px 0}.row:last-child{border:none}.lbl{color:#777;width:42%;font-size:.87rem}.val{font-weight:600;font-size:.87rem}.code{background:#1a5c3a;color:#fff;padding:2px 10px;border-radius:4px;font-family:monospace;letter-spacing:.1em}.ftr{text-align:center;margin-top:20px;font-size:.69rem;color:#aaa;border-top:1px solid #ddd;padding:12px 32px}.btn{display:block;margin:16px auto 0;padding:10px 28px;background:#2D8659;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600}@media print{.btn{display:none!important}body{background:#fff}}</style>
 </head><body><div class="page">
-<div class="hdr"><h1>🚲 Riepilogo Prenotazione</h1><p>Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV)</p></div>
+<div class="hdr"><h1>🚲 Riepilogo Prenotazione</h1><p>Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)</p></div>
 <div class="body">
 <div class="row"><div class="lbl">Codice</div><div class="val"><span class="code">${shortId}</span></div></div>
 <div class="row"><div class="lbl">Cliente</div><div class="val">${b.cliente_nome}</div></div>
@@ -756,7 +744,7 @@ ${b.firma_at ? `<div class="row"><div class="lbl">Contratto</div><div class="val
 ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class="val">${b.note_admin}</div></div>` : ''}
 </div>
 <button class="btn" onclick="window.print()">Stampa / Salva PDF</button>
-<div class="ftr">Bike Rental Tarzo · Via Pecol 22, Arfanta di Tarzo (TV) · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO</div>
+<div class="ftr">Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV) · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO</div>
 </div></body></html>`;
     const blob = new Blob([html], { type: 'text/html' });
     const url  = URL.createObjectURL(blob);
@@ -891,6 +879,29 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     } catch (e) { alert(e.message); }
   }
 
+  // ─── Foto viewer ─────────────────────────────────────────────────────────────
+
+  async function handleViewFoto(id, nome) {
+    setActionSheet(null);
+    setFotoModal({ loading: true, nome, foto: {} });
+    try {
+      const data = await adminApi.getBooking(id);
+      setFotoModal({
+        loading: false,
+        nome,
+        foto: {
+          documento:      data.documento_foto        || null,
+          documentoRetro: data.documento_foto_retro  || null,
+          consegna:       data.bici_foto_consegna    || null,
+          rientro:        data.bici_foto_rientro     || null,
+        },
+      });
+    } catch {
+      setFotoModal(null);
+      alert('Impossibile caricare le foto.');
+    }
+  }
+
   // ─── Photo upload helper ─────────────────────────────────────────────────────
 
   async function handlePhotoFile(file, setter) {
@@ -945,7 +956,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             </svg>
           </div>
           <h1 className="ac-login-title">Admin Panel</h1>
-          <p className="ac-login-sub">Bike Rental Tarzo</p>
+          <p className="ac-login-sub">Arfanta Bike Rental</p>
           {error && <div className="ac-error-banner">{error}</div>}
           <div className="ac-field">
             <label className="ac-label">Token amministratore</label>
@@ -985,8 +996,8 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             </svg>
           </div>
           <div>
-            <div className="ac-sidebar-title">BIKE RENTAL</div>
-            <div className="ac-sidebar-subtitle">TARZO</div>
+            <div className="ac-sidebar-title">ARFANTA</div>
+            <div className="ac-sidebar-subtitle">BIKE RENTAL</div>
           </div>
         </div>
 
@@ -1034,6 +1045,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           {activeView === 'clienti'      && renderClienti()}
           {activeView === 'report'       && renderReport()}
           {activeView === 'impostazioni' && renderImpostazioni()}
+          {activeView === 'log'          && renderAuditLog()}
         </div>
       </div>
 
@@ -1050,6 +1062,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       {rescheduleModal   && renderRescheduleModal()}
       {cambiaBiciModal   && renderCambiaBiciModal()}
       {actionSheet       && renderActionSheet()}
+      {fotoModal         && renderFotoModal()}
 
       {/* ── Mobile bottom nav ── */}
       <nav className="ac-bottom-nav">
@@ -1502,7 +1515,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                       )}
                       {filter === 'paid' && (
                         <td>
-                          {b.cauzione_status === 'authorized' && <span className="ac-badge cauzione-ok">€1.000 bloccati</span>}
+                          {b.cauzione_status === 'authorized' && <span className="ac-badge cauzione-ok">€500 bloccati</span>}
                           {b.cauzione_status === 'captured'   && <span className="ac-badge cauzione-cap">€{Number(b.cauzione_captured_amount||0).toFixed(0)} incassati</span>}
                           {b.cauzione_status === 'cancelled'  && <span className="ac-badge muted">Rilasciata</span>}
                           {b.cauzione_status === 'failed'     && <span className="ac-badge red">Non riuscita</span>}
@@ -1950,8 +1963,9 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           <div className="ac-photo-grid">
-            <PhotoUpload label="Documento identità" value={docFoto} onChange={setDocFoto} inputRef={docFotoRef} />
-            <PhotoUpload label="Bici alla consegna" value={biciFotoOut} onChange={setBiciFotoOut} inputRef={bikeOutRef} />
+            <PhotoUpload label="Documento — fronte" value={docFoto}      onChange={setDocFoto}      inputRef={docFotoRef}      />
+            <PhotoUpload label="Documento — retro"  value={docFotoRetro} onChange={setDocFotoRetro} inputRef={docFotoRetroRef} />
+            <PhotoUpload label="Bici alla consegna" value={biciFotoOut}  onChange={setBiciFotoOut}  inputRef={bikeOutRef}      />
           </div>
 
           <div className="ac-field">
@@ -2066,12 +2080,12 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
           {depositModal.action === 'release' ? (
             <p className="ac-modal-desc">
-              I <strong style={{ color: '#4ADE80' }}>€1.000 bloccati</strong> sulla carta del cliente verranno sbloccati immediatamente. Operazione irreversibile.
+              I <strong style={{ color: '#4ADE80' }}>€500 bloccati</strong> sulla carta del cliente verranno sbloccati immediatamente. Operazione irreversibile.
             </p>
           ) : (
             <div className="ac-field">
-              <label className="ac-label">Importo danni da trattenere (max €1.000)</label>
-              <input className="ac-input" type="number" min="1" max="1000" step="0.01" placeholder="es. 150"
+              <label className="ac-label">Importo danni da trattenere (max €500)</label>
+              <input className="ac-input" type="number" min="1" max="500" step="0.01" placeholder="es. 150"
                 value={depositAmount} onChange={e => setDepositAmount(e.target.value)} autoFocus />
             </div>
           )}
@@ -2082,7 +2096,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               onClick={handleDeposit}
               disabled={depositLoading || (depositModal.action === 'capture' && !depositAmount)}
             >
-              {depositLoading ? 'In corso…' : depositModal.action === 'release' ? '✓ Sblocca €1.000' : `⚠ Incassa €${parseFloat(depositAmount || 0).toFixed(2)}`}
+              {depositLoading ? 'In corso…' : depositModal.action === 'release' ? '✓ Sblocca €500' : `⚠ Incassa €${parseFloat(depositAmount || 0).toFixed(2)}`}
             </button>
             <button className="ac-btn ghost" onClick={() => { setDepositModal(null); setDepositAmount(''); }} disabled={depositLoading}>Annulla</button>
           </div>
@@ -2164,9 +2178,8 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     const f = manualForm;
     const isMulti = f.tipo_noleggio === 'multi_giorno';
     const accList = [
-      { key: 'casco',    label: 'Casco' },
-      { key: 'lucchetto', label: 'Lucchetto' },
-      { key: 'kit_foro', label: 'Kit Foratura' },
+      { key: 'casco',     label: 'Casco (+€2)' },
+      { key: 'lucchetto', label: 'Lucchetto (+€1)' },
     ];
     function toggleAcc(key) {
       setManualForm(prev => ({
@@ -2377,6 +2390,11 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               <IconNote /><span>Note interne</span>
               {b.note_admin && <span className="ac-actionsheet-dot" />}
             </button>
+            {b.checkin_at && (
+              <button className="ac-actionsheet-btn" onClick={() => handleViewFoto(b.id, b.cliente_nome)}>
+                <IconCamera /><span>Vedi foto check-in / checkout</span>
+              </button>
+            )}
 
             <div className="ac-actionsheet-sep" />
 
@@ -2415,7 +2433,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               <>
                 <div className="ac-actionsheet-sep" />
                 <button className="ac-actionsheet-btn" onClick={act(() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'release' }))}>
-                  <IconCheck /><span>Rilascia cauzione (€1.000)</span>
+                  <IconCheck /><span>Rilascia cauzione (€500)</span>
                 </button>
                 <button className="ac-actionsheet-btn" onClick={act(() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' }))}>
                   <IconAlert /><span>Incassa cauzione per danni</span>
@@ -2439,6 +2457,61 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             <button className="ac-actionsheet-btn danger" onClick={act(() => cancelBooking(b.id))}>
               <IconX /><span>Cancella prenotazione</span>
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── FOTO MODAL ──────────────────────────────────────────────────────────────
+
+  function renderFotoModal() {
+    const { loading, nome, foto } = fotoModal;
+    const photos = [
+      { key: 'documento', label: 'Documento — fronte', src: foto.documento     },
+      { key: 'docretro',  label: 'Documento — retro',  src: foto.documentoRetro},
+      { key: 'consegna',  label: 'Bici alla consegna', src: foto.consegna      },
+      { key: 'rientro',   label: 'Bici al rientro',    src: foto.rientro       },
+    ];
+    const hasFoto = photos.some(p => p.src);
+    return (
+      <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setFotoModal(null)}>
+        <div className="ac-modal">
+          <div className="ac-modal-header">
+            <h2>Foto — {nome}</h2>
+            <button className="ac-icon-btn" onClick={() => setFotoModal(null)}><IconX /></button>
+          </div>
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+              <div className="spinner" />
+            </div>
+          ) : !hasFoto ? (
+            <div style={{ padding: '32px 22px', textAlign: 'center', color: '#6B8BAF', fontSize: '0.9rem' }}>
+              Nessuna foto salvata per questa prenotazione.
+            </div>
+          ) : (
+            <div style={{ padding: '16px 18px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {photos.filter(p => p.src).map(p => (
+                <div key={p.key}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#4ADE80', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 8 }}>
+                    {p.label}
+                  </div>
+                  <a href={p.src} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                    <img
+                      src={p.src}
+                      alt={p.label}
+                      style={{ width: '100%', borderRadius: 8, border: '1px solid #1A2840', display: 'block', cursor: 'zoom-in' }}
+                    />
+                  </a>
+                  <div style={{ fontSize: '0.7rem', color: '#4B6278', marginTop: 4, textAlign: 'right' }}>
+                    Tocca per aprire a schermo intero
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="ac-modal-footer">
+            <button className="ac-btn ghost full" onClick={() => setFotoModal(null)}>Chiudi</button>
           </div>
         </div>
       </div>
@@ -2617,8 +2690,19 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     const pending    = cauzioni.filter(c => !c.cauzione_status || c.cauzione_status === 'pending');
     const failed     = cauzioni.filter(c => c.cauzione_status === 'failed');
 
-    const statusLabel = { authorized: '€1.000 bloccati', captured: 'Incassata', cancelled: 'Rilasciata', pending: 'In attesa', failed: 'Non riuscita' };
-    const statusClass = { authorized: 'cauzione-ok', captured: 'cauzione-cap', cancelled: 'muted', pending: 'yellow', failed: 'red' };
+    const statusLabel = { authorized: '€500 bloccati', captured: 'Incassata', cancelled: 'Rilasciata', pending: 'In attesa', failed: 'Non riuscita', no_card: 'No carta Stripe', authorizing: 'In corso…' };
+    const statusClass = { authorized: 'cauzione-ok', captured: 'cauzione-cap', cancelled: 'muted', pending: 'yellow', failed: 'red', no_card: 'muted', authorizing: 'yellow' };
+
+    // Calcola se il PI rischia di scadere (Stripe: 7 giorni da autorizzazione)
+    // Approssimazione: se data_ritiro + giorni_noleggio > oggi+7, avvisa
+    function piScadenza(b) {
+      if (b.cauzione_status !== 'authorized') return null;
+      const ritiro = new Date(b.data_ritiro + 'T00:00:00');
+      const restituzione = b.data_restituzione ? new Date(b.data_restituzione + 'T00:00:00') : ritiro;
+      const scadenzaPi = new Date(ritiro);
+      scadenzaPi.setDate(scadenzaPi.getDate() - 2 + 7); // autorizzato 2gg prima, scade dopo 7gg
+      return restituzione > scadenzaPi;
+    }
 
     return (
       <div className="ac-cauzioni">
@@ -2627,7 +2711,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           <div className="ac-cau-card green">
             <div className="ac-cau-num">{authorized.length}</div>
             <div className="ac-cau-lbl">Bloccate attive</div>
-            <div className="ac-cau-amt">€{(authorized.length * 1000).toLocaleString('it-IT')}</div>
+            <div className="ac-cau-amt">€{(authorized.length * 500).toLocaleString('it-IT')}</div>
           </div>
           <div className="ac-cau-card orange">
             <div className="ac-cau-num">{captured.length}</div>
@@ -2680,6 +2764,13 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                             ? `€${Number(b.cauzione_captured_amount||0).toFixed(0)} incassati`
                             : statusLabel[b.cauzione_status] || '—'}
                         </span>
+                        {piScadenza(b) && (
+                          <div style={{ marginTop: 4 }}>
+                            <span className="ac-badge red" title="Il blocco Stripe scade dopo 7 giorni dall'autorizzazione. Per questo noleggio multi-giorno lungo, potrebbe scadere prima della restituzione. Se ci sono danni, usa 'Addebita danno' invece di 'Incassa cauzione'.">
+                              ⚠ PI in scadenza
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         {b.cauzione_status === 'authorized' && (
@@ -2688,7 +2779,24 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                             <button className="ac-action-btn capture" onClick={() => setDepositModal({ id: b.id, nome: b.cliente_nome, action: 'capture' })}>⚠ Danni</button>
                           </>
                         )}
-                        {b.cauzione_status !== 'authorized' && (
+                        {(b.cauzione_status === 'pending' || b.cauzione_status === 'failed' || !b.cauzione_status) && (
+                          <button
+                            className="ac-action-btn warn"
+                            onClick={async () => {
+                              if (!confirm(`Autorizzare manualmente la cauzione di €500 per ${b.cliente_nome}?`)) return;
+                              try {
+                                await adminApi.autorizzaCauzione(b.id);
+                                alert('Cauzione autorizzata con successo!');
+                                loadCauzioni();
+                              } catch (e) {
+                                alert('Errore: ' + e.message);
+                              }
+                            }}
+                          >
+                            ⚡ Autorizza ora
+                          </button>
+                        )}
+                        {(b.cauzione_status === 'captured' || b.cauzione_status === 'cancelled') && (
                           <span className="ac-muted-dash">—</span>
                         )}
                       </td>
@@ -2797,23 +2905,112 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
   // ─── IMPOSTAZIONI VIEW ────────────────────────────────────────────────────────
 
-  function renderImpostazioni() {
-    const BIKE_TYPES = [
-      { key: 'ecity',  label: 'E-City Bike' },
-      { key: 'emtb',   label: 'E-MTB' },
-      { key: 'bimbo',  label: 'E-MTB Bimbo' },
-    ];
-    const TIPO_KEYS = [
-      { key: 'mezza',   label: 'Mezza Giornata' },
-      { key: 'intera',  label: 'Giornata Intera' },
-      { key: 'multi_2', label: 'Multi 2 giorni' },
-      { key: 'multi_3', label: 'Multi 3 giorni' },
-      { key: 'multi_4', label: 'Multi 4 giorni' },
-      { key: 'multi_5', label: 'Multi 5 giorni' },
-      { key: 'multi_6', label: 'Multi 6 giorni' },
-      { key: 'multi_7', label: 'Multi 7 giorni' },
-    ];
+  function renderAuditLog() {
+    const ACTION_LABELS = {
+      cancel:            'Cancellazione',
+      manual_booking:    'Prenotazione manuale',
+      reschedule:        'Modifica data',
+      assegna_bici:      'Cambio bici',
+      checkin:           'Check-in',
+      checkout_bici:     'Check-out',
+      charge_damage:     'Addebito danno',
+      autorizza_cauzione:'Autorizza cauzione',
+      release_deposit:   'Rilascio cauzione',
+      capture_deposit:   'Incasso cauzione',
+      refund:            'Rimborso',
+      send_email:        'Email cliente',
+      send_firma:        'Link firma',
+      note_update:       'Nota admin',
+      chiusura_add:      'Chiusura aggiunta',
+      chiusura_delete:   'Chiusura rimossa',
+      flotta_update:     'Aggiornamento flotta',
+    };
+    const ACTION_COLORS = {
+      cancel: '#ef4444', charge_damage: '#ef4444', capture_deposit: '#ef4444',
+      refund: '#f59e0b', release_deposit: '#10b981',
+      checkin: '#3b82f6', checkout_bici: '#8b5cf6',
+      autorizza_cauzione: '#f59e0b', manual_booking: '#10b981',
+    };
 
+    return (
+      <div className="ac-section">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+            Ultime {auditLog.length} azioni registrate
+          </p>
+          <button className="ac-btn secondary" onClick={loadAuditLog} disabled={auditLogLoading} style={{ padding: '6px 14px' }}>
+            <IconRefresh /> Aggiorna
+          </button>
+        </div>
+
+        {auditLogLoading && <div className="ac-spinner-center"><div className="ac-spinner" /></div>}
+
+        {!auditLogLoading && auditLog.length === 0 && (
+          <div className="ac-empty">
+            <p>Nessuna azione registrata.</p>
+            <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '8px' }}>
+              Le azioni verranno registrate qui dopo la prossima operazione admin.
+            </p>
+          </div>
+        )}
+
+        {!auditLogLoading && auditLog.length > 0 && (
+          <div className="ac-table-wrap">
+            <table className="ac-table">
+              <thead>
+                <tr>
+                  <th>Data/Ora</th>
+                  <th>Azione</th>
+                  <th>Prenotazione</th>
+                  <th>Dettagli</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLog.map(entry => (
+                  <tr key={entry.id}>
+                    <td style={{ whiteSpace: 'nowrap', color: '#94a3b8', fontSize: '0.8rem' }}>
+                      {formatDateTime(entry.created_at)}
+                    </td>
+                    <td>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        background: (ACTION_COLORS[entry.azione] || '#3b82f6') + '22',
+                        color: ACTION_COLORS[entry.azione] || '#3b82f6',
+                        border: `1px solid ${(ACTION_COLORS[entry.azione] || '#3b82f6')}44`,
+                      }}>
+                        {ACTION_LABELS[entry.azione] || entry.azione}
+                      </span>
+                    </td>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: '#cbd5e1' }}>
+                      {entry.booking_id ? entry.booking_id.toUpperCase().slice(0, 8) : '—'}
+                    </td>
+                    <td style={{ fontSize: '0.78rem', color: '#94a3b8', maxWidth: '260px' }}>
+                      {entry.dettagli && Object.keys(entry.dettagli).length > 0
+                        ? Object.entries(entry.dettagli)
+                            .filter(([, v]) => v !== '' && v !== null && v !== undefined)
+                            .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`)
+                            .join(' · ')
+                        : '—'}
+                    </td>
+                    <td style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace' }}>
+                      {entry.ip || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderImpostazioni() {
     return (
       <div className="ac-impostazioni">
 
@@ -2846,61 +3043,6 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               </button>
             )}
           </div>
-        </div>
-
-        {/* Config prezzi */}
-        <div className="ac-settings-section">
-          <h3 className="ac-section-title"><IconEuro /> Prezzi Noleggio</h3>
-          {configMigration && (
-            <div className="ac-settings-migration">
-              <strong>Migrazione DB richiesta.</strong> Esegui questo SQL in Supabase SQL Editor:
-              <pre className="ac-sql-pre">{`CREATE TABLE IF NOT EXISTS config (
-  chiave TEXT PRIMARY KEY,
-  valore TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);`}</pre>
-              <p>Poi ricarica questa pagina.</p>
-            </div>
-          )}
-          {configLoading && <div className="ac-spinner-center"><div className="ac-spinner" /></div>}
-          {!configLoading && !configMigration && configEdit && (
-            <>
-              <div className="ac-config-grid">
-                {BIKE_TYPES.map(bt => (
-                  <div key={bt.key} className="ac-config-bike-col">
-                    <div className="ac-config-bike-title">{bt.label}</div>
-                    {TIPO_KEYS.map(tk => {
-                      const cfgKey = `price_${bt.key}_${tk.key}`;
-                      return (
-                        <div key={cfgKey} className="ac-config-row">
-                          <label className="ac-label">{tk.label}</label>
-                          <div className="ac-config-input-wrap">
-                            <span className="ac-config-euro">€</span>
-                            <input
-                              className="ac-input ac-config-input"
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={configEdit[cfgKey] ?? ''}
-                              onChange={e => setConfigEdit(p => ({ ...p, [cfgKey]: e.target.value }))}
-                              placeholder="—"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              <div className="ac-config-footer">
-                <button className="ac-btn primary" onClick={handleSaveConfig} disabled={configLoading}>
-                  {configLoading ? 'Salvataggio…' : '✓ Salva Prezzi'}
-                </button>
-                {configSaved && <span className="ac-badge green">Salvato!</span>}
-                <span className="ac-settings-note">I prezzi salvati qui sono conservati nel DB per riferimento — la logica di calcolo vive nel backend.</span>
-              </div>
-            </>
-          )}
         </div>
 
 

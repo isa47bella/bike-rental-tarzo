@@ -1,7 +1,7 @@
 {
-  "name": "Bike Rental Tarzo",
+  "name": "Arfanta Bike Rental",
   "short_name": "BikeRental",
-  "description": "Pannello admin noleggio bici — Bike Rental Tarzo",
+  "description": "Pannello admin noleggio bici — Arfanta Bike Rental",
   "start_url": "/admin",
   "scope": "/",
   "display": "standalone",

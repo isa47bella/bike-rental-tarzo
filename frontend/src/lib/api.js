@@ -92,10 +92,6 @@ export const api = {
   getCalendario: (anno, mese) =>
     post('/availability/calendario', { anno, mese }),
 
-  // Prezzi correnti (letti da config DB)
-  getPrezzi: () =>
-    get('/availability/prezzi'),
-
   // Crea sessione pagamento Stripe
   checkout: (bookingData) =>
     post('/payments/checkout', bookingData),
@@ -113,6 +109,9 @@ export const adminApi = {
 
   getBookings: (params = {}) =>
     adminGet('/admin/bookings', params),
+
+  getBooking: (id) =>
+    adminGet(`/admin/bookings/${id}`),
 
   cancelBooking: (id) =>
     adminPost(`/admin/bookings/${id}/cancel`, {}),
@@ -170,5 +169,7 @@ export const adminApi = {
   refundBooking:  (id, amount, motivo) => adminPost(`/admin/bookings/${id}/refund`, { amount, motivo }),
   rescheduleBooking: (id, data_ritiro, tipo_noleggio, giorni) =>
     adminPatch(`/admin/bookings/${id}/reschedule`, { data_ritiro, tipo_noleggio, giorni }),
-  assegnaBici:    (id, bicicletta_id)  => adminPatch(`/admin/bookings/${id}/assegna-bici`, { bicicletta_id }),
+  assegnaBici:       (id, bicicletta_id)  => adminPatch(`/admin/bookings/${id}/assegna-bici`, { bicicletta_id }),
+  autorizzaCauzione: (id)                 => adminPost(`/admin/bookings/${id}/autorizza-cauzione`, {}),
+  getAuditLog:       (params = {})        => adminGet('/admin/audit-log', params),
 };
