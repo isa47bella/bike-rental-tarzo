@@ -613,6 +613,11 @@ const loadOccupazione = useCallback(async () => {
   // ─── Check-in ───────────────────────────────────────────────────────────────
 
   async function handleCheckin() {
+    const missing = [];
+    if (!docFoto)      missing.push('documento fronte');
+    if (!docFotoRetro) missing.push('documento retro');
+    if (!biciFotoOut)  missing.push('bici alla consegna');
+    if (missing.length && !confirm(`Foto mancanti: ${missing.join(', ')}. Continuare comunque?`)) return;
     setCheckinLoading(true);
     try {
       await adminApi.checkin(checkinModal.id, {
@@ -630,6 +635,7 @@ const loadOccupazione = useCallback(async () => {
   // ─── Checkout ───────────────────────────────────────────────────────────────
 
   async function handleCheckout() {
+    if (!biciFotoIn && !confirm('Nessuna foto della bici al rientro. Continuare comunque?')) return;
     setCheckoutLoading(true);
     try {
       await adminApi.checkout(checkoutModal.id, {
@@ -1958,7 +1964,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             )}
           </div>
 
-          <div style={{ padding: '14px 22px 4px', borderTop: '1px solid #1A2840' }}>
+          <div className="ac-photo-section-label">
             <span className="ac-label" style={{ fontSize: '0.7rem', color: '#4ADE80' }}>📷 Foto da scattare al ritiro</span>
           </div>
 
@@ -1997,10 +2003,10 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             Bici <strong>#{b.bicicletta_id}</strong> · Restituzione prevista {formatDateIT(b.data_restituzione)} {b.orario_restituzione?.substring(0,5)}
           </div>
 
-          <div style={{ padding: '14px 22px 4px', borderTop: '1px solid #1A2840' }}>
+          <div className="ac-photo-section-label">
             <span className="ac-label" style={{ fontSize: '0.7rem', color: '#4ADE80' }}>📷 Foto da scattare al rientro</span>
           </div>
-          <div style={{ padding: '0 22px 14px' }}>
+          <div className="ac-photo-grid" style={{ gridTemplateColumns: '1fr' }}>
             <PhotoUpload label="Bici al rientro" value={biciFotoIn} onChange={setBiciFotoIn} inputRef={bikeInRef} />
           </div>
 

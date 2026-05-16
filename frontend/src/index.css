@@ -1507,9 +1507,18 @@ body {
   flex-direction: column;
   gap: 8px;
   padding: 16px 22px 22px;
+  position: sticky;
+  bottom: 0;
+  background: #0D1520;
+  border-top: 1px solid #1A2840;
+  margin-top: auto;
 }
 
 /* Photo upload */
+.ac-photo-section-label {
+  padding: 14px 22px 4px;
+  border-top: 1px solid #1A2840;
+}
 .ac-photo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2461,9 +2470,12 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   }
   .ac-modal-header { padding: 0 18px 14px; }
   .ac-modal-info { padding: 8px 18px; }
-  .ac-modal-footer { padding: 14px 18px 28px; }
+  .ac-modal-footer { padding: 14px 18px calc(28px + env(safe-area-inset-bottom, 0)); }
   .ac-field { padding: 10px 18px 0; }
-  .ac-photo-grid { padding: 10px 18px 0; grid-template-columns: 1fr 1fr; }
+  .ac-photo-section-label { padding: 14px 18px 4px; }
+  .ac-photo-grid { padding: 10px 18px 0; grid-template-columns: 1fr; gap: 16px; }
+  .ac-photo-upload { aspect-ratio: 3/2; }
+  .ac-photo-empty { font-size: 0.85rem; gap: 8px; }
   .ac-photo-grid > div:first-child:last-child { grid-column: 1 / -1; }
 
   /* ── Login ── */
