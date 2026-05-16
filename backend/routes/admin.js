@@ -16,6 +16,7 @@ const { sendPushToAll } = require('../lib/push');
 const { sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione }       = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
+const { CAUZIONE_AMOUNT_EUR }               = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
 
@@ -79,16 +80,47 @@ router.get('/bookings/:id', async (req, res) => {
 // ─── POST /api/admin/bookings/:id/cancel ─────────────────────────────────────
 
 router.post('/bookings/:id/cancel', async (req, res) => {
+  // Carica lo stato attuale per gestire correttamente eventuale cauzione attiva
+  const { data: current, error: loadErr } = await supabase
+    .from('prenotazioni')
+    .select('cauzione_pi_id, cauzione_status, cliente_nome')
+    .eq('id', req.params.id)
+    .single();
+
+  if (loadErr || !current) return res.status(404).json({ error: 'Prenotazione non trovata' });
+
+  // Se c'è una cauzione autorizzata/in autorizzazione su Stripe, rilascia la hold
+  // PRIMA di marcare la prenotazione come cancellata, così la carta del cliente
+  // non resta bloccata per i €500.
+  let cauzioneReleased = false;
+  if (current.cauzione_pi_id && ['authorized', 'authorizing'].includes(current.cauzione_status)) {
+    try {
+      await stripe.paymentIntents.cancel(current.cauzione_pi_id);
+      cauzioneReleased = true;
+    } catch (e) {
+      // Stripe restituisce payment_intent_unexpected_state se il PI è già cancelled/expired
+      // su Stripe — in quel caso possiamo proseguire senza errore.
+      if (e.code !== 'payment_intent_unexpected_state') {
+        console.error('[cancel] Errore release cauzione Stripe:', e.message);
+        return res.status(502).json({ error: 'Impossibile rilasciare la cauzione su Stripe: ' + e.message });
+      }
+      cauzioneReleased = true;
+    }
+  }
+
+  const update = { pagamento_status: 'cancelled' };
+  if (cauzioneReleased) update.cauzione_status = 'cancelled';
+
   const { data, error } = await supabase
     .from('prenotazioni')
-    .update({ pagamento_status: 'cancelled' })
+    .update(update)
     .eq('id', req.params.id)
     .select()
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
-  await logAction('cancel', req.params.id, { nome: data.cliente_nome }, getIp(req));
-  return res.json({ success: true, booking: data });
+  await logAction('cancel', req.params.id, { nome: data.cliente_nome, cauzione_released: cauzioneReleased }, getIp(req));
+  return res.json({ success: true, booking: data, cauzione_released: cauzioneReleased });
 });
 
 // ─── GET /api/admin/stats ─────────────────────────────────────────────────────
@@ -277,8 +309,8 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
 router.post('/bookings/:id/capture-deposit', async (req, res) => {
   const { amount, motivo } = req.body;
   const amountNum = parseFloat(amount);
-  if (!amountNum || amountNum <= 0 || amountNum > 500) {
-    return res.status(400).json({ error: 'Importo non valido (max €500)' });
+  if (!amountNum || amountNum <= 0 || amountNum > CAUZIONE_AMOUNT_EUR) {
+    return res.status(400).json({ error: `Importo non valido (max €${CAUZIONE_AMOUNT_EUR})` });
   }
 
   const { data: prenotazione, error } = await supabase
@@ -308,6 +340,60 @@ router.post('/bookings/:id/capture-deposit', async (req, res) => {
     return res.json({ success: true });
   } catch (e) {
     console.error('Errore capture deposit:', e);
+    return res.status(402).json({ error: e.message || 'Errore Stripe' });
+  }
+});
+
+// ─── POST /api/admin/bookings/:id/refund-deposit ──────────────────────────────
+// Rimborsa una cauzione già catturata (totale o parziale).
+// Body: { amount?: number } — se omesso, rimborso totale del captured_amount
+
+router.post('/bookings/:id/refund-deposit', async (req, res) => {
+  const { amount } = req.body;
+
+  const { data: p, error } = await supabase
+    .from('prenotazioni')
+    .select('cauzione_pi_id, cauzione_status, cauzione_captured_amount, cliente_nome')
+    .eq('id', req.params.id)
+    .single();
+
+  if (error || !p) return res.status(404).json({ error: 'Prenotazione non trovata' });
+  if (!p.cauzione_pi_id) return res.status(400).json({ error: 'Nessuna cauzione attiva' });
+  if (p.cauzione_status !== 'captured') {
+    return res.status(400).json({ error: `Cauzione non rimborsabile (stato: ${p.cauzione_status})` });
+  }
+
+  const capturedAmount = Number(p.cauzione_captured_amount || 0);
+  const refundAmount   = amount != null ? parseFloat(amount) : capturedAmount;
+  if (!refundAmount || refundAmount <= 0 || refundAmount > capturedAmount + 0.01) {
+    return res.status(400).json({ error: `Importo non valido (max €${capturedAmount.toFixed(2)})` });
+  }
+
+  try {
+    const refund = await stripe.refunds.create({
+      payment_intent: p.cauzione_pi_id,
+      amount:         Math.round(refundAmount * 100),
+      metadata:       { booking_id: req.params.id, kind: 'cauzione' },
+    });
+
+    const newCaptured = Number((capturedAmount - refundAmount).toFixed(2));
+    const isFull      = newCaptured <= 0.01;
+
+    await supabase
+      .from('prenotazioni')
+      .update({
+        cauzione_status:           isFull ? 'refunded' : 'captured',
+        cauzione_captured_amount:  isFull ? null : newCaptured,
+      })
+      .eq('id', req.params.id);
+
+    await logAction('refund_deposit', req.params.id, {
+      amount: refundAmount, refund_id: refund.id, full: isFull,
+    }, getIp(req));
+
+    return res.json({ success: true, refunded: refundAmount, remaining: isFull ? 0 : newCaptured });
+  } catch (e) {
+    console.error('Errore refund deposit:', e);
     return res.status(402).json({ error: e.message || 'Errore Stripe' });
   }
 });

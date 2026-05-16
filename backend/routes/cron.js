@@ -10,6 +10,8 @@ const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 const { sendFirmaLinkEmail, sendReminderEmail } = require('../lib/email');
+const { sendPushToAll } = require('../lib/push');
+const { CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -96,7 +98,7 @@ router.get('/deposit', cronAuth, async (req, res) => {
 
     try {
       const pi = await stripe.paymentIntents.create({
-        amount:         50000, // €500 in centesimi
+        amount:         CAUZIONE_AMOUNT_CENTS,
         currency:       'eur',
         customer:       booking.stripe_customer_id,
         payment_method: booking.stripe_payment_method_id,
@@ -105,6 +107,25 @@ router.get('/deposit', cronAuth, async (req, res) => {
         off_session:    true,
         description:    `Cauzione bici — ${booking.cliente_nome} (${booking.id.substring(0, 8)})`,
       });
+
+      // Race-condition guard: se l'admin ha cancellato la prenotazione
+      // mentre creavamo il PI, rilascia subito l'hold sulla carta.
+      const { data: current } = await supabase
+        .from('prenotazioni')
+        .select('pagamento_status')
+        .eq('id', booking.id)
+        .single();
+
+      if (current && current.pagamento_status === 'cancelled') {
+        try { await stripe.paymentIntents.cancel(pi.id); } catch (_) {}
+        await supabase
+          .from('prenotazioni')
+          .update({ cauzione_pi_id: pi.id, cauzione_status: 'cancelled' })
+          .eq('id', booking.id);
+        console.warn(`[CRON deposit] ${booking.id} — booking cancellata durante autorizzazione, hold rilasciata (PI: ${pi.id})`);
+        results.push({ id: booking.id, status: 'cancelled_during_auth' });
+        continue;
+      }
 
       const status = pi.status === 'requires_capture' ? 'authorized' : 'failed';
       // Salviamo PRIMA il cauzione_pi_id — così anche se il secondo update fallisce,
@@ -115,11 +136,27 @@ router.get('/deposit', cronAuth, async (req, res) => {
         .eq('id', booking.id);
 
       console.log(`[CRON deposit] ${booking.id} — cauzione ${status} (PI: ${pi.id})`);
+
+      if (status === 'failed') {
+        await sendPushToAll({
+          title: '⚠️ Cauzione fallita',
+          body:  `${booking.cliente_nome} (${booking.data_ritiro}) — stato Stripe: ${pi.status}`,
+          url:   '/admin',
+        }).catch(e => console.error('[CRON deposit] push fail notify error:', e.message));
+      }
+
       results.push({ id: booking.id, status });
     } catch (err) {
       console.error(`[CRON deposit] ${booking.id} — errore Stripe: ${err.message}`);
       // Torna a 'failed' senza pi_id: al prossimo giro verrà riprovato
       await supabase.from('prenotazioni').update({ cauzione_status: 'failed' }).eq('id', booking.id);
+
+      await sendPushToAll({
+        title: '⚠️ Cauzione fallita',
+        body:  `${booking.cliente_nome} (${booking.data_ritiro}) — ${err.message.substring(0, 80)}`,
+        url:   '/admin',
+      }).catch(e => console.error('[CRON deposit] push fail notify error:', e.message));
+
       results.push({ id: booking.id, status: 'failed', error: err.message });
     }
   }
