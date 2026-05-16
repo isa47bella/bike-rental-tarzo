@@ -595,6 +595,7 @@ router.post('/bookings/manual', async (req, res) => {
     bike_type:      bikeTypeOverride,
     bici:           biciArrayInput,
     accessori:      accessoriRaw = [],
+    accessori_qty:  accessoriQtyInput,
     prezzo_totale:  prezzoOverride,
     note_pagamento  = '',
   } = req.body;
@@ -674,19 +675,39 @@ router.post('/bookings/manual', async (req, res) => {
     }
   }
 
-  // Pricing: per ogni bici applichiamo SEASONAL_PRICES + accessori.
+  // Accessori: due modalità supportate
+  //  (a) accessori_qty: { casco: N, lucchetto: M } — distribuzione per bici (max N ≤ totBici)
+  //  (b) accessori: ['casco','lucchetto'] — applicato a TUTTE le bici (legacy / website)
+  const totBici = assignedBikes.length;
+  const accessoriPerRow = assignedBikes.map(() => []); // [['casco'], ['casco','lucchetto'], ...]
+  const accCostPerRow   = assignedBikes.map(() => 0);
+
+  if (accessoriQtyInput && typeof accessoriQtyInput === 'object') {
+    for (const [acc, qty] of Object.entries(accessoriQtyInput)) {
+      if (!ACC_PREZZI[acc]) continue;
+      const n = Math.max(0, Math.min(Number(qty) || 0, totBici));
+      for (let i = 0; i < n; i++) {
+        accessoriPerRow[i].push(acc);
+        accCostPerRow[i] += ACC_PREZZI[acc];
+      }
+    }
+  } else {
+    const accArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => ACC_PREZZI[a]);
+    const accCostPerBike = accArr.reduce((sum, a) => sum + ACC_PREZZI[a], 0);
+    for (let i = 0; i < totBici; i++) {
+      accessoriPerRow[i] = [...accArr];
+      accCostPerRow[i]   = accCostPerBike;
+    }
+  }
+
+  // Pricing: per ogni bici applichiamo SEASONAL_PRICES + accessori effettivi della riga.
   // prezzoOverride (se fornito) = prezzo totale per TUTTE le bici; viene distribuito
   // equamente sulle righe (con eventuale resto sulla prima) per mantenere la somma esatta.
-  const accessoriArr = (Array.isArray(accessoriRaw) ? accessoriRaw : []).filter(a => ACC_PREZZI[a]);
-  const accessoriStr = accessoriArr.join(',');
-  const accCostPerBike = accessoriArr.reduce((sum, a) => sum + ACC_PREZZI[a], 0);
-
   let prezziPerBici; // array stesso indice di assignedBikes
   if (prezzoOverride !== undefined && prezzoOverride !== null && prezzoOverride !== '') {
     const totale = parseFloat(prezzoOverride);
-    const n      = assignedBikes.length;
-    const each   = Math.floor((totale / n) * 100) / 100;
-    const remainder = +(totale - each * n).toFixed(2);
+    const each   = Math.floor((totale / totBici) * 100) / 100;
+    const remainder = +(totale - each * totBici).toFixed(2);
     prezziPerBici = assignedBikes.map((_, i) => i === 0 ? +(each + remainder).toFixed(2) : each);
   } else {
     const stagione = getStagione(data_ritiro);
@@ -696,7 +717,9 @@ router.post('/bookings/manual', async (req, res) => {
         fuori_stagione: true,
       });
     }
-    prezziPerBici = assignedBikes.map(b => calcolaPrezzo(b.bike_type, tipo_noleggio, numGiorni, data_ritiro) + accCostPerBike);
+    prezziPerBici = assignedBikes.map((b, i) =>
+      calcolaPrezzo(b.bike_type, tipo_noleggio, numGiorni, data_ritiro) + accCostPerRow[i]
+    );
   }
 
   const noteFinale = [cliente_note, note_pagamento ? `Pagamento: ${note_pagamento}` : ''].filter(Boolean).join(' | ');
@@ -719,7 +742,7 @@ router.post('/bookings/manual', async (req, res) => {
     start_ts:            start.toISOString(),
     end_ts:              end.toISOString(),
     prezzo_totale:       prezziPerBici[i],
-    accessori:           accessoriStr,
+    accessori:           accessoriPerRow[i].join(','),
     pagamento_status:    'paid',
     stripe_session_id:   groupId,
   }));

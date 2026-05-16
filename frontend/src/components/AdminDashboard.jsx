@@ -464,7 +464,8 @@ async function handleClientiSearch(e) {
     cliente_nome: '', cliente_email: '', cliente_telefono: '', cliente_note: '',
     data_ritiro: '', tipo_noleggio: 'intera_giornata', giorni: 2,
     qty_ecity: 1, qty_emtb: 0, qty_bimbo: 0,
-    accessori: [], prezzo_totale: '', note_pagamento: 'Contanti',
+    acc_casco: 0, acc_lucchetto: 0,
+    prezzo_totale: '', note_pagamento: 'Contanti',
   };
   const [manualModal,   setManualModal]   = useState(false);
   const [manualForm,    setManualForm]    = useState(MANUAL_EMPTY);
@@ -858,29 +859,47 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
   const ACC_PREZZI_FE = { casco: 2, lucchetto: 1 };
 
+  function totalBici(form) {
+    return (form.qty_ecity || 0) + (form.qty_emtb || 0) + (form.qty_bimbo || 0);
+  }
+
   function calcPrezzoManualTotal(form) {
-    const accPerBike = (form.accessori || []).reduce((s, a) => s + (ACC_PREZZI_FE[a] || 0), 0);
     const qty = { ecity: form.qty_ecity || 0, emtb: form.qty_emtb || 0, bimbo: form.qty_bimbo || 0 };
     let total = 0;
     for (const [bt, n] of Object.entries(qty)) {
       if (n <= 0) continue;
       const base = calcPrezzoPerBike(form.tipo_noleggio, form.giorni, form.data_ritiro, bt);
       if (base <= 0) return 0;
-      total += (base + accPerBike) * n;
+      total += base * n;
     }
+    total += (form.acc_casco     || 0) * ACC_PREZZI_FE.casco;
+    total += (form.acc_lucchetto || 0) * ACC_PREZZI_FE.lucchetto;
     return total;
+  }
+
+  function recalcPrezzo(next, prev) {
+    if (prev._prezzoCambiato) return next;
+    const calc = calcPrezzoManualTotal(next);
+    return { ...next, prezzo_totale: calc > 0 ? String(calc) : '' };
+  }
+
+  function clampAccessoriToBici(form) {
+    const max = totalBici(form);
+    return {
+      ...form,
+      acc_casco:     Math.min(form.acc_casco     || 0, max),
+      acc_lucchetto: Math.min(form.acc_lucchetto || 0, max),
+    };
   }
 
   function setManualField(key, value) {
     setManualForm(prev => {
-      const next = { ...prev, [key]: value };
-      // Auto-update prezzo quando cambia qualsiasi input che lo influenza
-      const recalcKeys = ['tipo_noleggio', 'giorni', 'data_ritiro', 'qty_ecity', 'qty_emtb', 'qty_bimbo', 'accessori'];
-      if (recalcKeys.includes(key) && !prev._prezzoCambiato) {
-        const calc = calcPrezzoManualTotal(next);
-        next.prezzo_totale = calc > 0 ? String(calc) : '';
+      let next = { ...prev, [key]: value };
+      // Se cambia il count bici, riallinea gli accessori al nuovo cap
+      if (['qty_ecity', 'qty_emtb', 'qty_bimbo'].includes(key)) {
+        next = clampAccessoriToBici(next);
       }
-      return next;
+      return recalcPrezzo(next, prev);
     });
   }
 
@@ -889,12 +908,20 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       const cur = Number(prev[key] || 0);
       const newQty = Math.max(0, Math.min(10, cur + delta));
       if (newQty === cur) return prev;
+      let next = { ...prev, [key]: newQty };
+      next = clampAccessoriToBici(next);
+      return recalcPrezzo(next, prev);
+    });
+  }
+
+  function adjustAcc(key, delta) {
+    setManualForm(prev => {
+      const cur = Number(prev[key] || 0);
+      const max = totalBici(prev);
+      const newQty = Math.max(0, Math.min(max, cur + delta));
+      if (newQty === cur) return prev;
       const next = { ...prev, [key]: newQty };
-      if (!prev._prezzoCambiato) {
-        const calc = calcPrezzoManualTotal(next);
-        next.prezzo_totale = calc > 0 ? String(calc) : '';
-      }
-      return next;
+      return recalcPrezzo(next, prev);
     });
   }
 
@@ -919,6 +946,10 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         ...manualForm,
         giorni:        Number(manualForm.giorni),
         bici,
+        accessori_qty: {
+          casco:     manualForm.acc_casco     || 0,
+          lucchetto: manualForm.acc_lucchetto || 0,
+        },
         prezzo_totale: manualForm.prezzo_totale || undefined,
       });
       setManualModal(false);
@@ -2241,18 +2272,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
   function renderManualModal() {
     const f = manualForm;
     const isMulti = f.tipo_noleggio === 'multi_giorno';
-    const accList = [
-      { key: 'casco',     label: 'Casco (+€2)' },
-      { key: 'lucchetto', label: 'Lucchetto (+€1)' },
-    ];
-    function toggleAcc(key) {
-      setManualForm(prev => ({
-        ...prev,
-        accessori: prev.accessori.includes(key)
-          ? prev.accessori.filter(k => k !== key)
-          : [...prev.accessori, key],
-      }));
-    }
+    const maxAcc  = totalBici(f);
 
     return (
       <div className="ac-overlay" onClick={e => e.target === e.currentTarget && setManualModal(false)}>
@@ -2368,18 +2388,30 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           </div>
 
           {/* Accessori */}
-          <div className="ac-manual-accessori">
-            <label className="ac-label" style={{ marginBottom: 8 }}>Accessori inclusi</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {accList.map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`ac-btn sm${f.accessori.includes(key) ? ' primary' : ' ghost'}`}
-                  onClick={() => toggleAcc(key)}
-                >{label}</button>
-              ))}
+          <div className="ac-manual-bici">
+            <div className="ac-manual-bici-title">
+              <span className="ac-label">Accessori</span>
+              <span className="ac-manual-bici-hint">{maxAcc > 0 ? `max ${maxAcc} per tipo` : 'aggiungi prima una bici'}</span>
             </div>
+            {[
+              { key: 'acc_casco',     label: 'Casco',     sub: '+€2 cad.' },
+              { key: 'acc_lucchetto', label: 'Lucchetto', sub: '+€1 cad.' },
+            ].map(row => {
+              const qty = f[row.key] || 0;
+              return (
+                <div key={row.key} className="ac-bici-row">
+                  <div className="ac-bici-info">
+                    <div className="ac-bici-name">{row.label}</div>
+                    <div className="ac-bici-sub">{row.sub}</div>
+                  </div>
+                  <div className="ac-bici-qty">
+                    <button type="button" className="ac-qty-btn" onClick={() => adjustAcc(row.key, -1)} disabled={qty === 0}>−</button>
+                    <span className="ac-qty-val">{qty}</span>
+                    <button type="button" className="ac-qty-btn" onClick={() => adjustAcc(row.key, +1)} disabled={qty >= maxAcc}>+</button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <div className="ac-modal-footer">
