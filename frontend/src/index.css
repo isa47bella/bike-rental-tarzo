@@ -65,42 +65,16 @@ body {
 }
 
 .header {
-  background: linear-gradient(155deg, #122A19 0%, #1A3D26 55%, #0F2218 100%);
-  color: white;
+  background: #FFFFFF;
+  color: #1F2937;
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 68px;
+  height: 78px;
   position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid rgba(234, 88, 12, 0.45);
+  border-bottom: 1px solid #E5E7E0;
   flex-shrink: 0;
-}
-
-/* Diagonal texture */
-.header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    -52deg,
-    transparent 0px,
-    transparent 22px,
-    rgba(255,255,255,0.018) 22px,
-    rgba(255,255,255,0.018) 23px
-  );
-  pointer-events: none;
-}
-
-/* Soft light bloom top-left */
-.header::after {
-  content: '';
-  position: absolute;
-  top: -30px; left: -20px;
-  width: 220px; height: 130px;
-  background: radial-gradient(ellipse, rgba(255,255,255,0.05) 0%, transparent 70%);
-  pointer-events: none;
 }
 
 .header-brand {
@@ -112,17 +86,18 @@ body {
 }
 
 .header-logo-img {
-  height: 54px;
+  height: 64px;
   width: auto;
   display: block;
   flex-shrink: 0;
-  /* Il logo bianco è progettato per fondo scuro: nessun filtro/sfondo necessario */
 }
 
 .header-sub-tagline {
   margin-top: 0;
-  max-width: 160px;
-  display: none; /* default: nascosta, mostrata su breakpoint largo */
+  max-width: 200px;
+  color: #6B7280;
+  font-size: 0.78rem;
+  display: none; /* nascosta sotto 720px */
 }
 @media (min-width: 720px) {
   .header-sub-tagline { display: inline; }
@@ -2622,7 +2597,7 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.07em;
-  color: rgba(255,255,255,0.42);
+  color: #6B7280;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
@@ -2632,9 +2607,9 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   line-height: 1;
 }
 .lang-btn:hover {
-  color: rgba(255,255,255,0.82);
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.12);
+  color: #1F2937;
+  background: #F3F4F0;
+  border-color: #E5E7E0;
   transform: none;
   opacity: 1;
 }
@@ -2905,7 +2880,7 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .acc-card.selected::after { top: 14px; transform: none; right: 14px; }
   .acc-qty-btn { width: 42px; height: 42px; }
   .header { padding: 0 14px; height: auto; min-height: 60px; flex-wrap: wrap; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
-  .header-logo-img { height: 40px; }
+  .header-logo-img { height: 48px; }
   .header-sub { font-size: 0.6rem; }
   .lang-btn { font-size: 0.65rem; padding: 3px 5px; }
 }

@@ -55,7 +55,7 @@ export default function BookingWizard() {
       <header className="header">
         <div className="header-brand">
           <img
-            src="/logo-white.png"
+            src="/logo.png"
             alt="Arfanta Bike Rental"
             className="header-logo-img"
           />
