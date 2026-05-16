@@ -47,6 +47,7 @@ router.get('/bookings', async (req, res) => {
       prezzo_totale, pagamento_status, created_at,
       stripe_payment_method_id, danno_status, danno_amount,
       cauzione_status, cauzione_captured_amount, accessori,
+      checkin_at, checkout_at,
       firma_at, firma_nome, note_admin
     `)
     .order('data_ritiro', { ascending: true })
