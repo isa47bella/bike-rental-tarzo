@@ -143,6 +143,28 @@ const BICI = [
 function biciNome(id) { return BICI.find(b => b.id === Number(id))?.nome || `Bici #${id}`; }
 function biciTipo(id) { return BICI.find(b => b.id === Number(id))?.tipo || '—'; }
 
+// Raggruppa una lista di id bici in stringa compatta tipo
+//   "E-City #1·#2 · E-MTB #1·#3·#5" (oppure includendo "Bimbo")
+function formatBiciList(ids) {
+  const arr = (ids || []).map(Number).filter(Boolean);
+  if (!arr.length) return '—';
+  const groups = { 'E-City': [], 'E-MTB': [], 'Bimbo': [] };
+  for (const id of arr) {
+    const nome = biciNome(id);
+    // nome es "E-City KTM #1" → estrai "#1"
+    const m = nome.match(/#(\d+)/);
+    const label = m ? `#${m[1]}` : `#${id}`;
+    if (nome.startsWith('E-City'))     groups['E-City'].push(label);
+    else if (nome.startsWith('E-MTB Bimbo')) groups['Bimbo'].push(label);
+    else if (nome.startsWith('E-MTB')) groups['E-MTB'].push(label);
+    else                                groups['E-MTB'].push(label);
+  }
+  return Object.entries(groups)
+    .filter(([, list]) => list.length > 0)
+    .map(([cat, list]) => `${cat} ${list.join('·')}`)
+    .join(' · ');
+}
+
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
 const NAV = [
@@ -1997,12 +2019,12 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         {b._bici.length === 1 ? (
-                          <span style={{ fontWeight: 700 }}>#{b._bici[0]}</span>
+                          <span style={{ fontWeight: 700 }}>{biciNome(b._bici[0])}</span>
                         ) : (
                           <>
                             <div style={{ fontWeight: 700 }}>{b._bici.length} bici</div>
-                            <div className="ac-cell-sub" style={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>
-                              {b._bici.map(n => `#${n}`).join(' ')}
+                            <div className="ac-cell-sub" style={{ fontSize: '0.74rem' }}>
+                              {formatBiciList(b._bici)}
                             </div>
                           </>
                         )}
@@ -2924,8 +2946,8 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                 <span className="ac-code" style={{ fontSize: 11 }}>{b.id.toUpperCase().slice(0,8)}</span>
                 <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio, b.giorni)} · {
                   Array.isArray(b.bici_ids) && b.bici_ids.length > 1
-                    ? `${b.bici_ids.length} bici (${b.bici_ids.map(n => `#${n}`).join(' ')})`
-                    : `Bici #${b.bicicletta_id}`
+                    ? `${b.bici_ids.length} bici — ${formatBiciList(b.bici_ids)}`
+                    : biciNome(b.bicicletta_id)
                 }</span>
               </div>
             </div>
