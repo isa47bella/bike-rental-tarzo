@@ -43,9 +43,9 @@ router.get('/bookings', async (req, res) => {
     .from('prenotazioni')
     .select(`
       id, cliente_nome, cliente_email, cliente_telefono,
-      bicicletta_id, tipo_noleggio, giorni,
+      bicicletta_id, bici_ids, tipo_noleggio, giorni,
       data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
-      prezzo_totale, pagamento_status, created_at,
+      prezzo_totale, pagamento_status, created_at, stripe_session_id,
       stripe_payment_method_id, danno_status, danno_amount,
       cauzione_status, cauzione_captured_amount, accessori,
       checkin_at, checkout_at,
@@ -484,7 +484,7 @@ router.get('/heartbeat', async (req, res) => {
 
 router.get('/oggi', async (req, res) => {
   const oggi = new Date().toISOString().substring(0, 10);
-  const fields = `id, cliente_nome, cliente_email, cliente_telefono, bicicletta_id,
+  const fields = `id, cliente_nome, cliente_email, cliente_telefono, bicicletta_id, bici_ids,
     tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione,
     orario_restituzione, prezzo_totale, pagamento_status, cauzione_status,
     checkin_at, checkout_at, accessori, firma_at, firma_nome`;
