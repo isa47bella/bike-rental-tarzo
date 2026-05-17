@@ -4994,3 +4994,8 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .ac-login2-mobile-logo { display: flex; }
   .ac-login2-title { font-size: 1.7rem; }
 }
+
+/* Light theme: nomi bici e accessori (Casco/Lucchetto) nella prenotazione manuale */
+.ac-root .ac-bici-name { color: var(--ac-text) !important; }
+.ac-root .ac-bici-sub  { color: var(--ac-text-muted) !important; }
+.ac-root .ac-bici-row  { background: var(--ac-surface) !important; border-color: var(--ac-border) !important; }
