@@ -4142,3 +4142,88 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   accent-color: var(--ac-brand);
 }
 
+/* ─── Admin Notification drawer ──────────────────────────────────────── */
+.ac-root .ac-notif-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 1500;
+  display: flex;
+  justify-content: flex-end;
+}
+.ac-root .ac-notif-drawer {
+  width: 360px;
+  max-width: 100vw;
+  height: 100vh;
+  background: var(--ac-surface);
+  box-shadow: var(--ac-sh-modal);
+  display: flex;
+  flex-direction: column;
+}
+.ac-root .ac-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ac-border);
+  font-weight: 700;
+  color: var(--ac-text);
+}
+.ac-root .ac-notif-list { overflow-y: auto; flex: 1; }
+.ac-root .ac-notif-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ac-text-muted);
+}
+.ac-root .ac-notif-item {
+  display: flex;
+  gap: 10px;
+  padding: 12px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ac-border);
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+.ac-root .ac-notif-item:hover { background: var(--ac-surface-alt); }
+.ac-root .ac-notif-item.unread { background: var(--ac-brand-soft); }
+.ac-root .ac-notif-item.unread:hover { background: #FDE9D3; }
+.ac-root .ac-notif-icon { font-size: 1.1rem; line-height: 1.3; flex-shrink: 0; }
+.ac-root .ac-notif-body { flex: 1; min-width: 0; }
+.ac-root .ac-notif-titolo { font-weight: 600; color: var(--ac-text); font-size: 0.88rem; }
+.ac-root .ac-notif-desc { font-size: 0.78rem; color: var(--ac-text-muted); margin-top: 2px; }
+.ac-root .ac-notif-time { font-size: 0.7rem; color: var(--ac-text-muted); margin-top: 4px; }
+
+.ac-root .ac-topbar-bell {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-r-btn);
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ac-text-muted);
+}
+.ac-root .ac-topbar-bell:hover { background: var(--ac-surface-alt); color: var(--ac-text); }
+.ac-root .ac-topbar-bell-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--ac-red);
+  color: #fff;
+  border-radius: 9px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+@media (max-width: 640px) {
+  .ac-root .ac-notif-drawer { width: 100vw; }
+}
+

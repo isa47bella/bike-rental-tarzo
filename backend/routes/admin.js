@@ -625,6 +625,45 @@ router.get('/flotta', async (req, res) => {
   return res.json({ bici: data || [] });
 });
 
+// ─── GET /api/admin/notifiche ─────────────────────────────────────────────────
+router.get('/notifiche', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit, 10) || 30, 100);
+  const { data, error } = await supabase
+    .from('notifiche')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return res.status(500).json({ error: error.message });
+
+  const { count: unreadCount } = await supabase
+    .from('notifiche')
+    .select('id', { count: 'exact', head: true })
+    .is('letta_at', null);
+
+  return res.json({ items: data || [], unread: unreadCount || 0 });
+});
+
+// ─── POST /api/admin/notifiche/:id/read ───────────────────────────────────────
+router.post('/notifiche/:id/read', async (req, res) => {
+  const { error } = await supabase
+    .from('notifiche')
+    .update({ letta_at: new Date().toISOString() })
+    .eq('id', req.params.id)
+    .is('letta_at', null);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ success: true });
+});
+
+// ─── POST /api/admin/notifiche/read-all ───────────────────────────────────────
+router.post('/notifiche/read-all', async (req, res) => {
+  const { error } = await supabase
+    .from('notifiche')
+    .update({ letta_at: new Date().toISOString() })
+    .is('letta_at', null);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.json({ success: true });
+});
+
 // ─── PATCH /api/admin/flotta/:id ─────────────────────────────────────────────
 
 router.patch('/flotta/:id', async (req, res) => {

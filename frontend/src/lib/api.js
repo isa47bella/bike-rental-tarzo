@@ -174,4 +174,8 @@ export const adminApi = {
   getAuditLog:       (params = {})        => adminGet('/admin/audit-log', params),
   getAzioniPendenti: ()                   => adminGet('/admin/azioni-pendenti'),
   search:            (q)                  => adminGet(`/admin/search?q=${encodeURIComponent(q)}`),
+
+  getNotifiche:     (limit = 30) => adminGet(`/admin/notifiche?limit=${limit}`),
+  markNotificaRead: (id)         => adminPost(`/admin/notifiche/${id}/read`, {}),
+  markAllRead:      ()           => adminPost('/admin/notifiche/read-all', {}),
 };

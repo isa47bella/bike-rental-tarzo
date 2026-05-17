@@ -3,6 +3,7 @@ import { adminApi, api } from '../lib/api.js';
 import KpiStrip    from './admin/KpiStrip.jsx';
 import ActionFeed  from './admin/ActionFeed.jsx';
 import SearchModal from './admin/SearchModal.jsx';
+import NotificationDrawer from './admin/NotificationDrawer.jsx';
 import BulkActionBar from './admin/BulkActionBar.jsx';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -315,6 +316,8 @@ export default function AdminDashboard() {
 
   // Global search
   const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
 
   // Clienti / Storico
   const [clientiQuery,   setClientiQuery]   = useState('');
@@ -680,6 +683,11 @@ const loadOccupazione = useCallback(async () => {
     if (activeView === 'cauzioni') loadCauzioni();
     if (activeView === 'log') loadAuditLog();
   }, [activeView, authed]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!authed) return;
+    adminApi.getNotifiche(1).then(res => setNotifUnread(res.unread || 0)).catch(() => {});
+  }, [authed]);
 
   // Fetch availability live nella prenotazione manuale quando cambiano data/tipo/giorni
   useEffect(() => {
@@ -1312,6 +1320,17 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               <span className="ac-topbar-search-label">Cerca…</span>
               <kbd className="ac-topbar-search-kbd">⌘K</kbd>
             </button>
+            <button
+              type="button"
+              className="ac-topbar-bell"
+              onClick={() => { setNotifOpen(true); setNotifUnread(0); }}
+              title="Notifiche"
+            >
+              <span>🔔</span>
+              {notifUnread > 0 && (
+                <span className="ac-topbar-bell-badge">{notifUnread > 9 ? '9+' : notifUnread}</span>
+              )}
+            </button>
             <span className="ac-topbar-date">{todayIT()}</span>
             <button className="ac-icon-btn" onClick={refresh} title="Aggiorna">
               <IconRefresh />
@@ -1367,6 +1386,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             setClientiQuery(c.email || c.telefono || c.nome);
           }
           setActiveView('clienti');
+        }}
+      />
+
+      <NotificationDrawer
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        onClickBooking={(bid) => {
+          setActiveView('prenotazioni');
         }}
       />
 
