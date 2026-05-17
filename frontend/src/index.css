@@ -5014,3 +5014,28 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
 }
 .ac-root .ac-qty-btn:disabled { opacity: 0.35; }
 .ac-root .ac-qty-val { color: var(--ac-text) !important; }
+
+/* Audit log toolbar (export CSV/JSON + refresh) */
+.ac-root .ac-audit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ac-root .ac-audit-count {
+  margin: 0;
+  color: var(--ac-text-muted);
+  font-size: 0.85rem;
+}
+.ac-root .ac-audit-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ac-root .ac-audit-actions .ac-btn { padding: 6px 12px; font-size: 0.85rem; }
+@media (max-width: 480px) {
+  .ac-root .ac-audit-actions { width: 100%; }
+  .ac-root .ac-audit-actions .ac-btn { flex: 1; }
+}

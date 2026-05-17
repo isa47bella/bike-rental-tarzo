@@ -3450,15 +3450,59 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       autorizza_cauzione: '#f59e0b', manual_booking: '#10b981',
     };
 
+    function exportAuditLog(format) {
+      if (!auditLog.length) return;
+      const stamp = new Date().toISOString().substring(0, 10);
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(auditLog, null, 2)], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = `audit-log-${stamp}.json`; a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+      // CSV
+      const esc = v => {
+        if (v === null || v === undefined) return '';
+        const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ['data_ora', 'azione', 'azione_label', 'booking_id', 'ip', 'dettagli'];
+      const rows = auditLog.map(e => [
+        e.created_at,
+        e.azione,
+        ACTION_LABELS[e.azione] || e.azione,
+        e.booking_id || '',
+        e.ip || '',
+        e.dettagli ? JSON.stringify(e.dettagli) : '',
+      ].map(esc).join(';'));
+      const csv  = '﻿' + [header.join(';'), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `audit-log-${stamp}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    }
+
     return (
       <div className="ac-section">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+        <div className="ac-audit-toolbar">
+          <p className="ac-audit-count">
             Ultime {auditLog.length} azioni registrate
           </p>
-          <button className="ac-btn secondary" onClick={loadAuditLog} disabled={auditLogLoading} style={{ padding: '6px 14px' }}>
-            <IconRefresh /> Aggiorna
-          </button>
+          <div className="ac-audit-actions">
+            <button className="ac-btn secondary sm" onClick={() => exportAuditLog('csv')}
+              disabled={auditLogLoading || !auditLog.length}>
+              ⬇ CSV
+            </button>
+            <button className="ac-btn secondary sm" onClick={() => exportAuditLog('json')}
+              disabled={auditLogLoading || !auditLog.length}>
+              ⬇ JSON
+            </button>
+            <button className="ac-btn secondary sm" onClick={loadAuditLog} disabled={auditLogLoading}>
+              <IconRefresh /> Aggiorna
+            </button>
+          </div>
         </div>
 
         {auditLogLoading && <div className="ac-spinner-center"><div className="ac-spinner" /></div>}
