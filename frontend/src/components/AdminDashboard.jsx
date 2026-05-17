@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApi, api } from '../lib/api.js';
-import KpiStrip   from './admin/KpiStrip.jsx';
-import ActionFeed from './admin/ActionFeed.jsx';
+import KpiStrip    from './admin/KpiStrip.jsx';
+import ActionFeed  from './admin/ActionFeed.jsx';
+import SearchModal from './admin/SearchModal.jsx';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -311,6 +312,9 @@ export default function AdminDashboard() {
   const [cauzioni,        setCauzioni]        = useState([]);
   const [cauzioniLoading, setCauzioniLoading] = useState(false);
 
+  // Global search
+  const [searchOpen, setSearchOpen] = useState(false);
+
   // Clienti / Storico
   const [clientiQuery,   setClientiQuery]   = useState('');
   const [clientiResults, setClientiResults] = useState(null);
@@ -588,6 +592,18 @@ const loadOccupazione = useCallback(async () => {
     setAuditLogLoading(true);
     try { const d = await adminApi.getAuditLog(); setAuditLog(d.log || []); } catch (_) {}
     finally { setAuditLogLoading(false); }
+  }, []);
+
+  // Global search keyboard shortcut (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   // Load data when switching views
@@ -1234,6 +1250,16 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         <header className="ac-topbar">
           <h2 className="ac-topbar-title">{VIEW_TITLES[activeView]}</h2>
           <div className="ac-topbar-right">
+            <button
+              type="button"
+              className="ac-topbar-search-trigger"
+              onClick={() => setSearchOpen(true)}
+              title="Cerca (⌘K)"
+            >
+              <span>🔍</span>
+              <span className="ac-topbar-search-label">Cerca…</span>
+              <kbd className="ac-topbar-search-kbd">⌘K</kbd>
+            </button>
             <span className="ac-topbar-date">{todayIT()}</span>
             <button className="ac-icon-btn" onClick={refresh} title="Aggiorna">
               <IconRefresh />
@@ -1269,6 +1295,20 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       {cambiaBiciModal   && renderCambiaBiciModal()}
       {actionSheet       && renderActionSheet()}
       {fotoModal         && renderFotoModal()}
+
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelectBooking={(id) => {
+          setActiveView('prenotazioni');
+        }}
+        onSelectCliente={(c) => {
+          if (typeof setClientiQuery === 'function') {
+            setClientiQuery(c.email || c.telefono || c.nome);
+          }
+          setActiveView('clienti');
+        }}
+      />
 
       {/* ── Mobile bottom nav ── */}
       <nav className="ac-bottom-nav">

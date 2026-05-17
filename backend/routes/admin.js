@@ -479,6 +479,50 @@ router.get('/oggi', async (req, res) => {
   });
 });
 
+// ─── GET /api/admin/search?q=...&limit=20 ─────────────────────────────────────
+router.get('/search', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json({ prenotazioni: [], clienti: [] });
+
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+  const isShortId = /^[0-9a-f]{4,}$/i.test(q);
+  const qLike = `%${q.replace(/[%_]/g, '\\$&')}%`;
+
+  let booksQuery = supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cliente_email, cliente_telefono, data_ritiro, bicicletta_id, pagamento_status, tipo_noleggio')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (isShortId) {
+    booksQuery = booksQuery.or(`cliente_nome.ilike.${qLike},cliente_email.ilike.${qLike},cliente_telefono.ilike.${qLike},id.ilike.${q}%`);
+  } else {
+    booksQuery = booksQuery.or(`cliente_nome.ilike.${qLike},cliente_email.ilike.${qLike},cliente_telefono.ilike.${qLike}`);
+  }
+
+  const { data: prenotazioni, error } = await booksQuery;
+  if (error) return res.status(500).json({ error: error.message });
+
+  // Dedupe per cliente
+  const clientiMap = new Map();
+  for (const p of (prenotazioni || [])) {
+    const key = (p.cliente_email || p.cliente_telefono || p.cliente_nome || '').toLowerCase();
+    if (!key) continue;
+    if (!clientiMap.has(key)) {
+      clientiMap.set(key, {
+        nome: p.cliente_nome, email: p.cliente_email, telefono: p.cliente_telefono, count: 1,
+      });
+    } else {
+      clientiMap.get(key).count++;
+    }
+  }
+
+  return res.json({
+    prenotazioni: prenotazioni || [],
+    clienti:      Array.from(clientiMap.values()).slice(0, 10),
+  });
+});
+
 // ─── GET /api/admin/azioni-pendenti ───────────────────────────────────────────
 // Ritorna le card che devono apparire nell'Action Feed della home.
 // Priorità: 1=urgente (rosso), 2=warning (ambra), 3=info (blue).

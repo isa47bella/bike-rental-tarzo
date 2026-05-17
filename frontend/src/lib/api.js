@@ -173,4 +173,5 @@ export const adminApi = {
   autorizzaCauzione: (id)                 => adminPost(`/admin/bookings/${id}/autorizza-cauzione`, {}),
   getAuditLog:       (params = {})        => adminGet('/admin/audit-log', params),
   getAzioniPendenti: ()                   => adminGet('/admin/azioni-pendenti'),
+  search:            (q)                  => adminGet(`/admin/search?q=${encodeURIComponent(q)}`),
 };
