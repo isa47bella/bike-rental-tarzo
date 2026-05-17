@@ -129,7 +129,7 @@ router.post('/', async (req, res) => {
 
   const { data: occupate, error } = await supabase
     .from('prenotazioni')
-    .select('bicicletta_id')
+    .select('bicicletta_id, bici_ids')
     .eq('pagamento_status', 'paid')
     .lt('start_ts', end.toISOString())
     .gt('end_ts', start.toISOString());
@@ -143,7 +143,12 @@ router.post('/', async (req, res) => {
     .eq('stato', 'disponibile');
   const fleetActive  = new Set((flotta || []).map(r => r.id));
 
-  const biciOccupate = new Set(occupate.map(r => r.bicicletta_id));
+  // Una prenotazione può coprire più bici: usa bici_ids se presente, altrimenti bicicletta_id
+  const biciOccupate = new Set();
+  for (const r of (occupate || [])) {
+    const ids = Array.isArray(r.bici_ids) && r.bici_ids.length ? r.bici_ids : [r.bicicletta_id];
+    for (const id of ids) biciOccupate.add(id);
+  }
   const tutti        = [1,2,3,4,5,6,7,8,9,10].filter(id => fleetActive.has(id));
   const disponibili  = tutti.filter(id => !biciOccupate.has(id));
 
@@ -177,7 +182,7 @@ router.post('/calendario', async (req, res) => {
 
   const { data: prenotazioni, error } = await supabase
     .from('prenotazioni')
-    .select('bicicletta_id, start_ts, end_ts')
+    .select('bicicletta_id, bici_ids, start_ts, end_ts')
     .eq('pagamento_status', 'paid')
     .gte('end_ts',   dataInizio + 'T00:00:00Z')
     .lte('start_ts', dataFine   + 'T23:59:59Z');
@@ -206,12 +211,12 @@ router.post('/calendario', async (req, res) => {
     }
 
     const chiuso = chiusureCalSet.has(dataStr);
-    const occupate = new Set(
-      prenotazioni
-        .filter(p => new Date(p.start_ts) < dayEnd && new Date(p.end_ts) > dayStart)
-        .map(p => p.bicicletta_id)
-        .filter(id => fleetActiveCal.has(id))
-    );
+    const occupate = new Set();
+    for (const p of prenotazioni) {
+      if (!(new Date(p.start_ts) < dayEnd && new Date(p.end_ts) > dayStart)) continue;
+      const ids = Array.isArray(p.bici_ids) && p.bici_ids.length ? p.bici_ids : [p.bicicletta_id];
+      for (const id of ids) if (fleetActiveCal.has(id)) occupate.add(id);
+    }
 
     risultati[dataStr] = {
       disponibili: chiuso ? 0 : TOTALE - occupate.size,

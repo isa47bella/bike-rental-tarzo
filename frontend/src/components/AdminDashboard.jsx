@@ -1851,13 +1851,18 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         })
       : bookings;
 
-    // Raggruppa le prenotazioni multi-bici (stesso stripe_session_id) in un'unica riga:
-    // somma del prezzo, elenco delle bici e degli id linkati per le azioni.
+    // Le nuove prenotazioni hanno bici_ids[]; quelle legacy hanno righe multiple stesso
+    // stripe_session_id. Gestiamo entrambi i casi.
     const grouped = (() => {
       const map = new Map();
       const out = [];
       for (const b of filteredBookings) {
-        const k = b.stripe_session_id ? `s:${b.stripe_session_id}` : `i:${b.id}`;
+        const newStyle = Array.isArray(b.bici_ids) && b.bici_ids.length > 0;
+        const k = newStyle ? `n:${b.id}` : (b.stripe_session_id ? `s:${b.stripe_session_id}` : `i:${b.id}`);
+        if (newStyle) {
+          out.push({ ...b, _ids: [b.id], _bici: [...b.bici_ids], _prezzo: Number(b.prezzo_totale) || 0, _count: b.bici_ids.length });
+          continue;
+        }
         if (!map.has(k)) {
           const lead = { ...b, _ids: [b.id], _bici: [b.bicicletta_id], _prezzo: Number(b.prezzo_totale) || 0, _count: 1 };
           map.set(k, lead);

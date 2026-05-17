@@ -109,13 +109,16 @@ router.post('/checkout', async (req, res) => { try {
   const tuttiGliId = Object.values(TIPO_IDS_BICI).flat();
   const { data: conflitti } = await supabase
     .from('prenotazioni')
-    .select('bicicletta_id')
+    .select('bicicletta_id, bici_ids')
     .eq('pagamento_status', 'paid')
     .lt('start_ts', end.toISOString())
-    .gt('end_ts', start.toISOString())
-    .in('bicicletta_id', tuttiGliId);
+    .gt('end_ts', start.toISOString());
 
-  const biciOccupate = new Set((conflitti || []).map(r => r.bicicletta_id));
+  const biciOccupate = new Set();
+  for (const r of (conflitti || [])) {
+    const ids = Array.isArray(r.bici_ids) && r.bici_ids.length ? r.bici_ids : [r.bicicletta_id];
+    for (const id of ids) biciOccupate.add(id);
+  }
 
   // Assegna bici per ciascun tipo richiesto
   const linguaValida   = ['it','en','de','es','fr'].includes(lingua) ? lingua : 'it';
@@ -168,13 +171,17 @@ router.post('/checkout', async (req, res) => { try {
     accCostTotal = perBike * totBici;
   }
 
-  // Costruisci record prenotazione per ogni bici assegnata
-  const insertData = assignedBikes.map((b, i) => ({
+  // UNA sola prenotazione anche per multi-bici: bicicletta_id = prima, bici_ids = tutte
+  const totalPrezzoBici = assignedBikes.reduce((s, b, i) => s + b.prezzoBase + accCostPerRow[i], 0);
+  const accessoriUnione = Array.from(new Set(accessoriPerRow.flat()));
+
+  const insertData = [{
     cliente_nome,
     cliente_email,
     cliente_telefono,
     cliente_note:        cliente_note || null,
-    bicicletta_id:       b.bicicletta_id,
+    bicicletta_id:       assignedBikes[0].bicicletta_id,
+    bici_ids:            assignedBikes.map(b => b.bicicletta_id),
     tipo_noleggio,
     giorni:              numGiorni,
     data_ritiro,
@@ -183,11 +190,11 @@ router.post('/checkout', async (req, res) => { try {
     orario_restituzione,
     start_ts:            start.toISOString(),
     end_ts:              end.toISOString(),
-    prezzo_totale:       b.prezzoBase + accCostPerRow[i],
-    accessori:           accessoriPerRow[i].join(','),
+    prezzo_totale:       +totalPrezzoBici.toFixed(2),
+    accessori:           accessoriUnione.join(','),
     lingua:              linguaValida,
     pagamento_status:    'pending',
-  }));
+  }];
 
   const { data: prenotazioni, error: dbError } = await supabase
     .from('prenotazioni')
@@ -374,7 +381,7 @@ router.get('/session/:sessionId', async (req, res) => {
   const { data, error } = await supabase
     .from('prenotazioni')
     .select(`
-      id, cliente_nome, cliente_email, bicicletta_id, tipo_noleggio,
+      id, cliente_nome, cliente_email, bicicletta_id, bici_ids, tipo_noleggio,
       giorni, data_ritiro, orario_ritiro, data_restituzione, orario_restituzione,
       prezzo_totale, pagamento_status, created_at
     `)
@@ -386,6 +393,12 @@ router.get('/session/:sessionId', async (req, res) => {
     return res.status(404).json({ error: 'Prenotazione non trovata' });
   }
 
+  // Una sola riga = nuova logica. Più righe = legacy (somma).
+  if (data.length === 1) {
+    const r = data[0];
+    const total_bikes = Array.isArray(r.bici_ids) && r.bici_ids.length ? r.bici_ids.length : 1;
+    return res.json({ ...r, total_bikes });
+  }
   const totalPrezzo = data.reduce((s, p) => s + Number(p.prezzo_totale), 0);
   return res.json({ ...data[0], prezzo_totale: totalPrezzo, total_bikes: data.length });
 });

@@ -822,15 +822,19 @@ router.post('/bookings/manual', async (req, res) => {
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
   const { data_restituzione, orario_restituzione, orario_ritiro } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
 
-  // Trova bici disponibile
+  // Trova bici disponibile (espandi bici_ids)
   const { data: conflitti } = await supabase
     .from('prenotazioni')
-    .select('bicicletta_id')
+    .select('bicicletta_id, bici_ids')
     .eq('pagamento_status', 'paid')
     .lt('start_ts', end.toISOString())
     .gt('end_ts', start.toISOString());
 
-  const occupate = new Set((conflitti || []).map(r => r.bicicletta_id));
+  const occupate = new Set();
+  for (const r of (conflitti || [])) {
+    const ids = Array.isArray(r.bici_ids) && r.bici_ids.length ? r.bici_ids : [r.bicicletta_id];
+    for (const id of ids) occupate.add(id);
+  }
 
   // Normalizza l'input: tre modi supportati
   //   1) bici: [{ bike_type, quantita }, ...]                  → multi-bici (es. famiglia)
@@ -930,15 +934,21 @@ router.post('/bookings/manual', async (req, res) => {
 
   const noteFinale = [cliente_note, note_pagamento ? `Pagamento: ${note_pagamento}` : ''].filter(Boolean).join(' | ');
 
-  // Group id sintetico (riusa stripe_session_id) per legare le righe della stessa prenotazione
-  const groupId = `manual_${crypto.randomUUID()}`;
+  // UNA sola prenotazione anche per multi-bici:
+  // - bicicletta_id = prima bici (compat con tutti i punti che leggono solo questo)
+  // - bici_ids = elenco completo delle bici assegnate
+  // - prezzo_totale = somma di tutte le bici/accessori
+  // - accessori = unione (dedup) degli accessori di tutte le righe
+  const totalPrezzo = prezziPerBici.reduce((s, n) => s + n, 0);
+  const accessoriUnione = Array.from(new Set(accessoriPerRow.flat()));
 
-  const insertData = assignedBikes.map((b, i) => ({
+  const insertData = [{
     cliente_nome:        cliente_nome.trim(),
     cliente_email:       cliente_email.trim() || 'noemail@bikerentaltarzo.it',
     cliente_telefono:    (cliente_telefono || '').trim(),
     cliente_note:        noteFinale || null,
-    bicicletta_id:       b.bicicletta_id,
+    bicicletta_id:       assignedBikes[0].bicicletta_id,
+    bici_ids:            assignedBikes.map(b => b.bicicletta_id),
     tipo_noleggio,
     giorni:              numGiorni,
     data_ritiro,
@@ -947,11 +957,11 @@ router.post('/bookings/manual', async (req, res) => {
     orario_restituzione,
     start_ts:            start.toISOString(),
     end_ts:              end.toISOString(),
-    prezzo_totale:       prezziPerBici[i],
-    accessori:           accessoriPerRow[i].join(','),
+    prezzo_totale:       +totalPrezzo.toFixed(2),
+    accessori:           accessoriUnione.join(','),
     pagamento_status:    'paid',
-    stripe_session_id:   groupId,
-  }));
+    stripe_session_id:   `manual_${crypto.randomUUID()}`,
+  }];
 
   const { data: prenotazioni, error } = await supabase
     .from('prenotazioni')
@@ -963,24 +973,21 @@ router.post('/bookings/manual', async (req, res) => {
     return res.status(500).json({ error: error?.message || 'Errore creazione prenotazioni' });
   }
 
-  // WhatsApp alert sul lead (totale aggregato)
-  const totaleAggregato = prenotazioni.reduce((s, p) => s + Number(p.prezzo_totale), 0);
-  const leadAlert = { ...prenotazioni[0], prezzo_totale: totaleAggregato, _total_bikes: prenotazioni.length };
+  // WhatsApp alert (singola prenotazione con info su tutte le bici)
+  const leadAlert = { ...prenotazioni[0], _total_bikes: assignedBikes.length };
   sendWhatsAppAlert(leadAlert).catch(e => console.error('WhatsApp manual:', e));
 
   await logAction('manual_booking', prenotazioni[0].id, {
     nome: cliente_nome, tipo: tipo_noleggio, data: data_ritiro,
-    bici_count: prenotazioni.length,
-    bici_ids: prenotazioni.map(p => p.bicicletta_id),
-    group_id: groupId,
+    bici_count: assignedBikes.length,
+    bici_ids:   assignedBikes.map(b => b.bicicletta_id),
   }, getIp(req));
 
-  // Backward compat: ritorniamo .booking (singola, lead) + .bookings (array completo)
   return res.json({
     success:  true,
     booking:  prenotazioni[0],
     bookings: prenotazioni,
-    total:    totaleAggregato,
+    total:    +totalPrezzo.toFixed(2),
   });
 });
 
