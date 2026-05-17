@@ -178,4 +178,6 @@ export const adminApi = {
   getNotifiche:     (limit = 30) => adminGet(`/admin/notifiche?limit=${limit}`),
   markNotificaRead: (id)         => adminPost(`/admin/notifiche/${id}/read`, {}),
   markAllRead:      ()           => adminPost('/admin/notifiche/read-all', {}),
+
+  getHeartbeat: () => adminGet('/admin/heartbeat'),
 };

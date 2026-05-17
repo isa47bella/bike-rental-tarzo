@@ -5,6 +5,7 @@ import ActionFeed  from './admin/ActionFeed.jsx';
 import SearchModal from './admin/SearchModal.jsx';
 import NotificationDrawer from './admin/NotificationDrawer.jsx';
 import BulkActionBar from './admin/BulkActionBar.jsx';
+import useHeartbeat from './admin/useHeartbeat.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -373,6 +374,25 @@ export default function AdminDashboard() {
   // Action Feed (home)
   const [feedRefresh, setFeedRefresh] = useState(0);
   const [feedCount,   setFeedCount]   = useState(0);
+
+  // Phase 7: heartbeat polling (30s)
+  const { data: hb, lastUpdate, setOnNewBooking } = useHeartbeat(30000);
+
+  useEffect(() => {
+    if (!hb) return;
+    setNotifUnread(hb.notifiche_non_lette || 0);
+    setFeedCount(hb.azioni_pendenti || 0);
+  }, [hb]);
+
+  useEffect(() => {
+    setOnNewBooking((res) => {
+      console.log('Nuova prenotazione paid:', res.last_booking_nome);
+      if (activeView === 'oggi' && typeof loadOggi === 'function') {
+        loadOggi();
+        if (typeof setFeedRefresh === 'function') setFeedRefresh(t => t + 1);
+      }
+    });
+  }, [activeView]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleFeedAction(actionKey, card) {
     const bookingId = card.booking_id;
@@ -1332,6 +1352,11 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               )}
             </button>
             <span className="ac-topbar-date">{todayIT()}</span>
+            {lastUpdate && (
+              <span className="ac-topbar-update" title={`Heartbeat: ${lastUpdate.toLocaleTimeString()}`}>
+                Aggiornato ora
+              </span>
+            )}
             <button className="ac-icon-btn" onClick={refresh} title="Aggiorna">
               <IconRefresh />
             </button>

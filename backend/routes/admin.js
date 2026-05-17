@@ -452,6 +452,34 @@ router.post('/bookings/:id/send-firma', async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/heartbeat ─────────────────────────────────────────────────
+router.get('/heartbeat', async (req, res) => {
+  try {
+    const [unreadNotifRes, lastBookingRes, azioniRes] = await Promise.all([
+      supabase.from('notifiche').select('id', { count: 'exact', head: true }).is('letta_at', null),
+      supabase.from('prenotazioni')
+        .select('id, cliente_nome, created_at')
+        .eq('pagamento_status', 'paid')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase.from('prenotazioni')
+        .select('id', { count: 'exact', head: true })
+        .in('cauzione_status', ['failed', 'failed_permanent']),
+    ]);
+
+    return res.json({
+      notifiche_non_lette: unreadNotifRes.count || 0,
+      azioni_pendenti:     azioniRes.count || 0,
+      last_booking_id:     lastBookingRes.data?.id || null,
+      last_booking_nome:   lastBookingRes.data?.cliente_nome || null,
+      ts: new Date().toISOString(),
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── GET /api/admin/oggi ──────────────────────────────────────────────────────
 
 router.get('/oggi', async (req, res) => {

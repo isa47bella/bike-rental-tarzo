@@ -4227,3 +4227,13 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .ac-root .ac-notif-drawer { width: 100vw; }
 }
 
+
+.ac-root .ac-topbar-update {
+  font-size: 0.7rem;
+  color: var(--ac-text-muted);
+  margin-left: 8px;
+  font-style: italic;
+}
+@media (max-width: 640px) {
+  .ac-root .ac-topbar-update { display: none; }
+}
