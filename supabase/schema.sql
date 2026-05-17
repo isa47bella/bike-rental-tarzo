@@ -90,3 +90,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_log_booking_id ON audit_log(booking_id);
+
+-- ─── Smart Inbox: notifiche per il gestore ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifiche (
+  id          BIGSERIAL    PRIMARY KEY,
+  tipo        TEXT         NOT NULL,
+  booking_id  UUID,
+  titolo      TEXT         NOT NULL,
+  descrizione TEXT,
+  letta_at    TIMESTAMPTZ  DEFAULT NULL,
+  created_at  TIMESTAMPTZ  DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_notifiche_unread
+  ON notifiche(created_at DESC) WHERE letta_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_notifiche_booking
+  ON notifiche(booking_id) WHERE booking_id IS NOT NULL;
+
+-- ─── Cauzione retry counter (per auto-retry cron) ─────────────────────────────
+ALTER TABLE prenotazioni
+  ADD COLUMN IF NOT EXISTS cauzione_retry_count INT DEFAULT 0;

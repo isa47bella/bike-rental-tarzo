@@ -12,6 +12,7 @@ const supabase = require('../lib/supabase');
 const { sendFirmaLinkEmail, sendReminderEmail } = require('../lib/email');
 const { sendPushToAll } = require('../lib/push');
 const { CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
+const { writeNotification } = require('../lib/notifications');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -143,6 +144,11 @@ router.get('/deposit', cronAuth, async (req, res) => {
           body:  `${booking.cliente_nome} (${booking.data_ritiro}) — stato Stripe: ${pi.status}`,
           url:   '/admin',
         }).catch(e => console.error('[CRON deposit] push fail notify error:', e.message));
+        await writeNotification('cauzione_failed', {
+          titolo: `Cauzione fallita — ${booking.cliente_nome}`,
+          descrizione: `Data ritiro: ${booking.data_ritiro}.`,
+          booking_id: booking.id,
+        }).catch(_ => {});
       }
 
       results.push({ id: booking.id, status });
@@ -156,6 +162,11 @@ router.get('/deposit', cronAuth, async (req, res) => {
         body:  `${booking.cliente_nome} (${booking.data_ritiro}) — ${err.message.substring(0, 80)}`,
         url:   '/admin',
       }).catch(e => console.error('[CRON deposit] push fail notify error:', e.message));
+      await writeNotification('cauzione_failed', {
+        titolo: `Cauzione fallita — ${booking.cliente_nome}`,
+        descrizione: `Data ritiro: ${booking.data_ritiro}.`,
+        booking_id: booking.id,
+      }).catch(_ => {});
 
       results.push({ id: booking.id, status: 'failed', error: err.message });
     }
@@ -291,6 +302,152 @@ router.get('/gdpr-cleanup', cronAuth, async (req, res) => {
   const deleted = data?.length || 0;
   console.log(`[CRON gdpr-cleanup] Done — ${deleted} prenotazioni cancellate`);
   return res.json({ deleted, cutoff: cutoffStr });
+});
+
+// ─── GET /api/cron/auto-cancel-pending ────────────────────────────────────────
+// Cancella prenotazioni 'pending' più vecchie di 30 minuti.
+// Tenta anche di scadere la sessione Stripe (no-op se già scaduta).
+
+router.get('/auto-cancel-pending', cronAuth, async (req, res) => {
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+
+  const { data: stale, error } = await supabase
+    .from('prenotazioni')
+    .select('id, stripe_session_id, cliente_nome')
+    .eq('pagamento_status', 'pending')
+    .lt('created_at', cutoff);
+
+  if (error) {
+    console.error('[cron auto-cancel-pending] db error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!stale?.length) {
+    return res.json({ cancelled: 0 });
+  }
+
+  let cancelled = 0;
+  for (const row of stale) {
+    if (row.stripe_session_id && !row.stripe_session_id.startsWith('manual_')) {
+      try { await stripe.checkout.sessions.expire(row.stripe_session_id); }
+      catch (_) { /* sessione già scaduta o non esiste, ignora */ }
+    }
+    const { error: updErr } = await supabase
+      .from('prenotazioni')
+      .update({ pagamento_status: 'cancelled' })
+      .eq('id', row.id)
+      .eq('pagamento_status', 'pending');
+    if (!updErr) cancelled++;
+  }
+
+  if (cancelled > 0) {
+    await writeNotification('pending_auto_cancelled', {
+      titolo: `${cancelled} prenotazion${cancelled === 1 ? 'e' : 'i'} pending scaduta${cancelled === 1 ? '' : 'e'}`,
+      descrizione: 'Carrelli abbandonati >30min cancellati automaticamente.',
+    });
+  }
+
+  console.log(`[cron auto-cancel-pending] cancellate ${cancelled}/${stale.length}`);
+  return res.json({ cancelled, scanned: stale.length });
+});
+
+// ─── GET /api/cron/retry-cauzioni ─────────────────────────────────────────────
+// Ritenta cauzioni in stato 'failed' per prenotazioni con data_ritiro futura.
+// Max 3 tentativi, poi marca 'failed_permanent' e notifica.
+
+router.get('/retry-cauzioni', cronAuth, async (req, res) => {
+  const today = new Date().toISOString().substring(0, 10);
+
+  const { data: bookings, error } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, stripe_customer_id, stripe_payment_method_id, cauzione_retry_count, data_ritiro')
+    .eq('cauzione_status', 'failed')
+    .gte('data_ritiro', today)
+    .lt('cauzione_retry_count', 3)
+    .is('cauzione_pi_id', null);
+
+  if (error) {
+    console.error('[cron retry-cauzioni] db error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!bookings?.length) {
+    return res.json({ retried: 0 });
+  }
+
+  const results = { ok: 0, failed: 0, permanent: 0 };
+
+  for (const b of bookings) {
+    if (!b.stripe_customer_id || !b.stripe_payment_method_id) {
+      results.permanent++;
+      await supabase.from('prenotazioni').update({ cauzione_status: 'no_card' }).eq('id', b.id);
+      continue;
+    }
+
+    try {
+      const pi = await stripe.paymentIntents.create({
+        amount:         CAUZIONE_AMOUNT_CENTS,
+        currency:       'eur',
+        customer:       b.stripe_customer_id,
+        payment_method: b.stripe_payment_method_id,
+        capture_method: 'manual',
+        confirm:        true,
+        off_session:    true,
+        description:    `Cauzione bici (retry) — ${b.cliente_nome} (${b.id.substring(0, 8)})`,
+      });
+
+      const newStatus = pi.status === 'requires_capture' ? 'authorized' : 'failed';
+      await supabase.from('prenotazioni').update({
+        cauzione_pi_id: pi.id,
+        cauzione_status: newStatus,
+        cauzione_retry_count: (b.cauzione_retry_count || 0) + 1,
+      }).eq('id', b.id);
+
+      if (newStatus === 'authorized') results.ok++;
+      else results.failed++;
+    } catch (err) {
+      const newCount = (b.cauzione_retry_count || 0) + 1;
+      const permanent = newCount >= 3;
+      await supabase.from('prenotazioni').update({
+        cauzione_status: permanent ? 'failed_permanent' : 'failed',
+        cauzione_retry_count: newCount,
+      }).eq('id', b.id);
+
+      if (permanent) {
+        results.permanent++;
+        await writeNotification('cauzione_failed_permanent', {
+          titolo: `Cauzione fallita 3 volte — ${b.cliente_nome}`,
+          descrizione: `Stripe: ${err.message.substring(0, 120)}. Serve intervento manuale.`,
+          booking_id: b.id,
+        });
+      } else {
+        results.failed++;
+      }
+    }
+  }
+
+  console.log(`[cron retry-cauzioni] ok=${results.ok} failed=${results.failed} permanent=${results.permanent}`);
+  return res.json({ retried: bookings.length, ...results });
+});
+
+// ─── GET /api/cron/cleanup-audit ──────────────────────────────────────────────
+// Elimina record audit_log più vecchi di 180 giorni.
+
+router.get('/cleanup-audit', cronAuth, async (req, res) => {
+  const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error, count } = await supabase
+    .from('audit_log')
+    .delete({ count: 'exact' })
+    .lt('created_at', cutoff);
+
+  if (error) {
+    console.error('[cron cleanup-audit] db error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  console.log(`[cron cleanup-audit] eliminati ${count || 0} record (cutoff ${cutoff})`);
+  return res.json({ deleted: count || 0, cutoff });
 });
 
 module.exports = router;
