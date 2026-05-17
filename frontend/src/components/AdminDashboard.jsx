@@ -2758,7 +2758,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             <div className="ac-field">
               <label className="ac-label">Nome cliente *</label>
               <input className="ac-input" type="text" placeholder="Mario Rossi"
-                value={f.cliente_nome} onChange={e => setManualField('cliente_nome', e.target.value)} autoFocus />
+                value={f.cliente_nome} onChange={e => setManualField('cliente_nome', e.target.value)} />
             </div>
             <div className="ac-field">
               <label className="ac-label">Telefono *</label>
