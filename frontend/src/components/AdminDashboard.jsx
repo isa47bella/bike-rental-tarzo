@@ -3,6 +3,7 @@ import { adminApi, api } from '../lib/api.js';
 import KpiStrip    from './admin/KpiStrip.jsx';
 import ActionFeed  from './admin/ActionFeed.jsx';
 import SearchModal from './admin/SearchModal.jsx';
+import BulkActionBar from './admin/BulkActionBar.jsx';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -343,6 +344,9 @@ export default function AdminDashboard() {
   // Action sheet (⋮) in prenotazioni table — modal, no clipping issues
   const [actionSheet, setActionSheet] = useState(null); // booking object or null
 
+  // Phase 5: bulk selection
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
   // Foto modal
   const [fotoModal, setFotoModal] = useState(null); // null | { loading, nome, foto: {documento, consegna, rientro} }
 
@@ -547,6 +551,54 @@ async function handleClientiSearch(e) {
       setLoading(false);
     }
   }, []);
+
+  // Phase 5: bulk selection handlers
+  function toggleSelect(id) {
+    setSelectedIds(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id); else s.add(id);
+      return s;
+    });
+  }
+  function toggleSelectAll(visibleIds) {
+    setSelectedIds(prev => {
+      const allSelected = visibleIds.length > 0 && visibleIds.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(visibleIds);
+    });
+  }
+  function clearSelection() { setSelectedIds(new Set()); }
+
+  async function bulkCancel() {
+    if (!confirm(`Cancellare ${selectedIds.size} prenotazioni? Questa azione è irreversibile.`)) return;
+    const ids = Array.from(selectedIds);
+    let ok = 0;
+    for (const id of ids) {
+      try { await adminApi.cancelBooking(id); ok++; }
+      catch (e) { console.error('bulk cancel', id, e?.message); }
+    }
+    alert(`Cancellate ${ok}/${ids.length}`);
+    clearSelection();
+    if (typeof loadBookings === 'function') loadBookings('paid');
+  }
+
+  function bulkWhatsApp() {
+    const sourceList = Array.isArray(bookings) ? bookings : [];
+    const rows = sourceList.filter(b => selectedIds.has(b.id));
+    const phones = rows.map(b => (b.cliente_telefono || '').replace(/\D/g, '')).filter(Boolean);
+    if (phones.length === 0) { alert('Nessun telefono disponibile'); return; }
+    const msg = encodeURIComponent('Ciao! Ti scriviamo riguardo alla tua prenotazione di Arfanta Bike Rental.');
+    phones.slice(0, 5).forEach(p => window.open(`https://wa.me/${p}?text=${msg}`, '_blank'));
+    if (phones.length > 5) alert(`${phones.length} numeri totali, aperti solo i primi 5 (popup blocker). Deseleziona alcune righe e riprova.`);
+  }
+
+  function bulkEmail() {
+    const sourceList = Array.isArray(bookings) ? bookings : [];
+    const rows = sourceList.filter(b => selectedIds.has(b.id));
+    const emails = rows.map(b => b.cliente_email).filter(e => e && e !== 'noemail@bikerentaltarzo.it');
+    if (emails.length === 0) { alert('Nessuna email disponibile'); return; }
+    window.location.href = `mailto:?bcc=${emails.join(',')}&subject=${encodeURIComponent('Arfanta Bike Rental')}`;
+  }
 
   const loadFlotta = useCallback(async () => {
     setFlottaLoading(true);
@@ -1296,6 +1348,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
       {actionSheet       && renderActionSheet()}
       {fotoModal         && renderFotoModal()}
 
+      <BulkActionBar
+        count={selectedIds.size}
+        onEmail={bulkEmail}
+        onWhatsApp={bulkWhatsApp}
+        onCancel={bulkCancel}
+        onClear={clearSelection}
+      />
+
       <SearchModal
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -1715,6 +1775,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               <table className="ac-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 36 }}>
+                      <input
+                        type="checkbox"
+                        className="ac-bulk-checkbox"
+                        checked={filteredBookings.length > 0 && filteredBookings.every(b => selectedIds.has(b.id))}
+                        onChange={() => toggleSelectAll(filteredBookings.map(b => b.id))}
+                      />
+                    </th>
                     <th>Codice</th>
                     <th>Cliente</th>
                     <th>Tipo</th>
@@ -1731,6 +1799,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                 <tbody>
                   {filteredBookings.map(b => (
                     <tr key={b.id}>
+                      <td onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="ac-bulk-checkbox"
+                          checked={selectedIds.has(b.id)}
+                          onChange={() => toggleSelect(b.id)}
+                        />
+                      </td>
                       <td><span className="ac-code">{b.id.toUpperCase().substring(0, 8)}</span></td>
                       <td>
                         <div className="ac-cell-name">

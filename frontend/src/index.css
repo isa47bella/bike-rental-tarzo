@@ -4102,3 +4102,43 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .ac-root .ac-topbar-search-label,
   .ac-root .ac-topbar-search-kbd { display: none; }
 }
+
+/* ─── Phase 5: Bulk action bar ─────────────────────────────────────────── */
+.ac-root .ac-bulk-bar {
+  position: fixed;
+  bottom: 80px; /* sopra al bottom-nav su mobile */
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ac-text);
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 18px;
+  box-shadow: var(--ac-sh-modal);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 100;
+  max-width: 92vw;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.ac-root .ac-bulk-count { font-weight: 700; font-size: 0.85rem; }
+.ac-root .ac-bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.ac-root .ac-bulk-bar .ac-btn.ghost.sm {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+.ac-root .ac-bulk-bar .ac-btn.ghost.sm:hover {
+  background: rgba(255,255,255,0.2);
+}
+@media (min-width: 641px) {
+  .ac-root .ac-bulk-bar { bottom: 24px; }
+}
+
+.ac-root .ac-bulk-checkbox {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--ac-brand);
+}
+
