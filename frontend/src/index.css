@@ -4237,3 +4237,197 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
 @media (max-width: 640px) {
   .ac-root .ac-topbar-update { display: none; }
 }
+
+/* ─── Admin light theme — additional overrides per legacy classes ───────────── */
+
+/* Stat cards (vecchia dashboard) */
+.ac-root .ac-stat-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+  box-shadow: var(--ac-sh-card);
+}
+.ac-root .ac-stat-value { color: var(--ac-text); }
+.ac-root .ac-stat-label { color: var(--ac-text-muted); }
+
+/* Stat icon tinted bg — colori del logo originale, adattati per fondi chiari */
+.ac-root .ac-stat-icon.orange { background: var(--ac-brand-soft); color: var(--ac-brand); }
+.ac-root .ac-stat-icon.green  { background: var(--ac-green-soft); color: var(--ac-green); }
+.ac-root .ac-stat-icon.indigo { background: var(--ac-blue-soft);  color: var(--ac-blue); }
+.ac-root .ac-stat-icon.yellow { background: var(--ac-amber-soft); color: #92400E; }
+
+/* Alert banner (es. "In ritardo") */
+.ac-root .ac-alert-banner {
+  background: var(--ac-red-soft);
+  border: 1px solid var(--ac-red-border);
+  color: #991B1B;
+}
+.ac-root .ac-alert-banner svg { stroke: var(--ac-red); }
+
+/* Today cards (Ritiri / Restituzioni oggi sotto al Feed) */
+.ac-root .ac-today-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+  box-shadow: var(--ac-sh-card);
+}
+.ac-root .ac-today-card-header { color: var(--ac-text); border-bottom-color: var(--ac-border); }
+.ac-root .ac-today-card-title  { color: var(--ac-text); }
+.ac-root .ac-today-row {
+  background: var(--ac-surface-alt);
+  border: 1px solid var(--ac-border);
+}
+.ac-root .ac-today-time  { color: var(--ac-brand); font-weight: 700; }
+.ac-root .ac-today-name  { color: var(--ac-text); }
+.ac-root .ac-today-bike  { color: var(--ac-text-muted); }
+.ac-root .ac-today-more  { color: var(--ac-text-muted); }
+.ac-root .ac-today-more:hover { color: var(--ac-brand); }
+
+/* Fleet cards */
+.ac-root .ac-fleet-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+  box-shadow: var(--ac-sh-card);
+}
+.ac-root .ac-fleet-card-top { border-bottom-color: var(--ac-border); }
+.ac-root .ac-fleet-name  { color: var(--ac-text); }
+.ac-root .ac-fleet-icon  { background: var(--ac-surface-alt); color: var(--ac-text-muted); }
+.ac-root .ac-cell-sub    { color: var(--ac-text-muted); }
+.ac-root .ac-fleet-maint { color: var(--ac-text-body); }
+.ac-root .ac-maint-row   { color: var(--ac-text-body); }
+.ac-root .ac-maint-row svg { stroke: var(--ac-text-muted); }
+.ac-root .ac-maint-row.red    { color: var(--ac-red); }
+.ac-root .ac-maint-row.yellow { color: #92400E; }
+.ac-root .ac-fleet-note  {
+  background: var(--ac-amber-soft);
+  border: 1px solid var(--ac-amber-border);
+  color: #78350F;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+/* Icon button (top-right secondary actions) */
+.ac-root .ac-icon-btn {
+  background: transparent;
+  color: var(--ac-text-muted);
+  border: 1px solid var(--ac-border);
+}
+.ac-root .ac-icon-btn:hover {
+  background: var(--ac-surface-alt);
+  border-color: var(--ac-border-strong);
+  color: var(--ac-text);
+}
+
+/* Filter buttons (Prenotazioni) */
+.ac-root .ac-filter-btn {
+  background: var(--ac-surface);
+  color: var(--ac-text-muted);
+  border: 1px solid var(--ac-border);
+}
+.ac-root .ac-filter-btn:hover { border-color: var(--ac-brand); color: var(--ac-brand); background: var(--ac-brand-soft); }
+.ac-root .ac-filter-btn.active { background: var(--ac-brand); border-color: var(--ac-brand); color: #fff; }
+
+/* Modal header/info/desc */
+.ac-root .ac-modal-header { border-bottom-color: var(--ac-border); }
+.ac-root .ac-modal-header h2 { color: var(--ac-text); }
+.ac-root .ac-modal-info {
+  background: var(--ac-surface-alt);
+  border-bottom-color: var(--ac-border);
+  color: var(--ac-text-body);
+}
+.ac-root .ac-modal-info strong { color: var(--ac-text); }
+.ac-root .ac-modal-desc { color: var(--ac-text-body); }
+.ac-root .ac-modal-footer { background: var(--ac-surface); border-top-color: var(--ac-border); }
+
+/* Action sheet (3-dot menu modal) */
+.ac-root .ac-actionsheet {
+  background: var(--ac-surface);
+  color: var(--ac-text-body);
+}
+.ac-root .ac-actionsheet-header { border-bottom-color: var(--ac-border); }
+.ac-root .ac-actionsheet-name   { color: var(--ac-text); }
+.ac-root .ac-actionsheet-meta   { color: var(--ac-text-muted); }
+.ac-root .ac-actionsheet-btn {
+  background: var(--ac-surface);
+  color: var(--ac-text-body);
+  border: 1px solid var(--ac-border);
+}
+.ac-root .ac-actionsheet-btn:hover { background: var(--ac-surface-alt); border-color: var(--ac-border-strong); }
+.ac-root .ac-actionsheet-sep { background: var(--ac-border); }
+
+/* Kebab button */
+.ac-root .ac-kebab-btn { color: var(--ac-text-muted); }
+.ac-root .ac-kebab-btn:hover { background: var(--ac-surface-alt); color: var(--ac-text); }
+
+/* Empty state */
+.ac-root .ac-empty-state {
+  background: var(--ac-surface);
+  border: 1px dashed var(--ac-border);
+  color: var(--ac-text-muted);
+}
+.ac-root .ac-empty-state p { color: var(--ac-text-muted); }
+
+/* Code/short ID chips */
+.ac-root .ac-code {
+  background: var(--ac-surface-alt);
+  color: var(--ac-text-muted);
+  border: 1px solid var(--ac-border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: monospace;
+}
+
+/* Photo upload area (check-in/check-out) */
+.ac-root .ac-photo-upload {
+  background: var(--ac-surface-alt);
+  border-color: var(--ac-border-strong);
+}
+.ac-root .ac-photo-upload:hover { border-color: var(--ac-brand); }
+.ac-root .ac-photo-upload.has-photo { border-color: var(--ac-green); }
+.ac-root .ac-photo-empty { color: var(--ac-text-muted); }
+
+/* Spinner stays neutral */
+.ac-root .ac-spinner,
+.ac-root .spinner {
+  border-color: var(--ac-border);
+  border-top-color: var(--ac-brand);
+}
+
+/* Note indicator dot */
+.ac-root .ac-note-indicator { background: var(--ac-amber); }
+.ac-root .ac-actionsheet-dot { background: var(--ac-amber); }
+
+/* Login screen — manteniamo dark per il login, è uno schermo a sé.
+   Nessuna override: la login card NON è dentro .ac-root quindi resta col tema originale. */
+
+/* Inline info boxes (hardcoded dark in JSX) — colpiamo via attribute selector */
+.ac-root [style*="background: rgb(26, 40, 64)"],
+.ac-root [style*="background:#1A2840"],
+.ac-root [style*="background: #1A2840"] {
+  background: var(--ac-blue-soft) !important;
+  color: var(--ac-text-body) !important;
+  border: 1px solid #BFDBFE;
+}
+
+/* Generic foreground rescue: any inline color: '#94a3b8' / '#64748b' / '#8FA8C8' / '#5A7090' / '#6B8BAF' / '#C8D8E8' that was meant for dark bg, remap on light */
+.ac-root [style*="color: rgb(148, 163, 184)"],
+.ac-root [style*="color:#94a3b8"],
+.ac-root [style*="color: #94a3b8"],
+.ac-root [style*="color: rgb(100, 116, 139)"],
+.ac-root [style*="color:#64748b"],
+.ac-root [style*="color: #64748b"],
+.ac-root [style*="color: rgb(143, 168, 200)"],
+.ac-root [style*="color:#8FA8C8"],
+.ac-root [style*="color: #8FA8C8"],
+.ac-root [style*="color: rgb(107, 139, 175)"],
+.ac-root [style*="color:#6B8BAF"],
+.ac-root [style*="color: #6B8BAF"],
+.ac-root [style*="color: rgb(200, 216, 232)"],
+.ac-root [style*="color:#C8D8E8"],
+.ac-root [style*="color: #C8D8E8"],
+.ac-root [style*="color: rgb(90, 112, 144)"],
+.ac-root [style*="color:#5A7090"],
+.ac-root [style*="color: #5A7090"] {
+  color: var(--ac-text-muted) !important;
+}
