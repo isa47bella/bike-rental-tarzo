@@ -4278,8 +4278,10 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   border: 1px solid var(--ac-border);
 }
 .ac-root .ac-today-time  { color: var(--ac-brand); font-weight: 700; }
-.ac-root .ac-today-name  { color: var(--ac-text); }
+.ac-root .ac-today-name  { color: var(--ac-text) !important; font-weight: 600; }
 .ac-root .ac-today-bike  { color: var(--ac-text-muted); }
+.ac-root .ac-op-name     { color: var(--ac-text) !important; font-weight: 600; }
+.ac-root .ac-cell-name   { color: var(--ac-text) !important; font-weight: 600; }
 .ac-root .ac-today-more  { color: var(--ac-text-muted); }
 .ac-root .ac-today-more:hover { color: var(--ac-brand); }
 
