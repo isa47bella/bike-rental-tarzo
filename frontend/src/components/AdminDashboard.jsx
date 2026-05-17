@@ -1147,7 +1147,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
   const lateCount = oggiData?.inRitardo?.length || 0;
 
   return (
-    <div className="ac-layout">
+    <div className="ac-root ac-layout">
 
       {/* ── Sidebar ── */}
       <aside className="ac-sidebar">

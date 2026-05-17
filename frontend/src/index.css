@@ -4,6 +4,7 @@
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap');
+@import './styles/admin-tokens.css';
 
 :root {
   --primary:       #EA580C;
@@ -3763,4 +3764,129 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   .cookie-banner-actions { width: 100%; justify-content: flex-end; }
   .privacy-table { font-size: 0.75rem; }
   .privacy-table th, .privacy-table td { padding: 6px 8px; }
+}
+
+/* ─── Admin light theme — overrides quando .ac-root è presente ─── */
+
+.ac-root.ac-layout {
+  background: var(--ac-bg);
+  color: var(--ac-text-body);
+}
+
+.ac-root .ac-topbar {
+  background: var(--ac-surface);
+  border-bottom: 1px solid var(--ac-border);
+  color: var(--ac-text);
+  box-shadow: var(--ac-sh-card);
+}
+.ac-root .ac-topbar-title { color: var(--ac-text); font-weight: 700; }
+.ac-root .ac-topbar-date  { color: var(--ac-text-muted); }
+
+.ac-root .ac-sidebar {
+  background: var(--ac-surface);
+  border-right: 1px solid var(--ac-border);
+}
+.ac-root .ac-sidebar-brand { color: var(--ac-text); }
+.ac-root .ac-sidebar-title    { color: var(--ac-text); }
+.ac-root .ac-sidebar-subtitle { color: var(--ac-text-muted); }
+
+.ac-root .ac-nav-item {
+  color: var(--ac-text-muted);
+  background: transparent;
+}
+.ac-root .ac-nav-item:hover {
+  background: var(--ac-surface-alt);
+  color: var(--ac-text);
+}
+.ac-root .ac-nav-item.active {
+  background: var(--ac-brand-soft);
+  color: var(--ac-brand);
+  font-weight: 700;
+}
+
+.ac-root .ac-content { background: var(--ac-bg); color: var(--ac-text-body); }
+
+.ac-root .ac-card,
+.ac-root .ac-modal {
+  background: var(--ac-surface);
+  border-color: var(--ac-border);
+  color: var(--ac-text-body);
+  box-shadow: var(--ac-sh-card);
+}
+.ac-root .ac-modal { box-shadow: var(--ac-sh-modal); }
+
+.ac-root .ac-btn.primary {
+  background: var(--ac-brand);
+  color: #fff;
+  border-color: var(--ac-brand);
+}
+.ac-root .ac-btn.primary:hover {
+  background: var(--ac-brand-hover);
+  border-color: var(--ac-brand-hover);
+}
+.ac-root .ac-btn.ghost {
+  background: var(--ac-surface);
+  color: var(--ac-text-body);
+  border: 1px solid var(--ac-border);
+}
+.ac-root .ac-btn.ghost:hover {
+  border-color: var(--ac-border-strong);
+  background: var(--ac-surface-alt);
+}
+
+.ac-root .ac-input,
+.ac-root .ac-select,
+.ac-root .ac-textarea {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+}
+.ac-root .ac-input:focus,
+.ac-root .ac-select:focus,
+.ac-root .ac-textarea:focus {
+  border-color: var(--ac-brand);
+  outline: 2px solid var(--ac-brand-soft);
+  outline-offset: 0;
+}
+
+.ac-root .ac-label { color: var(--ac-text-muted); }
+
+.ac-root .ac-badge.green  { background: var(--ac-green-soft); color: var(--ac-green); border-color: var(--ac-green-border); }
+.ac-root .ac-badge.red    { background: var(--ac-red-soft);   color: var(--ac-red);   border-color: var(--ac-red-border); }
+.ac-root .ac-badge.yellow { background: var(--ac-amber-soft); color: #92400E; border-color: var(--ac-amber-border); }
+.ac-root .ac-badge.indigo,
+.ac-root .ac-badge.cauzione-ok { background: var(--ac-blue-soft); color: var(--ac-blue); border-color: #BFDBFE; }
+.ac-root .ac-badge.cauzione-cap { background: var(--ac-brand-soft); color: var(--ac-brand); border-color: #FED7AA; }
+
+.ac-root .ac-table-wrap,
+.ac-root .admin-table-scroll {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-r-card);
+}
+.ac-root table th {
+  background: var(--ac-surface-alt);
+  color: var(--ac-text-muted);
+  border-bottom: 1px solid var(--ac-border);
+}
+.ac-root table td {
+  border-bottom: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+}
+.ac-root table tr:hover td { background: var(--ac-surface-alt); }
+
+.ac-root .ac-bottom-nav {
+  background: var(--ac-surface);
+  border-top: 1px solid var(--ac-border);
+}
+.ac-root .ac-bottom-nav-item { color: var(--ac-text-muted); }
+.ac-root .ac-bottom-nav-item.active { color: var(--ac-brand); }
+
+.ac-root .ac-kebab-btn {
+  color: var(--ac-text-muted);
+  background: transparent;
+}
+.ac-root .ac-kebab-btn:hover {
+  background: var(--ac-surface-alt);
+  color: var(--ac-text);
 }

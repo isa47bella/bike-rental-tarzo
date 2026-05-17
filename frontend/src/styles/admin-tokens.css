@@ -1,0 +1,39 @@
+/* Admin Panel design tokens — Clean Modern Light theme.
+   Applicato sotto .ac-root e tutti i suoi figli. Lascia il sito pubblico inalterato. */
+.ac-root {
+  --ac-bg: #F9FAFB;
+  --ac-surface: #FFFFFF;
+  --ac-surface-alt: #F3F4F6;
+  --ac-border: #E5E7EB;
+  --ac-border-strong: #D1D5DB;
+
+  --ac-text: #0F172A;
+  --ac-text-body: #1F2937;
+  --ac-text-muted: #6B7280;
+
+  --ac-brand: #EA580C;
+  --ac-brand-hover: #C2410C;
+  --ac-brand-soft: #FFEDD5;
+
+  --ac-red: #DC2626;
+  --ac-red-soft: #FEF2F2;
+  --ac-red-border: #FCA5A5;
+
+  --ac-amber: #F59E0B;
+  --ac-amber-soft: #FFFBEB;
+  --ac-amber-border: #FCD34D;
+
+  --ac-green: #16A34A;
+  --ac-green-soft: #ECFDF5;
+  --ac-green-border: #A7F3D0;
+
+  --ac-blue: #2563EB;
+  --ac-blue-soft: #EFF6FF;
+
+  --ac-r-btn: 6px;
+  --ac-r-card: 10px;
+  --ac-r-modal: 14px;
+
+  --ac-sh-card: 0 1px 2px rgba(0,0,0,0.04);
+  --ac-sh-modal: 0 4px 16px rgba(0,0,0,0.06);
+}
