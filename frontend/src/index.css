@@ -4486,3 +4486,118 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   background: var(--ac-amber);
   border-radius: 50%;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   COMPREHENSIVE LIGHT THEME SWEEP
+   Final override pass: forces every known dark .ac-* surface to the light theme.
+   This block goes LAST so it wins over earlier rules without !important spam.
+   ───────────────────────────────────────────────────────────────────────────── */
+.ac-root .ac-layout,
+.ac-root .ac-topbar,
+.ac-root .ac-sidebar,
+.ac-root .ac-bottom-nav,
+.ac-root .ac-stat-card,
+.ac-root .ac-today-card,
+.ac-root .ac-fleet-card,
+.ac-root .ac-op-card,
+.ac-root .ac-cau-card,
+.ac-root .ac-cauz-card,
+.ac-root .ac-cliente-card,
+.ac-root .ac-empty-card,
+.ac-root .ac-report-stat,
+.ac-root .ac-settings-section,
+.ac-root .ac-chiusure-panel,
+.ac-root .ac-cal-main,
+.ac-root .ac-cal-grid,
+.ac-root .ac-cal-cell,
+.ac-root .ac-cal-header-cell,
+.ac-root .ac-bar-chart,
+.ac-root .ac-type-table,
+.ac-root .ac-table-wrap,
+.ac-root .ac-modal,
+.ac-root .ac-modal-footer,
+.ac-root .ac-actionsheet,
+.ac-root .ac-actionsheet-header,
+.ac-root .ac-actionsheet-sep,
+.ac-root .ac-actionsheet-close,
+.ac-root .ac-kebab-btn,
+.ac-root .ac-qty-btn,
+.ac-root .ac-quick-btn,
+.ac-root .ac-photo-upload,
+.ac-root .ac-sql-pre,
+.ac-root .ac-login,
+.ac-root .ac-login-card {
+  background: var(--ac-surface) !important;
+  color: var(--ac-text-body) !important;
+  border-color: var(--ac-border) !important;
+}
+
+/* Page-level layout backgrounds use the soft page bg, not surface */
+.ac-root .ac-layout,
+.ac-root .ac-cal-grid,
+.ac-root .ac-sql-pre,
+.ac-root .ac-login {
+  background: var(--ac-bg) !important;
+}
+
+/* Calendario cells: keep distinct status colors readable on light bg */
+.ac-root .ac-cal-cell { background: var(--ac-surface) !important; color: var(--ac-text-body) !important; }
+.ac-root .ac-cal-header-cell { background: #F1F5F9 !important; color: var(--ac-text-muted) !important; }
+
+/* Hover states for interactive elements */
+.ac-root .ac-kebab-btn:hover,
+.ac-root .ac-qty-btn:hover:not(:disabled),
+.ac-root .ac-quick-btn:hover,
+.ac-root .ac-actionsheet-btn:hover:not(:disabled),
+.ac-root .ac-actionsheet-close:hover {
+  background: #F1F5F9 !important;
+  color: var(--ac-text-body) !important;
+  border-color: var(--ac-brand) !important;
+}
+
+/* Topbar uses brand-aware light header */
+.ac-root .ac-topbar {
+  background: var(--ac-surface) !important;
+  border-bottom: 1px solid var(--ac-border) !important;
+}
+
+/* Bottom-nav stays white with subtle border */
+.ac-root .ac-bottom-nav {
+  background: var(--ac-surface) !important;
+  border-top: 1px solid var(--ac-border) !important;
+}
+
+/* Any leftover text colors that were tuned for dark bg */
+.ac-root .ac-topbar *,
+.ac-root .ac-sidebar *,
+.ac-root .ac-bottom-nav *,
+.ac-root .ac-stat-card *,
+.ac-root .ac-today-card *,
+.ac-root .ac-fleet-card *,
+.ac-root .ac-op-card *,
+.ac-root .ac-cau-card *,
+.ac-root .ac-cliente-card *,
+.ac-root .ac-report-stat *,
+.ac-root .ac-settings-section *,
+.ac-root .ac-cal-main *,
+.ac-root .ac-modal *,
+.ac-root .ac-actionsheet * {
+  border-color: var(--ac-border);
+}
+
+/* Make sure any inline dark hex on backgrounds gets overridden too */
+.ac-root [style*="background:#0D1520"],
+.ac-root [style*="background: #0D1520"],
+.ac-root [style*="background:#080E14"],
+.ac-root [style*="background: #080E14"],
+.ac-root [style*="background:#0B1219"],
+.ac-root [style*="background: #0B1219"],
+.ac-root [style*="background:#0A1218"],
+.ac-root [style*="background: #0A1218"],
+.ac-root [style*="background:#111C2A"],
+.ac-root [style*="background: #111C2A"],
+.ac-root [style*="background:#060C12"],
+.ac-root [style*="background: #060C12"] {
+  background: var(--ac-surface) !important;
+  color: var(--ac-text-body) !important;
+}
