@@ -2569,7 +2569,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           )}
           {!blocked && hasNoFleet && f.data_ritiro && (
             <div className="ac-manual-error">
-              <div className="ac-error-banner" style={{ background: '#3A2A0E', color: '#FBBF24', borderColor: '#92760E' }}>
+              <div className="ac-error-banner ac-warn-banner">
                 Tutte le bici sono già prenotate in questa data/orario
               </div>
             </div>

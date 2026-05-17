@@ -4431,3 +4431,58 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
 .ac-root [style*="color: #5A7090"] {
   color: var(--ac-text-muted) !important;
 }
+
+/* ─── Additional inline-color rescue selectors ──────────────────────────────── */
+.ac-root [style*="color: rgb(203, 213, 225)"],
+.ac-root [style*="color:#cbd5e1"],
+.ac-root [style*="color: #cbd5e1"],
+.ac-root [style*="color: rgb(75, 98, 120)"],
+.ac-root [style*="color:#4B6278"],
+.ac-root [style*="color: #4B6278"] {
+  color: var(--ac-text-muted) !important;
+}
+
+/* Error banner generale (rosso) — usato come fallback per messaggi di errore.
+   La versione "warn" è gialla/ambra. */
+.ac-root .ac-error-banner {
+  background: var(--ac-red-soft);
+  color: #991B1B;
+  border: 1px solid var(--ac-red-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+.ac-root .ac-error-banner.ac-warn-banner {
+  background: var(--ac-amber-soft);
+  color: #92400E;
+  border-color: var(--ac-amber-border);
+}
+
+/* Eventuali altre classi che potrebbero leakare dark e che non ho ancora coperto */
+.ac-root .ac-search-box,
+.ac-root .ac-search-input-bar {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+}
+.ac-root .ac-spinner-center { color: var(--ac-text-muted); }
+
+/* Cauzioni view rows (se usano classi dedicate) */
+.ac-root .ac-cauz-card,
+.ac-root .ac-cauz-row {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  color: var(--ac-text-body);
+}
+
+/* Bottom-nav badge (Phase 7 indicator counters) */
+.ac-root .ac-nav-badge {
+  background: var(--ac-red);
+  color: #fff;
+}
+
+/* "Note interne" indicator dot accanto al nome cliente */
+.ac-root .ac-note-indicator {
+  background: var(--ac-amber);
+  border-radius: 50%;
+}
