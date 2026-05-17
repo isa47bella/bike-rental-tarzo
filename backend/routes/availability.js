@@ -136,8 +136,15 @@ router.post('/', async (req, res) => {
 
   if (error) return res.status(500).json({ error: 'Errore database' });
 
+  // Escludi bici in manutenzione/guasto/fuori uso dalla flotta noleggiabile
+  const { data: flotta } = await supabase
+    .from('biciclette')
+    .select('id, stato')
+    .eq('stato', 'disponibile');
+  const fleetActive  = new Set((flotta || []).map(r => r.id));
+
   const biciOccupate = new Set(occupate.map(r => r.bicicletta_id));
-  const tutti        = [1,2,3,4,5,6,7,8,9,10];
+  const tutti        = [1,2,3,4,5,6,7,8,9,10].filter(id => fleetActive.has(id));
   const disponibili  = tutti.filter(id => !biciOccupate.has(id));
 
   const PER_TIPO = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
@@ -180,7 +187,13 @@ router.post('/calendario', async (req, res) => {
   const { data: chiusureCal } = await supabase.from('chiusure').select('data');
   const chiusureCalSet = new Set((chiusureCal || []).map(c => c.data));
 
-  const TOTALE = 10;
+  // Conta solo le bici operative (escludi guasto/manutenzione/fuori uso)
+  const { data: flottaCal } = await supabase
+    .from('biciclette')
+    .select('id, stato')
+    .eq('stato', 'disponibile');
+  const fleetActiveCal = new Set((flottaCal || []).map(r => r.id));
+  const TOTALE = fleetActiveCal.size || 10;
   const risultati = {};
   for (let d = 1; d <= ultimoGiorno.getDate(); d++) {
     const dataStr  = `${anno}-${String(mese).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -197,6 +210,7 @@ router.post('/calendario', async (req, res) => {
       prenotazioni
         .filter(p => new Date(p.start_ts) < dayEnd && new Date(p.end_ts) > dayStart)
         .map(p => p.bicicletta_id)
+        .filter(id => fleetActiveCal.has(id))
     );
 
     risultati[dataStr] = {
