@@ -1995,12 +1995,17 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                         <div>{formatDateIT(b.data_restituzione)}</div>
                         <div style={{ fontWeight: 700 }}>{b.orario_restituzione?.substring(0, 5)}</div>
                       </td>
-                      <td style={{ textAlign: 'center', fontWeight: 700 }}>
-                        {b._bici.length === 1
-                          ? `#${b._bici[0]}`
-                          : b._bici.length <= 4
-                            ? b._bici.map(n => `#${n}`).join(' ')
-                            : `${b._bici.length} bici`}
+                      <td style={{ textAlign: 'center' }}>
+                        {b._bici.length === 1 ? (
+                          <span style={{ fontWeight: 700 }}>#{b._bici[0]}</span>
+                        ) : (
+                          <>
+                            <div style={{ fontWeight: 700 }}>{b._bici.length} bici</div>
+                            <div className="ac-cell-sub" style={{ fontFamily: 'monospace', fontSize: '0.72rem' }}>
+                              {b._bici.map(n => `#${n}`).join(' ')}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td><span className="ac-price">€{Number(b._prezzo).toFixed(0)}</span></td>
                       <td>
@@ -2917,7 +2922,11 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               </div>
               <div className="ac-actionsheet-meta">
                 <span className="ac-code" style={{ fontSize: 11 }}>{b.id.toUpperCase().slice(0,8)}</span>
-                <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio, b.giorni)} · Bici #{b.bicicletta_id}</span>
+                <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio, b.giorni)} · {
+                  Array.isArray(b.bici_ids) && b.bici_ids.length > 1
+                    ? `${b.bici_ids.length} bici (${b.bici_ids.map(n => `#${n}`).join(' ')})`
+                    : `Bici #${b.bicicletta_id}`
+                }</span>
               </div>
             </div>
             <button className="ac-actionsheet-close" onClick={() => setActionSheet(null)}>
