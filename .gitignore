@@ -26,3 +26,6 @@ frontend/.env
 
 # Claude Code local skills (not project code)
 .agents/
+
+# Brainstorming visual companion artifacts
+.superpowers/
