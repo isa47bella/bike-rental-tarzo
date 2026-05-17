@@ -3890,3 +3890,94 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   background: var(--ac-surface-alt);
   color: var(--ac-text);
 }
+
+/* ─── Admin Home — KPI strip ─────────────────────────────────────────── */
+.ac-root .ac-kpi-strip {
+  display: flex;
+  gap: 0;
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-r-card);
+  box-shadow: var(--ac-sh-card);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.ac-root .ac-kpi { flex: 1; text-align: center; min-width: 0; }
+.ac-root .ac-kpi-divider { width: 1px; background: var(--ac-border); margin: 4px 0; }
+.ac-root .ac-kpi-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ac-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ac-root .ac-kpi-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--ac-text);
+  line-height: 1;
+}
+.ac-root .ac-kpi-of { font-size: 0.9rem; color: var(--ac-text-muted); font-weight: 600; }
+
+@media (max-width: 480px) {
+  .ac-root .ac-kpi-strip { padding: 10px 12px; }
+  .ac-root .ac-kpi-value { font-size: 1.3rem; }
+}
+
+/* ─── Admin Home — Action Feed ───────────────────────────────────────── */
+.ac-root .ac-action-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.ac-root .ac-action-feed-empty {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-r-card);
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--ac-text-muted);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.ac-root .ac-action-card {
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-left: 3px solid var(--ac-border);
+  border-radius: var(--ac-r-card);
+  padding: 14px 16px;
+  box-shadow: var(--ac-sh-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ac-root .ac-action-card-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.ac-root .ac-action-icon { font-size: 1.1rem; line-height: 1.3; flex-shrink: 0; }
+.ac-root .ac-action-titles { flex: 1; min-width: 0; }
+.ac-root .ac-action-title {
+  font-weight: 700;
+  color: var(--ac-text);
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+.ac-root .ac-action-sub {
+  font-size: 0.78rem;
+  color: var(--ac-text-muted);
+  margin-top: 3px;
+}
+.ac-root .ac-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

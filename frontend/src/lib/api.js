@@ -172,4 +172,5 @@ export const adminApi = {
   assegnaBici:       (id, bicicletta_id)  => adminPatch(`/admin/bookings/${id}/assegna-bici`, { bicicletta_id }),
   autorizzaCauzione: (id)                 => adminPost(`/admin/bookings/${id}/autorizza-cauzione`, {}),
   getAuditLog:       (params = {})        => adminGet('/admin/audit-log', params),
+  getAzioniPendenti: ()                   => adminGet('/admin/azioni-pendenti'),
 };

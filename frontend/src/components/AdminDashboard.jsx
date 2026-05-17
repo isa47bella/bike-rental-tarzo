@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApi, api } from '../lib/api.js';
+import KpiStrip   from './admin/KpiStrip.jsx';
+import ActionFeed from './admin/ActionFeed.jsx';
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -356,6 +358,47 @@ export default function AdminDashboard() {
   const [cambiaBiciModal,   setCambiaBiciModal]   = useState(null); // {id, nome, bicicletta_id}
   const [cambiaBiciId,      setCambiaBiciId]      = useState('');
   const [cambiaBiciLoading, setCambiaBiciLoading] = useState(false);
+
+  // Action Feed (home)
+  const [feedRefresh, setFeedRefresh] = useState(0);
+  const [feedCount,   setFeedCount]   = useState(0);
+
+  function handleFeedAction(actionKey, card) {
+    const bookingId = card.booking_id;
+    const phone = (card.cliente_telefono || '').replace(/\D/g, '');
+    switch (actionKey) {
+      case 'retry_cauzione':
+        adminApi.autorizzaCauzione(bookingId)
+          .then(() => { setFeedRefresh(t => t + 1); loadOggi?.(); })
+          .catch(e => alert('Errore: ' + e.message));
+        break;
+      case 'whatsapp_cliente':
+        if (phone) window.open(`https://wa.me/${phone}`, '_blank');
+        else alert('Nessun telefono disponibile');
+        break;
+      case 'chiama_cliente':
+        if (phone) window.open(`tel:${phone}`, '_self');
+        else alert('Nessun telefono disponibile');
+        break;
+      case 'marca_noshow':
+        if (confirm(`Marcare ${card.titolo} come no-show? La prenotazione verrà cancellata.`)) {
+          adminApi.cancelBooking(bookingId)
+            .then(() => { setFeedRefresh(t => t + 1); loadOggi?.(); })
+            .catch(e => alert('Errore: ' + e.message));
+        }
+        break;
+      case 'invia_firma':
+        adminApi.sendFirmaLink(bookingId)
+          .then(() => { alert('Link firma inviato.'); setFeedRefresh(t => t + 1); })
+          .catch(e => alert('Errore: ' + e.message));
+        break;
+      case 'vedi_dettaglio':
+        setActiveView('prenotazioni');
+        break;
+      default:
+        console.warn('action non gestita:', actionKey);
+    }
+  }
 
   async function handleSendFirma(bookingId) {
     setFirmaLoading(prev => ({ ...prev, [bookingId]: true }));
@@ -1398,6 +1441,17 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
     return (
       <div className="ac-oggi">
+        <KpiStrip
+          revenue_oggi={stats?.incasso_oggi || stats?.incasso_totale || 0}
+          bici_occupate={(oggiData?.ritiri?.length || 0) + (oggiData?.inRitardo?.length || 0)}
+          bici_totali={10}
+          azioni_count={feedCount}
+        />
+        <ActionFeed
+          onAction={handleFeedAction}
+          refreshTick={feedRefresh}
+          onCount={setFeedCount}
+        />
         {inRitardo.length > 0 && (
           <div className="ac-alert-banner" style={{ marginBottom: 24 }}>
             <IconAlert />

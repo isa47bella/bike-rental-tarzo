@@ -479,6 +479,100 @@ router.get('/oggi', async (req, res) => {
   });
 });
 
+// ─── GET /api/admin/azioni-pendenti ───────────────────────────────────────────
+// Ritorna le card che devono apparire nell'Action Feed della home.
+// Priorità: 1=urgente (rosso), 2=warning (ambra), 3=info (blue).
+
+router.get('/azioni-pendenti', async (req, res) => {
+  const now    = new Date();
+  const oggi   = now.toISOString().substring(0, 10);
+  const domani = new Date(now.getTime() + 24*60*60*1000).toISOString().substring(0, 10);
+
+  // HH:MM:SS string usata per confronto con orario_ritiro / orario_restituzione (TIME columns)
+  const timeMinusMin = (minutes) => {
+    const d = new Date(now.getTime() - minutes*60*1000);
+    return d.toTimeString().substring(0, 8); // HH:MM:SS
+  };
+
+  const fields = 'id, cliente_nome, cliente_telefono, cliente_email, data_ritiro, orario_ritiro, data_restituzione, orario_restituzione, bicicletta_id, cauzione_status, danno_status, firma_at, checkin_at, checkout_at, pagamento_status';
+
+  // Query in parallelo
+  const [cauzioniFailedQ, ritardiRitiroQ, ritardiRiconsegnaQ, firmeMancantiQ, danniApertiQ] = await Promise.all([
+    supabase.from('prenotazioni').select(fields)
+      .in('cauzione_status', ['failed', 'failed_permanent'])
+      .gte('data_ritiro', oggi),
+    supabase.from('prenotazioni').select(fields)
+      .eq('pagamento_status', 'paid')
+      .is('checkin_at', null)
+      .eq('data_ritiro', oggi)
+      .lt('orario_ritiro', timeMinusMin(30)),
+    supabase.from('prenotazioni').select(fields)
+      .eq('pagamento_status', 'paid')
+      .not('checkin_at', 'is', null)
+      .is('checkout_at', null)
+      .eq('data_restituzione', oggi)
+      .lt('orario_restituzione', timeMinusMin(30)),
+    supabase.from('prenotazioni').select(fields)
+      .eq('pagamento_status', 'paid')
+      .is('firma_at', null)
+      .eq('data_ritiro', domani),
+    supabase.from('prenotazioni').select(fields)
+      .not('danno_status', 'is', null)
+      .neq('danno_status', 'resolved'),
+  ]);
+
+  const cards = [];
+  for (const b of (cauzioniFailedQ.data || [])) {
+    cards.push({
+      id: `cauzione-${b.id}`, booking_id: b.id, cliente_telefono: b.cliente_telefono,
+      priority: 1, tipo: 'cauzione_failed',
+      titolo: `Cauzione fallita — ${b.cliente_nome}`,
+      sub: `€500 non autorizzati · ritiro ${b.data_ritiro}`,
+      actions: ['retry_cauzione', 'whatsapp_cliente'],
+    });
+  }
+  for (const b of (ritardiRitiroQ.data || [])) {
+    cards.push({
+      id: `ritardo-ritiro-${b.id}`, booking_id: b.id, cliente_telefono: b.cliente_telefono,
+      priority: 1, tipo: 'ritardo_ritiro',
+      titolo: `Cliente in ritardo al ritiro — ${b.cliente_nome}`,
+      sub: `Atteso ${b.orario_ritiro?.substring(0,5)} · ora ${now.toTimeString().substring(0,5)}`,
+      actions: ['whatsapp_cliente', 'marca_noshow'],
+    });
+  }
+  for (const b of (ritardiRiconsegnaQ.data || [])) {
+    cards.push({
+      id: `ritardo-riconsegna-${b.id}`, booking_id: b.id, cliente_telefono: b.cliente_telefono,
+      priority: 1, tipo: 'ritardo_riconsegna',
+      titolo: `Bici non restituita — ${b.cliente_nome}`,
+      sub: `Atteso ${b.orario_restituzione?.substring(0,5)} · ora ${now.toTimeString().substring(0,5)}`,
+      actions: ['whatsapp_cliente', 'chiama_cliente'],
+    });
+  }
+  for (const b of (firmeMancantiQ.data || [])) {
+    cards.push({
+      id: `firma-${b.id}`, booking_id: b.id, cliente_telefono: b.cliente_telefono,
+      priority: 2, tipo: 'firma_mancante',
+      titolo: `Firma contratto mancante — ${b.cliente_nome}`,
+      sub: `Ritiro domani · invia link firma`,
+      actions: ['invia_firma', 'whatsapp_cliente'],
+    });
+  }
+  for (const b of (danniApertiQ.data || [])) {
+    cards.push({
+      id: `danno-${b.id}`, booking_id: b.id, cliente_telefono: b.cliente_telefono,
+      priority: 2, tipo: 'danno_aperto',
+      titolo: `Danno aperto — ${b.cliente_nome}`,
+      sub: `Stato: ${b.danno_status}`,
+      actions: ['vedi_dettaglio'],
+    });
+  }
+
+  cards.sort((a, b) => a.priority - b.priority);
+
+  return res.json({ cards, count: cards.length });
+});
+
 // ─── GET /api/admin/flotta ────────────────────────────────────────────────────
 
 router.get('/flotta', async (req, res) => {
