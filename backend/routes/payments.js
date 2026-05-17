@@ -100,7 +100,8 @@ router.post('/checkout', async (req, res) => { try {
 
   // Calcola orari e range temporale
   const orari     = getOrariFromTipo(tipo_noleggio);
-  const numGiorni = Number(giorni);
+  // Solo multi_giorno usa giorni > 1; per gli altri tipi forziamo 1
+  const numGiorni = tipo_noleggio === 'multi_giorno' ? Number(giorni) : 1;
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
   const { data_restituzione, orario_restituzione } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
 

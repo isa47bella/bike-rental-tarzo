@@ -1851,6 +1851,28 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         })
       : bookings;
 
+    // Raggruppa le prenotazioni multi-bici (stesso stripe_session_id) in un'unica riga:
+    // somma del prezzo, elenco delle bici e degli id linkati per le azioni.
+    const grouped = (() => {
+      const map = new Map();
+      const out = [];
+      for (const b of filteredBookings) {
+        const k = b.stripe_session_id ? `s:${b.stripe_session_id}` : `i:${b.id}`;
+        if (!map.has(k)) {
+          const lead = { ...b, _ids: [b.id], _bici: [b.bicicletta_id], _prezzo: Number(b.prezzo_totale) || 0, _count: 1 };
+          map.set(k, lead);
+          out.push(lead);
+        } else {
+          const g = map.get(k);
+          g._ids.push(b.id);
+          if (!g._bici.includes(b.bicicletta_id)) g._bici.push(b.bicicletta_id);
+          g._prezzo += Number(b.prezzo_totale) || 0;
+          g._count  += 1;
+        }
+      }
+      return out;
+    })();
+
     return (
       <div>
         <div className="ac-controls">
@@ -1919,8 +1941,8 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                       <input
                         type="checkbox"
                         className="ac-bulk-checkbox"
-                        checked={filteredBookings.length > 0 && filteredBookings.every(b => selectedIds.has(b.id))}
-                        onChange={() => toggleSelectAll(filteredBookings.map(b => b.id))}
+                        checked={grouped.length > 0 && grouped.every(g => g._ids.every(id => selectedIds.has(id)))}
+                        onChange={() => toggleSelectAll(grouped.flatMap(g => g._ids))}
                       />
                     </th>
                     <th>Codice</th>
@@ -1937,14 +1959,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredBookings.map(b => (
+                  {grouped.map(b => (
                     <tr key={b.id}>
                       <td onClick={e => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           className="ac-bulk-checkbox"
-                          checked={selectedIds.has(b.id)}
-                          onChange={() => toggleSelect(b.id)}
+                          checked={b._ids.every(id => selectedIds.has(id))}
+                          onChange={() => toggleSelectAll(b._ids)}
                         />
                       </td>
                       <td><span className="ac-code">{b.id.toUpperCase().substring(0, 8)}</span></td>
@@ -1958,6 +1980,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{tipoShort(b.tipo_noleggio, b.giorni)}</div>
+                        {b._count > 1 && <div className="ac-cell-sub">{b._count} bici</div>}
                       </td>
                       <td>
                         <div>{formatDateIT(b.data_ritiro)}</div>
@@ -1967,8 +1990,14 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                         <div>{formatDateIT(b.data_restituzione)}</div>
                         <div style={{ fontWeight: 700 }}>{b.orario_restituzione?.substring(0, 5)}</div>
                       </td>
-                      <td style={{ textAlign: 'center', fontWeight: 700 }}>#{b.bicicletta_id}</td>
-                      <td><span className="ac-price">€{Number(b.prezzo_totale).toFixed(0)}</span></td>
+                      <td style={{ textAlign: 'center', fontWeight: 700 }}>
+                        {b._bici.length === 1
+                          ? `#${b._bici[0]}`
+                          : b._bici.length <= 4
+                            ? b._bici.map(n => `#${n}`).join(' ')
+                            : `${b._bici.length} bici`}
+                      </td>
+                      <td><span className="ac-price">€{Number(b._prezzo).toFixed(0)}</span></td>
                       <td>
                         <span className={`ac-badge ${b.pagamento_status}`}>
                           {b.pagamento_status === 'paid' && 'Pagata'}

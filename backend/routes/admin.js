@@ -817,7 +817,8 @@ router.post('/bookings/manual', async (req, res) => {
     return res.status(400).json({ error: 'Multi-giorno richiede almeno 2 giorni' });
   }
 
-  const numGiorni = Number(giorni);
+  // Solo multi_giorno usa giorni > 1; per gli altri tipi forziamo 1
+  const numGiorni = tipo_noleggio === 'multi_giorno' ? Number(giorni) : 1;
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
   const { data_restituzione, orario_restituzione, orario_ritiro } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
 
