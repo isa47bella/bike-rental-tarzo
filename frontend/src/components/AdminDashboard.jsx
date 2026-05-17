@@ -50,13 +50,14 @@ function tipoLabel(tipo) {
   return m[tipo] || tipo;
 }
 
-function tipoShort(tipo) {
-  const m = {
-    mezza_mattina: '½M', mezza_pomeriggio: '½P',
-    intera_giornata: 'Giorn.', multi_giorno: 'Multi',
-    '4_ore': '4h', '3_piu_giorni': 'Multi',
-  };
-  return m[tipo] || tipo;
+function tipoShort(tipo, giorni) {
+  const n = Number(giorni) || 1;
+  if (tipo === 'mezza_mattina')    return '½ Mattina';
+  if (tipo === 'mezza_pomeriggio') return '½ Pomeriggio';
+  if (tipo === '4_ore')            return '4 ore';
+  if (tipo === 'intera_giornata')  return n > 1 ? `${n} giorni` : '1 giornata';
+  if (tipo === 'multi_giorno' || tipo === '3_piu_giorni') return `${Math.max(n, 2)} giorni`;
+  return tipo;
 }
 
 function parseAccessori(raw) {
@@ -1956,8 +1957,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                         <div className="ac-cell-sub">{b.cliente_telefono}</div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600 }}>{tipoShort(b.tipo_noleggio)}</div>
-                        {b.giorni > 1 && <div className="ac-cell-sub">{b.giorni}g</div>}
+                        <div style={{ fontWeight: 600 }}>{tipoShort(b.tipo_noleggio, b.giorni)}</div>
                       </td>
                       <td>
                         <div>{formatDateIT(b.data_ritiro)}</div>
@@ -2883,7 +2883,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
               </div>
               <div className="ac-actionsheet-meta">
                 <span className="ac-code" style={{ fontSize: 11 }}>{b.id.toUpperCase().slice(0,8)}</span>
-                <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio)} · Bici #{b.bicicletta_id}</span>
+                <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio, b.giorni)} · Bici #{b.bicicletta_id}</span>
               </div>
             </div>
             <button className="ac-actionsheet-close" onClick={() => setActionSheet(null)}>
@@ -3272,7 +3272,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                       </td>
                       <td>
                         <div>{formatDateIT(b.data_ritiro)}</div>
-                        <div className="ac-cell-sub">{tipoShort(b.tipo_noleggio)}</div>
+                        <div className="ac-cell-sub">{tipoShort(b.tipo_noleggio, b.giorni)}</div>
                       </td>
                       <td style={{ textAlign: 'center', fontWeight: 700 }}>#{b.bicicletta_id}</td>
                       <td><span className="ac-price">€{Number(b.prezzo_totale).toFixed(0)}</span></td>
