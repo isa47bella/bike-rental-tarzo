@@ -15,8 +15,8 @@
     { "path": "/api/cron/firma-reminder",      "schedule": "0 18 * * *"  },
     { "path": "/api/cron/reminder",            "schedule": "0 9 * * *"   },
     { "path": "/api/cron/gdpr-cleanup",        "schedule": "0 3 1 * *"   },
-    { "path": "/api/cron/auto-cancel-pending", "schedule": "*/10 * * * *" },
-    { "path": "/api/cron/retry-cauzioni",      "schedule": "0 */6 * * *" },
-    { "path": "/api/cron/cleanup-audit",       "schedule": "0 3 * * 0"   }
+    { "path": "/api/cron/auto-cancel-pending", "schedule": "0 4 * * *"  },
+    { "path": "/api/cron/retry-cauzioni",      "schedule": "0 12 * * *" },
+    { "path": "/api/cron/cleanup-audit",       "schedule": "0 3 * * 0"  }
   ]
 }
