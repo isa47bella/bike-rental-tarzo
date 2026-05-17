@@ -4601,3 +4601,313 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
   background: var(--ac-surface) !important;
   color: var(--ac-text-body) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ADMIN LOGIN V2 — split-screen brand + clean form
+   ───────────────────────────────────────────────────────────────────────────── */
+.ac-root.ac-login2 {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--ac-bg);
+  font-family: 'Barlow', system-ui, -apple-system, sans-serif;
+  color: var(--ac-text-body);
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* ── Brand panel (left) ── */
+.ac-login2-brand {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(234,88,12,0.35) 0%, transparent 55%),
+    radial-gradient(80% 60% at 0% 100%, rgba(20,184,166,0.28) 0%, transparent 60%),
+    linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0F172A 100%);
+  color: #fff;
+}
+.ac-login2-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: ac-login2-float 14s ease-in-out infinite;
+}
+.ac-login2-blob-1 { width: 380px; height: 380px; background: #EA580C; top: -80px; left: -60px; animation-delay: 0s; }
+.ac-login2-blob-2 { width: 340px; height: 340px; background: #F59E0B; bottom: -100px; right: -80px; animation-delay: -5s; }
+.ac-login2-blob-3 { width: 280px; height: 280px; background: #14B8A6; top: 40%; left: 30%; animation-delay: -9s; opacity: 0.35; }
+
+@keyframes ac-login2-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -20px) scale(1.08); }
+  66%      { transform: translate(-25px, 25px) scale(0.94); }
+}
+
+.ac-login2-brand-inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ac-login2-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ac-login2-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.35));
+}
+.ac-login2-brand-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.28em;
+  color: rgba(255,255,255,0.78);
+}
+.ac-login2-brand-mid {
+  max-width: 480px;
+}
+.ac-login2-hero {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 3.4vw, 3.1rem);
+  line-height: 1.05;
+  margin: 0 0 18px;
+  letter-spacing: -0.01em;
+}
+.ac-login2-accent {
+  background: linear-gradient(90deg, #FB923C, #FBBF24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.ac-login2-tagline {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.78);
+  max-width: 420px;
+}
+.ac-login2-brand-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.7);
+}
+.ac-login2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 7px 14px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.ac-login2-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block;
+}
+.ac-login2-dot-ok {
+  background: #22C55E;
+  box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+  animation: ac-login2-pulse 2s ease-out infinite;
+}
+@keyframes ac-login2-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.ac-login2-meta {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+
+/* ── Form panel (right) ── */
+.ac-login2-form-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgba(234,88,12,0.06) 0%, transparent 70%),
+    var(--ac-bg);
+}
+.ac-login2-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--ac-surface);
+  border: 1px solid var(--ac-border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  box-shadow:
+    0 1px 2px rgba(15,23,42,0.04),
+    0 12px 32px -8px rgba(15,23,42,0.08);
+  animation: ac-login2-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes ac-login2-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ac-login2-mobile-logo {
+  display: none;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.ac-login2-mobile-logo img { height: 44px; width: auto; }
+
+.ac-login2-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--ac-brand);
+  margin-bottom: 10px;
+}
+.ac-login2-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  color: var(--ac-text);
+}
+.ac-login2-sub {
+  margin: 0 0 28px;
+  color: var(--ac-text-muted);
+  font-size: 0.95rem;
+}
+.ac-login2-error {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ac-login2-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ac-text-body);
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.ac-login2-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #F8FAFC;
+  border: 1.5px solid var(--ac-border);
+  border-radius: 12px;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 22px;
+}
+.ac-login2-input-wrap:focus-within {
+  border-color: var(--ac-brand);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(234,88,12,0.12);
+}
+.ac-login2-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--ac-text-muted);
+  pointer-events: none;
+}
+.ac-login2-input-wrap:focus-within .ac-login2-input-icon { color: var(--ac-brand); }
+.ac-login2-input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  padding: 14px 44px 14px 42px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--ac-text);
+  letter-spacing: 0.04em;
+}
+.ac-login2-input::placeholder { color: #94A3B8; letter-spacing: 0.2em; }
+.ac-login2-eye {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: 0;
+  padding: 8px;
+  color: var(--ac-text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ac-login2-eye:hover { color: var(--ac-brand); background: rgba(234,88,12,0.06); }
+
+.ac-login2-submit {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 8px 22px -8px rgba(234,88,12,0.55);
+  transition: transform 0.12s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.ac-login2-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -10px rgba(234,88,12,0.65);
+}
+.ac-login2-submit:active:not(:disabled) { transform: translateY(0); }
+.ac-login2-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.ac-login2-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ac-login2-spin 0.7s linear infinite;
+}
+@keyframes ac-login2-spin { to { transform: rotate(360deg); } }
+
+.ac-login2-foot {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--ac-text-muted);
+}
+
+/* Mobile: stack — hide brand panel, show inline logo */
+@media (max-width: 860px) {
+  .ac-root.ac-login2 { grid-template-columns: 1fr; }
+  .ac-login2-brand { display: none; }
+  .ac-login2-form-wrap { padding: 24px 18px; }
+  .ac-login2-card { padding: 32px 24px; border-radius: 18px; }
+  .ac-login2-mobile-logo { display: flex; }
+  .ac-login2-title { font-size: 1.7rem; }
+}
