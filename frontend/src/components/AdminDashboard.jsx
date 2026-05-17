@@ -1258,8 +1258,9 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           <div className="ac-login2-blob ac-login2-blob-3" />
           <div className="ac-login2-brand-inner">
             <div className="ac-login2-brand-top">
-              <img src="/logo-white.png" alt="Arfanta" className="ac-login2-logo" />
-              <span className="ac-login2-brand-label">ARFANTA · BIKE RENTAL</span>
+              <div className="ac-login2-logo-card">
+                <img src="/logo.png" alt="Arfanta Bike Rental" />
+              </div>
             </div>
             <div className="ac-login2-brand-mid">
               <h2 className="ac-login2-hero">
@@ -1285,7 +1286,9 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         <main className="ac-login2-form-wrap">
           <div className="ac-login2-card">
             <div className="ac-login2-mobile-logo">
-              <img src="/logo.png" alt="Arfanta" />
+              <div className="ac-login2-logo-card ac-login2-logo-card-sm">
+                <img src="/logo.png" alt="Arfanta Bike Rental" />
+              </div>
             </div>
             <div className="ac-login2-eyebrow">PANNELLO AMMINISTRATORE</div>
             <h1 className="ac-login2-title">Bentornato</h1>

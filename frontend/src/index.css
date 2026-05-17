@@ -4657,20 +4657,35 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
 .ac-login2-brand-top {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: flex-start;
 }
-.ac-login2-logo {
-  height: 38px;
+.ac-login2-logo-card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 20px 30px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.5) inset,
+    0 12px 32px -8px rgba(0,0,0,0.45),
+    0 30px 70px -18px rgba(234,88,12,0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-1.5deg);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ac-login2-logo-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ac-login2-logo-card:hover { transform: rotate(0deg) scale(1.03); }
+.ac-login2-logo-card img {
+  display: block;
+  height: 100px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.35));
 }
-.ac-login2-brand-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 600;
-  font-size: 0.78rem;
-  letter-spacing: 0.28em;
-  color: rgba(255,255,255,0.78);
+.ac-login2-logo-card-sm { padding: 14px 20px; transform: none; }
+.ac-login2-logo-card-sm img { height: 64px; }
+@keyframes ac-login2-logo-in {
+  from { opacity: 0; transform: rotate(-6deg) translateY(-12px); }
+  to   { opacity: 1; transform: rotate(-1.5deg) translateY(0); }
 }
 .ac-login2-brand-mid {
   max-width: 480px;
