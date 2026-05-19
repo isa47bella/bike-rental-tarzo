@@ -3669,6 +3669,16 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                 Test
               </button>
             )}
+            <button
+              className="ac-btn ghost sm"
+              onClick={() =>
+                adminApi.whatsappTest()
+                  .then(() => alert('Messaggio WhatsApp di test inviato!'))
+                  .catch(e => alert(e.message || 'Errore invio WhatsApp'))
+              }
+            >
+              Test WhatsApp
+            </button>
           </div>
         </div>
 
