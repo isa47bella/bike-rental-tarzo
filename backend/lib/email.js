@@ -251,8 +251,9 @@ async function sendAdminEmail(prenotazione, subject, messageText) {
 }
 
 // ─── Notifica WhatsApp via CallMeBot ─────────────────────────────────────────
-// Setup: manda "I allow callmebot to send me messages" su WhatsApp a +34 644 28 72 02
-// e imposta CALLMEBOT_API_KEY + OWNER_WHATSAPP (numero senza +, es. 393928614635)
+// Setup: salva il contatto +34 644 09 78 64 ("CallMeBot") e mandagli
+// "I allow callmebot to send me messages". Ti risponde con la API key.
+// Poi imposta CALLMEBOT_API_KEY + OWNER_WHATSAPP (numero senza +, es. 393917563277).
 
 async function sendWhatsAppAlert(prenotazione) {
   const phone  = process.env.OWNER_WHATSAPP;
@@ -264,14 +265,29 @@ async function sendWhatsAppAlert(prenotazione) {
     intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno',
   }[prenotazione.tipo_noleggio] || prenotazione.tipo_noleggio;
 
+  const oraRitiro    = (prenotazione.orario_ritiro       || '').substring(0, 5);
+  const oraRestit    = (prenotazione.orario_restituzione || '').substring(0, 5);
+  const accessoriArr = parseAccessori(prenotazione.accessori);
+  const accessoriStr = accessoriArr.length > 0
+    ? accessoriArr.map(accLabel).join(', ')
+    : '';
+  const noteCliente  = (prenotazione.cliente_note || '').trim();
+
   const lines = [
     '🚲 NUOVA PRENOTAZIONE!',
     `👤 ${prenotazione.cliente_nome}`,
-    `📅 ${prenotazione.data_ritiro} ${(prenotazione.orario_ritiro || '').substring(0, 5)} — ${tipoShort}`,
+    prenotazione.cliente_email    ? `📧 ${prenotazione.cliente_email}`    : '',
+    prenotazione.cliente_telefono ? `📞 ${prenotazione.cliente_telefono}` : '',
+    `📅 ${prenotazione.data_ritiro} ${oraRitiro} — ${tipoShort}`,
+    prenotazione.data_restituzione
+      ? `🔄 Restituzione: ${prenotazione.data_restituzione} ${oraRestit}`
+      : '',
     prenotazione.giorni > 1 ? `📆 ${prenotazione.giorni} giorni` : '',
+    `🚴 ${biciLabel(prenotazione.bicicletta_id)}`,
+    accessoriStr ? `🎒 Accessori: ${accessoriStr}` : '',
     `💶 €${Number(prenotazione.prezzo_totale).toFixed(2)} PAGATO`,
-    `📞 ${prenotazione.cliente_telefono}`,
-    `🔑 ${prenotazione.id.toUpperCase().substring(0, 8)}`,
+    noteCliente ? `📝 Note: ${noteCliente}` : '',
+    `🔑 ${String(prenotazione.id).toUpperCase().substring(0, 8)}`,
   ].filter(Boolean).join('%0A');
 
   const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${lines}&apikey=${apikey}`;
