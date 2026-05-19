@@ -1196,6 +1196,39 @@ router.post('/push/test', async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/whatsapp/test ────────────────────────────────────────────
+
+router.post('/whatsapp/test', async (req, res) => {
+  try {
+    if (!process.env.OWNER_WHATSAPP || !process.env.CALLMEBOT_API_KEY) {
+      return res.status(400).json({
+        error: 'WhatsApp non configurato: mancano OWNER_WHATSAPP o CALLMEBOT_API_KEY',
+      });
+    }
+    const fakeBooking = {
+      id:                  'test-' + Date.now(),
+      cliente_nome:        'Mario Rossi (TEST)',
+      cliente_email:       'test@arfantabikerental.it',
+      cliente_telefono:    '+39 333 1234567',
+      cliente_note:        'Questo è un messaggio di test inviato dall\'admin panel.',
+      tipo_noleggio:       'intera_giornata',
+      giorni:              1,
+      data_ritiro:         new Date().toISOString().slice(0, 10),
+      orario_ritiro:       '09:00:00',
+      data_restituzione:   new Date().toISOString().slice(0, 10),
+      orario_restituzione: '18:00:00',
+      bicicletta_id:       1,
+      accessori:           'casco,lucchetto',
+      prezzo_totale:       45,
+    };
+    await sendWhatsAppAlert(fakeBooking);
+    await logAction('whatsapp_test', null, {}, getIp(req));
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── GET /api/admin/bookings/:id/contratto ────────────────────────────────────
 // Restituisce il contratto firmato come HTML (da aprire in nuova tab → stampa PDF)
 
