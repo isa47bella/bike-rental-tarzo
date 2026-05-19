@@ -1219,7 +1219,7 @@ router.post('/whatsapp/test', async (req, res) => {
       orario_restituzione: '18:00:00',
       bicicletta_id:       1,
       accessori:           'casco,lucchetto',
-      prezzo_totale:       45,
+      prezzo_totale:       48, // 45€ giornata + 2€ casco + 1€ lucchetto
     };
     await sendWhatsAppAlert(fakeBooking);
     await logAction('whatsapp_test', null, {}, getIp(req));
