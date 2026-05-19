@@ -6,14 +6,14 @@
 
 ## Obiettivo
 
-Ricevere un messaggio WhatsApp al numero del proprietario (`+39 391 7563277`) ogni volta che viene effettuata una nuova prenotazione pagata sul sito Arfanta Bike Rental.
+Ricevere un messaggio WhatsApp al numero del proprietario (`+39 392 8614635`) ogni volta che viene effettuata una nuova prenotazione pagata sul sito Arfanta Bike Rental.
 
 ## Requisiti (raccolti in brainstorming)
 
 | Requisito | Decisione |
 |---|---|
 | Destinatario | Solo il proprietario (Giulio) — non i clienti |
-| Numero destinatari | 1 (solo `+39 391 7563277`) |
+| Numero destinatari | 1 (solo `+39 392 8614635`) |
 | Servizio | **Fase 1**: CallMeBot (quick win); **Fase 2 (futuro)**: Meta WhatsApp Business Cloud API |
 | Contenuto messaggio | Riepilogo completo (cliente, contatti, date, bici, accessori, prezzo, note, ID) |
 
@@ -91,7 +91,7 @@ Il nome bici si recupera con un lookup su `biciclette` per `bicicletta_id`. Se i
 | `backend/lib/email.js` | Arricchire il template di `sendWhatsAppAlert()` con email, data restituzione, bici, accessori, note |
 | `backend/routes/admin.js` | Nuovo endpoint `POST /api/admin/whatsapp/test` che chiama `sendWhatsAppAlert()` con prenotazione fittizia |
 | `frontend/src/components/AdminDashboard.jsx` | Nuovo bottone "Testa WhatsApp" (analogo a "Testa Push" esistente) |
-| Vercel env vars | Aggiungere `OWNER_WHATSAPP=393917563277` e `CALLMEBOT_API_KEY=<da_callmebot>` |
+| Vercel env vars | Aggiungere `OWNER_WHATSAPP=393928614635` e `CALLMEBOT_API_KEY=<da_callmebot>` |
 
 ### Fase 2 (futuro — non in questa iterazione)
 

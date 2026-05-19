@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Attivare notifiche WhatsApp al proprietario (`+39 391 7563277`) ad ogni nuova prenotazione pagata, riusando il codice CallMeBot già presente nel webhook Stripe.
+**Goal:** Attivare notifiche WhatsApp al proprietario (`+39 392 8614635`) ad ogni nuova prenotazione pagata, riusando il codice CallMeBot già presente nel webhook Stripe.
 
 **Architecture:** La funzione `sendWhatsAppAlert()` esiste già in `backend/lib/email.js` ed è già agganciata al webhook `checkout.session.completed`. Bastano: (1) arricchire il template del messaggio, (2) aggiungere un endpoint admin di test + bottone UI, (3) configurare le due env vars CallMeBot su Vercel, (4) deploy + verifica.
 
@@ -39,7 +39,7 @@ Nel file `backend/lib/email.js`, sostituire le righe 253-285 (dall'inizio del co
 // ─── Notifica WhatsApp via CallMeBot ─────────────────────────────────────────
 // Setup: salva il contatto +34 644 09 78 64 ("CallMeBot") e mandagli
 // "I allow callmebot to send me messages". Ti risponde con la API key.
-// Poi imposta CALLMEBOT_API_KEY + OWNER_WHATSAPP (numero senza +, es. 393917563277).
+// Poi imposta CALLMEBOT_API_KEY + OWNER_WHATSAPP (numero senza +, es. 393928614635).
 
 async function sendWhatsAppAlert(prenotazione) {
   const phone  = process.env.OWNER_WHATSAPP;
@@ -280,7 +280,7 @@ EOF
 
 **Files:** nessuno (operazione sul telefono).
 
-**Contesto:** Prima di configurare le env vars su Vercel servono i due valori — il numero destinatario (già noto: `+39 391 7563277`) e la API key personale di CallMeBot (da ottenere ora).
+**Contesto:** Prima di configurare le env vars su Vercel servono i due valori — il numero destinatario (già noto: `+39 392 8614635`) e la API key personale di CallMeBot (da ottenere ora).
 
 - [ ] **Step 1: Salvare il contatto CallMeBot**
 
@@ -328,7 +328,7 @@ cd "/Users/giulio/Desktop/arfanta bike rental/bike-rental-tarzo"
 Alla richiesta del valore, inserire:
 
 ```
-393917563277
+393928614635
 ```
 
 (Senza `+` iniziale, senza spazi.)
@@ -390,7 +390,7 @@ Aprire https://bike-rental-tarzo-app.vercel.app/admin nel browser. Inserire admi
 
 Expected:
 - Alert nel browser: `Messaggio WhatsApp di test inviato!`
-- Entro 5-15 secondi, messaggio WhatsApp ricevuto sul numero `+39 391 7563277` con contenuto:
+- Entro 5-15 secondi, messaggio WhatsApp ricevuto sul numero `+39 392 8614635` con contenuto:
 
 ```
 🚲 NUOVA PRENOTAZIONE!
@@ -420,7 +420,7 @@ Expected entro 30 secondi dal pagamento:
 - Email di conferma al cliente (già funzionante)
 - Email al gestore (già funzionante)
 - Push notification (se attivata, già funzionante)
-- **Messaggio WhatsApp su `+39 391 7563277`** con i dati reali della prenotazione
+- **Messaggio WhatsApp su `+39 392 8614635`** con i dati reali della prenotazione
 
 - [ ] **Step 3: Verifica log produzione**
 
