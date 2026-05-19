@@ -226,6 +226,18 @@ router.get('/firma-reminder', cronAuth, async (req, res) => {
   const failed = results.filter(r => r.status === 'failed').length;
   console.log(`[CRON firma-reminder] Done — ${sent} inviati, ${failed} falliti`);
 
+  if (sent > 0) {
+    sendPushToAll({
+      title: '✍️ Reminder firma inviato',
+      body:  `${sent} client${sent === 1 ? 'e' : 'i'} senza firma per domani${failed > 0 ? ` (${failed} fallit${failed === 1 ? 'a' : 'e'})` : ''}`,
+      url:   '/admin',
+    }).catch(e => console.error('[CRON firma-reminder] push error:', e.message));
+    writeNotification('firma_reminder_sent', {
+      titolo: `Reminder firma inviati`,
+      descrizione: `${sent} client${sent === 1 ? 'e' : 'i'} senza firma per domani.`,
+    }).catch(_ => {});
+  }
+
   return res.json({ processed: bookings.length, sent, failed, results });
 });
 
@@ -274,6 +286,19 @@ router.get('/reminder', cronAuth, async (req, res) => {
   const sent   = results.filter(r => r.status === 'sent').length;
   const failed = results.filter(r => r.status === 'failed').length;
   console.log(`[CRON reminder] Done — ${sent} inviati, ${failed} falliti`);
+
+  if (sent > 0) {
+    sendPushToAll({
+      title: '✉️ Promemoria ritiro inviato',
+      body:  `${sent} client${sent === 1 ? 'e' : 'i'} con ritiro domani${failed > 0 ? ` (${failed} fallit${failed === 1 ? 'a' : 'e'})` : ''}`,
+      url:   '/admin',
+    }).catch(e => console.error('[CRON reminder] push error:', e.message));
+    writeNotification('ritiro_reminder_sent', {
+      titolo: `Promemoria ritiro inviati`,
+      descrizione: `${sent} client${sent === 1 ? 'e' : 'i'} con ritiro domani.`,
+    }).catch(_ => {});
+  }
+
   return res.json({ processed: bookings.length, sent, failed, results });
 });
 

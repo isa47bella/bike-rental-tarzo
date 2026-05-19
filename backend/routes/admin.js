@@ -24,6 +24,7 @@ const {
 } = require('../lib/email');
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
+const { writeNotification }                 = require('../lib/notifications');
 const { CAUZIONE_AMOUNT_EUR }               = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
@@ -131,6 +132,16 @@ router.post('/bookings/:id/cancel', async (req, res) => {
   if (data?.cliente_email) {
     sendCancellationEmail(data, { cauzioneReleased }).catch(e => console.error('Email cancellazione:', e.message));
   }
+  sendPushToAll({
+    title: '❌ Prenotazione cancellata',
+    body:  `${data.cliente_nome} — ${data.data_ritiro}${cauzioneReleased ? ' · cauzione rilasciata' : ''}`,
+    url:   '/admin',
+  }).catch(e => console.error('Push cancel:', e.message));
+  writeNotification('booking_cancelled', {
+    titolo: `Cancellata — ${data.cliente_nome}`,
+    descrizione: `Data ritiro: ${data.data_ritiro}.${cauzioneReleased ? ' Cauzione rilasciata.' : ''}`,
+    booking_id: req.params.id,
+  }).catch(_ => {});
   return res.json({ success: true, booking: data, cauzione_released: cauzioneReleased });
 });
 
@@ -310,6 +321,15 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
     if (prenotazione.cliente_email) {
       sendDepositReleasedEmail(prenotazione).catch(e => console.error('Email cauzione rilasciata:', e.message));
     }
+    sendPushToAll({
+      title: '✅ Cauzione rilasciata',
+      body:  `${prenotazione.cliente_nome} — nessun addebito`,
+      url:   '/admin',
+    }).catch(e => console.error('Push release-deposit:', e.message));
+    writeNotification('deposit_released', {
+      titolo: `Cauzione rilasciata — ${prenotazione.cliente_nome}`,
+      booking_id: req.params.id,
+    }).catch(_ => {});
     return res.json({ success: true });
   } catch (e) {
     console.error('Errore release deposit:', e);
@@ -752,6 +772,15 @@ router.post('/bookings/:id/checkout', async (req, res) => {
   if (data?.cliente_email) {
     sendCheckoutFarewellEmail(data).catch(e => console.error('Email checkout farewell:', e.message));
   }
+  sendPushToAll({
+    title: '🔚 Restituzione registrata',
+    body:  `${data.cliente_nome} — bici rientrata`,
+    url:   '/admin',
+  }).catch(e => console.error('Push checkout:', e.message));
+  writeNotification('checkout_bici', {
+    titolo: `Restituzione — ${data.cliente_nome}`,
+    booking_id: req.params.id,
+  }).catch(_ => {});
   return res.json(data);
 });
 
@@ -1438,6 +1467,16 @@ router.post('/bookings/:id/refund', async (req, res) => {
     if (b.cliente_email) {
       sendRefundEmail(b, { amount: refund.amount / 100, isTotal }).catch(e => console.error('Email rimborso:', e.message));
     }
+    sendPushToAll({
+      title: isTotal ? '💶 Rimborso totale + cancellazione' : '💶 Rimborso parziale',
+      body:  `${b.cliente_nome} — €${(refund.amount / 100).toFixed(2)}`,
+      url:   '/admin',
+    }).catch(e => console.error('Push refund:', e.message));
+    writeNotification('refund_issued', {
+      titolo: `Rimborso ${isTotal ? 'totale' : 'parziale'} — ${b.cliente_nome}`,
+      descrizione: `€${(refund.amount / 100).toFixed(2)}${isTotal ? ' (prenotazione cancellata)' : ''}.`,
+      booking_id: req.params.id,
+    }).catch(_ => {});
     return res.json({ success: true, refund_id: refund.id, amount: refund.amount / 100 });
   } catch (e) {
     console.error('[admin refund] Stripe error:', e);
