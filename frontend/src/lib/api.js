@@ -165,6 +165,7 @@ export const adminApi = {
   pushSubscribe:  (subscription)       => adminPost('/admin/push/subscribe', { subscription }),
   pushUnsubscribe:(endpoint)           => adminDelete('/admin/push/subscribe', { endpoint }),
   pushTest:       ()                   => adminPost('/admin/push/test', {}),
+  whatsappTest:   ()                   => adminPost('/admin/whatsapp/test', {}),
 
   refundBooking:  (id, amount, motivo) => adminPost(`/admin/bookings/${id}/refund`, { amount, motivo }),
   rescheduleBooking: (id, data_ritiro, tipo_noleggio, giorni) =>
