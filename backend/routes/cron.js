@@ -216,27 +216,35 @@ router.get('/firma-reminder', cronAuth, async (req, res) => {
       await sendFirmaLinkEmail(booking);
       console.log(`[CRON firma-reminder] Inviato a ${booking.cliente_email}`);
       results.push({ id: booking.id, status: 'sent' });
+      sendPushToAll({
+        title: '✍️ Reminder firma inviato',
+        body:  `${booking.cliente_nome} · ritiro domani · ✓ email inviata`,
+        url:   '/admin',
+      }).catch(e => console.error('[CRON firma-reminder] push:', e.message));
+      writeNotification('firma_reminder_sent', {
+        titolo: `Reminder firma — ${booking.cliente_nome}`,
+        descrizione: `Email inviata per ritiro di domani.`,
+        booking_id: booking.id,
+      }).catch(_ => {});
     } catch (e) {
       console.error(`[CRON firma-reminder] ${booking.id} — errore: ${e.message}`);
       results.push({ id: booking.id, status: 'failed', error: e.message });
+      sendPushToAll({
+        title: '⚠️ Reminder firma fallito',
+        body:  `${booking.cliente_nome} · ${e.message.substring(0, 60)}`,
+        url:   '/admin',
+      }).catch(_ => {});
+      writeNotification('firma_reminder_failed', {
+        titolo: `Reminder firma fallito — ${booking.cliente_nome}`,
+        descrizione: `Errore: ${e.message}`,
+        booking_id: booking.id,
+      }).catch(_ => {});
     }
   }
 
   const sent   = results.filter(r => r.status === 'sent').length;
   const failed = results.filter(r => r.status === 'failed').length;
   console.log(`[CRON firma-reminder] Done — ${sent} inviati, ${failed} falliti`);
-
-  if (sent > 0) {
-    sendPushToAll({
-      title: '✍️ Reminder firma inviato',
-      body:  `${sent} client${sent === 1 ? 'e' : 'i'} senza firma per domani${failed > 0 ? ` (${failed} fallit${failed === 1 ? 'a' : 'e'})` : ''}`,
-      url:   '/admin',
-    }).catch(e => console.error('[CRON firma-reminder] push error:', e.message));
-    writeNotification('firma_reminder_sent', {
-      titolo: `Reminder firma inviati`,
-      descrizione: `${sent} client${sent === 1 ? 'e' : 'i'} senza firma per domani.`,
-    }).catch(_ => {});
-  }
 
   return res.json({ processed: bookings.length, sent, failed, results });
 });
@@ -277,27 +285,36 @@ router.get('/reminder', cronAuth, async (req, res) => {
       await sendReminderEmail(booking);
       console.log(`[CRON reminder] Inviato a ${booking.cliente_email}`);
       results.push({ id: booking.id, status: 'sent' });
+      const oraStr = (booking.orario_ritiro || '').substring(0, 5);
+      sendPushToAll({
+        title: '✉️ Promemoria ritiro inviato',
+        body:  `${booking.cliente_nome} · ritiro domani${oraStr ? ' ore ' + oraStr : ''} · ✓ email inviata`,
+        url:   '/admin',
+      }).catch(e => console.error('[CRON reminder] push:', e.message));
+      writeNotification('ritiro_reminder_sent', {
+        titolo: `Promemoria ritiro — ${booking.cliente_nome}`,
+        descrizione: `Email inviata per ritiro di domani${oraStr ? ' alle ' + oraStr : ''}.`,
+        booking_id: booking.id,
+      }).catch(_ => {});
     } catch (e) {
       console.error(`[CRON reminder] ${booking.id} — errore: ${e.message}`);
       results.push({ id: booking.id, status: 'failed', error: e.message });
+      sendPushToAll({
+        title: '⚠️ Promemoria ritiro fallito',
+        body:  `${booking.cliente_nome} · ${e.message.substring(0, 60)}`,
+        url:   '/admin',
+      }).catch(_ => {});
+      writeNotification('ritiro_reminder_failed', {
+        titolo: `Promemoria ritiro fallito — ${booking.cliente_nome}`,
+        descrizione: `Errore: ${e.message}`,
+        booking_id: booking.id,
+      }).catch(_ => {});
     }
   }
 
   const sent   = results.filter(r => r.status === 'sent').length;
   const failed = results.filter(r => r.status === 'failed').length;
   console.log(`[CRON reminder] Done — ${sent} inviati, ${failed} falliti`);
-
-  if (sent > 0) {
-    sendPushToAll({
-      title: '✉️ Promemoria ritiro inviato',
-      body:  `${sent} client${sent === 1 ? 'e' : 'i'} con ritiro domani${failed > 0 ? ` (${failed} fallit${failed === 1 ? 'a' : 'e'})` : ''}`,
-      url:   '/admin',
-    }).catch(e => console.error('[CRON reminder] push error:', e.message));
-    writeNotification('ritiro_reminder_sent', {
-      titolo: `Promemoria ritiro inviati`,
-      descrizione: `${sent} client${sent === 1 ? 'e' : 'i'} con ritiro domani.`,
-    }).catch(_ => {});
-  }
 
   return res.json({ processed: bookings.length, sent, failed, results });
 });

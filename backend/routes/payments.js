@@ -347,16 +347,22 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       const totalBici = prenotazioni.length;
       const totalPrezzo = prenotazioni.reduce((s, p) => s + Number(p.prezzo_totale), 0);
       const leadWithTotal = { ...lead, prezzo_totale: totalPrezzo };
-      Promise.all([
-        sendConfirmationToCliente(leadWithTotal).catch(e => console.error('Email cliente:', e)),
-        sendNotificationToGestore(leadWithTotal).catch(e => console.error('Email gestore:', e)),
-        sendWhatsAppAlert(leadWithTotal).catch(e => console.error('WhatsApp alert:', e)),
-        sendPushToAll({
+      const pushBodyBase = `${lead.cliente_nome} — ${tipoMap[lead.tipo_noleggio] || lead.tipo_noleggio} · ${lead.data_ritiro} · ${totalBici > 1 ? `${totalBici} bici · ` : ''}€${totalPrezzo}`;
+
+      // Email gestore + WhatsApp: fire-and-forget (non aspettano la push)
+      sendNotificationToGestore(leadWithTotal).catch(e => console.error('Email gestore:', e));
+      sendWhatsAppAlert(leadWithTotal).catch(e => console.error('WhatsApp alert:', e));
+
+      // Email cliente: aspetta esito SMTP per includere risultato nella push
+      sendConfirmationToCliente(leadWithTotal)
+        .then(() => ({ ok: true }))
+        .catch(e => { console.error('Email cliente:', e); return { ok: false }; })
+        .then(({ ok }) => sendPushToAll({
           title: '🚲 Nuova prenotazione!',
-          body:  `${lead.cliente_nome} — ${tipoMap[lead.tipo_noleggio] || lead.tipo_noleggio} · ${lead.data_ritiro} · ${totalBici > 1 ? `${totalBici} bici · ` : ''}€${totalPrezzo}`,
+          body:  pushBodyBase + (ok ? ' · ✓ email inviata' : ' · ⚠️ email fallita'),
           url:   '/admin',
-        }).catch(e => console.error('Push:', e)),
-      ]);
+        }))
+        .catch(e => console.error('Push:', e));
     }
   }
 

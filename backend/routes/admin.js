@@ -129,17 +129,26 @@ router.post('/bookings/:id/cancel', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   await logAction('cancel', req.params.id, { nome: data.cliente_nome, cauzione_released: cauzioneReleased }, getIp(req));
+
+  let emailStatus = null;
   if (data?.cliente_email) {
-    sendCancellationEmail(data, { cauzioneReleased }).catch(e => console.error('Email cancellazione:', e.message));
+    try {
+      await sendCancellationEmail(data, { cauzioneReleased });
+      emailStatus = 'ok';
+    } catch (e) {
+      console.error('Email cancellazione:', e.message);
+      emailStatus = 'fail';
+    }
   }
+  const emailSuffix = emailStatus === 'ok' ? ' · ✓ email inviata' : emailStatus === 'fail' ? ' · ⚠️ email fallita' : '';
   sendPushToAll({
     title: '❌ Prenotazione cancellata',
-    body:  `${data.cliente_nome} — ${data.data_ritiro}${cauzioneReleased ? ' · cauzione rilasciata' : ''}`,
+    body:  `${data.cliente_nome} — ${data.data_ritiro}${cauzioneReleased ? ' · cauzione rilasciata' : ''}${emailSuffix}`,
     url:   '/admin',
   }).catch(e => console.error('Push cancel:', e.message));
   writeNotification('booking_cancelled', {
     titolo: `Cancellata — ${data.cliente_nome}`,
-    descrizione: `Data ritiro: ${data.data_ritiro}.${cauzioneReleased ? ' Cauzione rilasciata.' : ''}`,
+    descrizione: `Data ritiro: ${data.data_ritiro}.${cauzioneReleased ? ' Cauzione rilasciata.' : ''}${emailStatus ? ` Email: ${emailStatus === 'ok' ? 'inviata' : 'fallita'}.` : ''}`,
     booking_id: req.params.id,
   }).catch(_ => {});
   return res.json({ success: true, booking: data, cauzione_released: cauzioneReleased });
@@ -318,16 +327,26 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
       .update({ cauzione_status: 'cancelled' })
       .eq('id', req.params.id);
     await logAction('release_deposit', req.params.id, { pi_id: prenotazione.cauzione_pi_id }, getIp(req));
+
+    let emailStatus = null;
     if (prenotazione.cliente_email) {
-      sendDepositReleasedEmail(prenotazione).catch(e => console.error('Email cauzione rilasciata:', e.message));
+      try {
+        await sendDepositReleasedEmail(prenotazione);
+        emailStatus = 'ok';
+      } catch (e) {
+        console.error('Email cauzione rilasciata:', e.message);
+        emailStatus = 'fail';
+      }
     }
+    const emailSuffix = emailStatus === 'ok' ? ' · ✓ email inviata' : emailStatus === 'fail' ? ' · ⚠️ email fallita' : '';
     sendPushToAll({
       title: '✅ Cauzione rilasciata',
-      body:  `${prenotazione.cliente_nome} — nessun addebito`,
+      body:  `${prenotazione.cliente_nome} — nessun addebito${emailSuffix}`,
       url:   '/admin',
     }).catch(e => console.error('Push release-deposit:', e.message));
     writeNotification('deposit_released', {
       titolo: `Cauzione rilasciata — ${prenotazione.cliente_nome}`,
+      descrizione: emailStatus ? `Email cliente: ${emailStatus === 'ok' ? 'inviata' : 'fallita'}.` : null,
       booking_id: req.params.id,
     }).catch(_ => {});
     return res.json({ success: true });
@@ -769,16 +788,26 @@ router.post('/bookings/:id/checkout', async (req, res) => {
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
   await logAction('checkout_bici', req.params.id, {}, getIp(req));
+
+  let emailStatus = null;
   if (data?.cliente_email) {
-    sendCheckoutFarewellEmail(data).catch(e => console.error('Email checkout farewell:', e.message));
+    try {
+      await sendCheckoutFarewellEmail(data);
+      emailStatus = 'ok';
+    } catch (e) {
+      console.error('Email checkout farewell:', e.message);
+      emailStatus = 'fail';
+    }
   }
+  const emailSuffix = emailStatus === 'ok' ? ' · ✓ email inviata' : emailStatus === 'fail' ? ' · ⚠️ email fallita' : '';
   sendPushToAll({
     title: '🔚 Restituzione registrata',
-    body:  `${data.cliente_nome} — bici rientrata`,
+    body:  `${data.cliente_nome} — bici rientrata${emailSuffix}`,
     url:   '/admin',
   }).catch(e => console.error('Push checkout:', e.message));
   writeNotification('checkout_bici', {
     titolo: `Restituzione — ${data.cliente_nome}`,
+    descrizione: emailStatus ? `Email cliente: ${emailStatus === 'ok' ? 'inviata' : 'fallita'}.` : null,
     booking_id: req.params.id,
   }).catch(_ => {});
   return res.json(data);
@@ -1464,17 +1493,26 @@ router.post('/bookings/:id/refund', async (req, res) => {
 
     console.log(`[admin refund] ${req.params.id} — €${refund.amount / 100} rimborsati`);
     await logAction('refund', req.params.id, { amount: refund.amount / 100, refund_id: refund.id, motivo: motivo || '' }, getIp(req));
+
+    let emailStatus = null;
     if (b.cliente_email) {
-      sendRefundEmail(b, { amount: refund.amount / 100, isTotal }).catch(e => console.error('Email rimborso:', e.message));
+      try {
+        await sendRefundEmail(b, { amount: refund.amount / 100, isTotal });
+        emailStatus = 'ok';
+      } catch (e) {
+        console.error('Email rimborso:', e.message);
+        emailStatus = 'fail';
+      }
     }
+    const emailSuffix = emailStatus === 'ok' ? ' · ✓ email inviata' : emailStatus === 'fail' ? ' · ⚠️ email fallita' : '';
     sendPushToAll({
       title: isTotal ? '💶 Rimborso totale + cancellazione' : '💶 Rimborso parziale',
-      body:  `${b.cliente_nome} — €${(refund.amount / 100).toFixed(2)}`,
+      body:  `${b.cliente_nome} — €${(refund.amount / 100).toFixed(2)}${emailSuffix}`,
       url:   '/admin',
     }).catch(e => console.error('Push refund:', e.message));
     writeNotification('refund_issued', {
       titolo: `Rimborso ${isTotal ? 'totale' : 'parziale'} — ${b.cliente_nome}`,
-      descrizione: `€${(refund.amount / 100).toFixed(2)}${isTotal ? ' (prenotazione cancellata)' : ''}.`,
+      descrizione: `€${(refund.amount / 100).toFixed(2)}${isTotal ? ' (prenotazione cancellata)' : ''}.${emailStatus ? ` Email: ${emailStatus === 'ok' ? 'inviata' : 'fallita'}.` : ''}`,
       booking_id: req.params.id,
     }).catch(_ => {});
     return res.json({ success: true, refund_id: refund.id, amount: refund.amount / 100 });
