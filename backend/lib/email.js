@@ -273,7 +273,7 @@ async function sendWhatsAppAlert(prenotazione) {
     : '';
   const noteCliente  = (prenotazione.cliente_note || '').trim();
 
-  const lines = [
+  const text = [
     '🚲 NUOVA PRENOTAZIONE!',
     `👤 ${prenotazione.cliente_nome}`,
     prenotazione.cliente_email    ? `📧 ${prenotazione.cliente_email}`    : '',
@@ -288,9 +288,10 @@ async function sendWhatsAppAlert(prenotazione) {
     `💶 €${Number(prenotazione.prezzo_totale).toFixed(2)} PAGATO`,
     noteCliente ? `📝 Note: ${noteCliente}` : '',
     `🔑 ${String(prenotazione.id).toUpperCase().substring(0, 8)}`,
-  ].filter(Boolean).join('%0A');
+  ].filter(Boolean).join('\n');
 
-  const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${lines}&apikey=${apikey}`;
+  const params = new URLSearchParams({ phone, text, apikey });
+  const url = `https://api.callmebot.com/whatsapp.php?${params.toString()}`;
 
   await new Promise(resolve => {
     https.get(url, res => {
