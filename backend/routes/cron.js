@@ -450,4 +450,79 @@ router.get('/cleanup-audit', cronAuth, async (req, res) => {
   return res.json({ deleted: count || 0, cutoff });
 });
 
+// ─── GET /api/cron/daily-summary ──────────────────────────────────────────────
+// Push notification con riepilogo della giornata.
+// Schedule: 0 17 * * * UTC (19:00 IT in estate, 18:00 IT in inverno).
+// "Oggi" = giornata UTC corrente (alle 17 UTC siamo dentro lo stesso giorno IT).
+// Conta: prenotazioni pagate, check-in, check-out. Se tutto a zero non manda nulla.
+
+router.get('/daily-summary', cronAuth, async (req, res) => {
+  const now = new Date();
+  const todayStart    = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+  const fromIso = todayStart.toISOString();
+  const toIso   = tomorrowStart.toISOString();
+
+  const [nuove, ritiri, restituzioni] = await Promise.all([
+    supabase
+      .from('prenotazioni')
+      .select('id, prezzo_totale')
+      .eq('pagamento_status', 'paid')
+      .gte('created_at', fromIso)
+      .lt('created_at',  toIso),
+    supabase
+      .from('prenotazioni')
+      .select('id')
+      .gte('checkin_at', fromIso)
+      .lt('checkin_at',  toIso),
+    supabase
+      .from('prenotazioni')
+      .select('id')
+      .gte('checkout_at', fromIso)
+      .lt('checkout_at',  toIso),
+  ]);
+
+  if (nuove.error || ritiri.error || restituzioni.error) {
+    const msg = nuove.error?.message || ritiri.error?.message || restituzioni.error?.message;
+    console.error('[CRON daily-summary] DB error:', msg);
+    return res.status(500).json({ error: msg });
+  }
+
+  const nPrenot  = (nuove.data        || []).length;
+  const totalEur = (nuove.data        || []).reduce((s, p) => s + Number(p.prezzo_totale), 0);
+  const nRitiri  = (ritiri.data       || []).length;
+  const nRest    = (restituzioni.data || []).length;
+
+  if (nPrenot === 0 && nRitiri === 0 && nRest === 0) {
+    console.log('[CRON daily-summary] Nessun evento oggi, skip push');
+    return res.json({ skipped: true, prenotazioni: 0, ritiri: 0, restituzioni: 0 });
+  }
+
+  const parts = [];
+  if (nPrenot > 0) parts.push(`${nPrenot} prenot. (€${totalEur.toFixed(0)})`);
+  if (nRitiri > 0) parts.push(`${nRitiri} ritir${nRitiri === 1 ? 'o' : 'i'}`);
+  if (nRest   > 0) parts.push(`${nRest} restituz${nRest === 1 ? 'ione' : 'ioni'}`);
+  const body = parts.join(' · ');
+
+  try {
+    await sendPushToAll({
+      title: '📊 Riepilogo giornata',
+      body,
+      url:   '/admin',
+    });
+  } catch (e) {
+    console.error('[CRON daily-summary] push error:', e.message);
+  }
+
+  console.log(`[CRON daily-summary] Push inviata: ${body}`);
+  return res.json({
+    sent: true,
+    prenotazioni: nPrenot,
+    ritiri:       nRitiri,
+    restituzioni: nRest,
+    total_eur:    totalEur,
+  });
+});
+
 module.exports = router;
