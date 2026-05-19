@@ -337,4 +337,147 @@ async function sendReminderEmail(prenotazione) {
   await sendAdminEmail(prenotazione, subject, message);
 }
 
-module.exports = { sendConfirmationToCliente, sendNotificationToGestore, sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert, sendReminderEmail };
+// ─── Email post check-out (ringraziamento, senza recensione) ─────────────────
+
+async function sendCheckoutFarewellEmail(prenotazione) {
+  const lang = prenotazione.lingua || 'it';
+
+  const subjects = {
+    it: `🚲 Grazie per il noleggio! — Arfanta Bike Rental`,
+    en: `🚲 Thank you for renting with us! — Arfanta Bike Rental`,
+    de: `🚲 Vielen Dank für die Anmietung! — Arfanta Bike Rental`,
+    es: `🚲 ¡Gracias por alquilar con nosotros! — Arfanta Bike Rental`,
+    fr: `🚲 Merci pour la location ! — Arfanta Bike Rental`,
+  };
+  const messages = {
+    it: `Grazie per aver scelto Arfanta Bike Rental!\n\nSperiamo tu abbia trascorso una bella giornata pedalando tra le Colline del Prosecco UNESCO.\n\nQuando vorrai tornare a noleggiare le nostre e-bike ti aspettiamo a Via Pecol 22, Arfanta di Tarzo (TV).\n\nA presto!\nIl team Arfanta Bike Rental`,
+    en: `Thank you for choosing Arfanta Bike Rental!\n\nWe hope you enjoyed a great day cycling through the UNESCO Prosecco Hills.\n\nWhenever you'd like to rent our e-bikes again, we'll be waiting at Via Pecol 22, Arfanta di Tarzo (TV), Italy.\n\nSee you soon!\nThe Arfanta Bike Rental team`,
+    de: `Vielen Dank, dass Sie sich für Arfanta Bike Rental entschieden haben!\n\nWir hoffen, Sie hatten einen schönen Tag beim Radfahren durch die UNESCO-Prosecco-Hügel.\n\nWann immer Sie unsere E-Bikes wieder mieten möchten, erwarten wir Sie in Via Pecol 22, Arfanta di Tarzo (TV), Italien.\n\nBis bald!\nIhr Arfanta Bike Rental Team`,
+    es: `¡Gracias por elegir Arfanta Bike Rental!\n\nEsperamos que hayas pasado un gran día pedaleando por las Colinas del Prosecco UNESCO.\n\nCuando quieras volver a alquilar nuestras e-bikes, te esperamos en Via Pecol 22, Arfanta di Tarzo (TV), Italia.\n\n¡Hasta pronto!\nEl equipo de Arfanta Bike Rental`,
+    fr: `Merci d'avoir choisi Arfanta Bike Rental !\n\nNous espérons que vous avez passé une belle journée à pédaler dans les Collines du Prosecco UNESCO.\n\nQuand vous souhaiterez louer à nouveau nos e-bikes, nous vous attendrons au Via Pecol 22, Arfanta di Tarzo (TV), Italie.\n\nÀ bientôt !\nL'équipe Arfanta Bike Rental`,
+  };
+
+  await sendAdminEmail(
+    prenotazione,
+    subjects[lang] || subjects.it,
+    messages[lang] || messages.it,
+  );
+}
+
+// ─── Email conferma cancellazione prenotazione ──────────────────────────────
+
+async function sendCancellationEmail(prenotazione, { cauzioneReleased = false } = {}) {
+  const lang = prenotazione.lingua || 'it';
+  const codice = String(prenotazione.id).toUpperCase().substring(0, 8);
+  const dataIt = formatDate(prenotazione.data_ritiro);
+
+  const subjects = {
+    it: `❌ Prenotazione cancellata — Arfanta Bike Rental`,
+    en: `❌ Booking cancelled — Arfanta Bike Rental`,
+    de: `❌ Buchung storniert — Arfanta Bike Rental`,
+    es: `❌ Reserva cancelada — Arfanta Bike Rental`,
+    fr: `❌ Réservation annulée — Arfanta Bike Rental`,
+  };
+
+  const cauzioneNote = {
+    it: cauzioneReleased ? `\n\nL'autorizzazione di cauzione sulla tua carta è stata rilasciata: non vedrai alcun addebito.` : '',
+    en: cauzioneReleased ? `\n\nThe deposit authorization on your card has been released: you will see no charge.` : '',
+    de: cauzioneReleased ? `\n\nDie Kautionsautorisierung auf Ihrer Karte wurde freigegeben: Sie werden keine Belastung sehen.` : '',
+    es: cauzioneReleased ? `\n\nLa autorización de fianza en tu tarjeta ha sido liberada: no verás ningún cargo.` : '',
+    fr: cauzioneReleased ? `\n\nL'autorisation de caution sur votre carte a été libérée : vous ne verrez aucun débit.` : '',
+  };
+
+  const messages = {
+    it: `La tua prenotazione del ${dataIt} (codice ${codice}) è stata cancellata.${cauzioneNote.it}\n\nPer qualsiasi domanda scrivici via WhatsApp al +39 392 8614635 o rispondendo a questa email.\n\nGrazie,\nIl team Arfanta Bike Rental`,
+    en: `Your booking for ${dataIt} (code ${codice}) has been cancelled.${cauzioneNote.en}\n\nFor any questions, write us on WhatsApp at +39 392 8614635 or reply to this email.\n\nThank you,\nThe Arfanta Bike Rental team`,
+    de: `Ihre Buchung für den ${dataIt} (Code ${codice}) wurde storniert.${cauzioneNote.de}\n\nBei Fragen schreiben Sie uns per WhatsApp an +39 392 8614635 oder antworten Sie auf diese E-Mail.\n\nVielen Dank,\nIhr Arfanta Bike Rental Team`,
+    es: `Tu reserva para el ${dataIt} (código ${codice}) ha sido cancelada.${cauzioneNote.es}\n\nPara cualquier pregunta, escríbenos por WhatsApp al +39 392 8614635 o responde a este correo.\n\nGracias,\nEl equipo de Arfanta Bike Rental`,
+    fr: `Votre réservation du ${dataIt} (code ${codice}) a été annulée.${cauzioneNote.fr}\n\nPour toute question, écrivez-nous sur WhatsApp au +39 392 8614635 ou répondez à cet email.\n\nMerci,\nL'équipe Arfanta Bike Rental`,
+  };
+
+  await sendAdminEmail(
+    prenotazione,
+    subjects[lang] || subjects.it,
+    messages[lang] || messages.it,
+  );
+}
+
+// ─── Email conferma rimborso (parziale o totale) ─────────────────────────────
+
+async function sendRefundEmail(prenotazione, { amount, isTotal = false } = {}) {
+  const lang = prenotazione.lingua || 'it';
+  const codice = String(prenotazione.id).toUpperCase().substring(0, 8);
+  const dataIt = formatDate(prenotazione.data_ritiro);
+  const importo = Number(amount).toFixed(2);
+
+  const subjects = {
+    it: isTotal ? `💶 Rimborso emesso e prenotazione cancellata — Arfanta Bike Rental` : `💶 Rimborso parziale emesso — Arfanta Bike Rental`,
+    en: isTotal ? `💶 Refund issued and booking cancelled — Arfanta Bike Rental` : `💶 Partial refund issued — Arfanta Bike Rental`,
+    de: isTotal ? `💶 Erstattung ausgestellt und Buchung storniert — Arfanta Bike Rental` : `💶 Teilerstattung ausgestellt — Arfanta Bike Rental`,
+    es: isTotal ? `💶 Reembolso emitido y reserva cancelada — Arfanta Bike Rental` : `💶 Reembolso parcial emitido — Arfanta Bike Rental`,
+    fr: isTotal ? `💶 Remboursement émis et réservation annulée — Arfanta Bike Rental` : `💶 Remboursement partiel émis — Arfanta Bike Rental`,
+  };
+
+  const totalNote = {
+    it: isTotal ? `\n\nLa prenotazione del ${dataIt} è stata cancellata.` : '',
+    en: isTotal ? `\n\nThe booking for ${dataIt} has been cancelled.` : '',
+    de: isTotal ? `\n\nDie Buchung für den ${dataIt} wurde storniert.` : '',
+    es: isTotal ? `\n\nLa reserva del ${dataIt} ha sido cancelada.` : '',
+    fr: isTotal ? `\n\nLa réservation du ${dataIt} a été annulée.` : '',
+  };
+
+  const messages = {
+    it: `Abbiamo emesso un rimborso di €${importo} per la prenotazione ${codice}.\n\nL'importo sarà accreditato sulla carta usata per il pagamento entro 5-10 giorni lavorativi (i tempi dipendono dalla tua banca).${totalNote.it}\n\nPer qualsiasi domanda scrivici via WhatsApp al +39 392 8614635 o rispondendo a questa email.\n\nGrazie,\nIl team Arfanta Bike Rental`,
+    en: `We have issued a refund of €${importo} for booking ${codice}.\n\nThe amount will be credited to the card used for payment within 5-10 business days (timing depends on your bank).${totalNote.en}\n\nFor any questions, write us on WhatsApp at +39 392 8614635 or reply to this email.\n\nThank you,\nThe Arfanta Bike Rental team`,
+    de: `Wir haben eine Rückerstattung von €${importo} für die Buchung ${codice} ausgestellt.\n\nDer Betrag wird innerhalb von 5-10 Werktagen auf die für die Zahlung verwendete Karte gutgeschrieben (Zeitpunkt hängt von Ihrer Bank ab).${totalNote.de}\n\nBei Fragen schreiben Sie uns per WhatsApp an +39 392 8614635 oder antworten Sie auf diese E-Mail.\n\nVielen Dank,\nIhr Arfanta Bike Rental Team`,
+    es: `Hemos emitido un reembolso de €${importo} para la reserva ${codice}.\n\nEl importe se acreditará a la tarjeta utilizada para el pago en un plazo de 5-10 días laborables (los plazos dependen de tu banco).${totalNote.es}\n\nPara cualquier pregunta, escríbenos por WhatsApp al +39 392 8614635 o responde a este correo.\n\nGracias,\nEl equipo de Arfanta Bike Rental`,
+    fr: `Nous avons émis un remboursement de €${importo} pour la réservation ${codice}.\n\nLe montant sera crédité sur la carte utilisée pour le paiement dans un délai de 5 à 10 jours ouvrables (les délais dépendent de votre banque).${totalNote.fr}\n\nPour toute question, écrivez-nous sur WhatsApp au +39 392 8614635 ou répondez à cet email.\n\nMerci,\nL'équipe Arfanta Bike Rental`,
+  };
+
+  await sendAdminEmail(
+    prenotazione,
+    subjects[lang] || subjects.it,
+    messages[lang] || messages.it,
+  );
+}
+
+// ─── Email conferma rilascio cauzione (nessun danno) ─────────────────────────
+
+async function sendDepositReleasedEmail(prenotazione) {
+  const lang = prenotazione.lingua || 'it';
+
+  const subjects = {
+    it: `✅ Cauzione rilasciata — Arfanta Bike Rental`,
+    en: `✅ Deposit released — Arfanta Bike Rental`,
+    de: `✅ Kaution freigegeben — Arfanta Bike Rental`,
+    es: `✅ Fianza liberada — Arfanta Bike Rental`,
+    fr: `✅ Caution libérée — Arfanta Bike Rental`,
+  };
+
+  const messages = {
+    it: `L'autorizzazione di cauzione sulla tua carta è stata rilasciata: non c'è stato nessun addebito.\n\nLa bici è rientrata senza problemi — grazie!\n\nA presto,\nIl team Arfanta Bike Rental`,
+    en: `The deposit authorization on your card has been released: no amount has been charged.\n\nThe bike was returned in good condition — thank you!\n\nSee you soon,\nThe Arfanta Bike Rental team`,
+    de: `Die Kautionsautorisierung auf Ihrer Karte wurde freigegeben: es wurde kein Betrag abgebucht.\n\nDas Fahrrad wurde in gutem Zustand zurückgegeben — vielen Dank!\n\nBis bald,\nIhr Arfanta Bike Rental Team`,
+    es: `La autorización de fianza en tu tarjeta ha sido liberada: no se ha cargado ningún importe.\n\nLa bici se devolvió en buenas condiciones — ¡gracias!\n\nHasta pronto,\nEl equipo de Arfanta Bike Rental`,
+    fr: `L'autorisation de caution sur votre carte a été libérée : aucun montant n'a été débité.\n\nLe vélo a été rendu en bon état — merci !\n\nÀ bientôt,\nL'équipe Arfanta Bike Rental`,
+  };
+
+  await sendAdminEmail(
+    prenotazione,
+    subjects[lang] || subjects.it,
+    messages[lang] || messages.it,
+  );
+}
+
+module.exports = {
+  sendConfirmationToCliente,
+  sendNotificationToGestore,
+  sendAdminEmail,
+  sendFirmaLinkEmail,
+  sendWhatsAppAlert,
+  sendReminderEmail,
+  sendCheckoutFarewellEmail,
+  sendCancellationEmail,
+  sendRefundEmail,
+  sendDepositReleasedEmail,
+};

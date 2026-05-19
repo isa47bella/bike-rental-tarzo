@@ -13,7 +13,15 @@ const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
 const { CONTRATTO_TERMS, TIPO_LABEL, CONTRATTO_TITLE, CONTRATTO_FIELDS, LOCALE_MAP } = require('../lib/contratto-terms');
 const { sendPushToAll } = require('../lib/push');
-const { sendAdminEmail, sendFirmaLinkEmail, sendWhatsAppAlert } = require('../lib/email');
+const {
+  sendAdminEmail,
+  sendFirmaLinkEmail,
+  sendWhatsAppAlert,
+  sendCheckoutFarewellEmail,
+  sendCancellationEmail,
+  sendRefundEmail,
+  sendDepositReleasedEmail,
+} = require('../lib/email');
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
 const { CAUZIONE_AMOUNT_EUR }               = require('../lib/config');
@@ -120,6 +128,9 @@ router.post('/bookings/:id/cancel', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   await logAction('cancel', req.params.id, { nome: data.cliente_nome, cauzione_released: cauzioneReleased }, getIp(req));
+  if (data?.cliente_email) {
+    sendCancellationEmail(data, { cauzioneReleased }).catch(e => console.error('Email cancellazione:', e.message));
+  }
   return res.json({ success: true, booking: data, cauzione_released: cauzioneReleased });
 });
 
@@ -279,7 +290,7 @@ router.post('/bookings/:id/autorizza-cauzione', async (req, res) => {
 router.post('/bookings/:id/release-deposit', async (req, res) => {
   const { data: prenotazione, error } = await supabase
     .from('prenotazioni')
-    .select('cauzione_pi_id, cauzione_status, cliente_nome')
+    .select('id, cauzione_pi_id, cauzione_status, cliente_nome, cliente_email, lingua, data_ritiro')
     .eq('id', req.params.id)
     .single();
 
@@ -296,6 +307,9 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
       .update({ cauzione_status: 'cancelled' })
       .eq('id', req.params.id);
     await logAction('release_deposit', req.params.id, { pi_id: prenotazione.cauzione_pi_id }, getIp(req));
+    if (prenotazione.cliente_email) {
+      sendDepositReleasedEmail(prenotazione).catch(e => console.error('Email cauzione rilasciata:', e.message));
+    }
     return res.json({ success: true });
   } catch (e) {
     console.error('Errore release deposit:', e);
@@ -735,6 +749,9 @@ router.post('/bookings/:id/checkout', async (req, res) => {
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
   await logAction('checkout_bici', req.params.id, {}, getIp(req));
+  if (data?.cliente_email) {
+    sendCheckoutFarewellEmail(data).catch(e => console.error('Email checkout farewell:', e.message));
+  }
   return res.json(data);
 });
 
@@ -1387,7 +1404,7 @@ router.post('/bookings/:id/refund', async (req, res) => {
 
   const { data: b, error } = await supabase
     .from('prenotazioni')
-    .select('stripe_session_id, stripe_payment_id, pagamento_status, prezzo_totale, cliente_nome')
+    .select('id, stripe_session_id, stripe_payment_id, pagamento_status, prezzo_totale, cliente_nome, cliente_email, lingua, data_ritiro')
     .eq('id', req.params.id)
     .single();
 
@@ -1418,6 +1435,9 @@ router.post('/bookings/:id/refund', async (req, res) => {
 
     console.log(`[admin refund] ${req.params.id} — €${refund.amount / 100} rimborsati`);
     await logAction('refund', req.params.id, { amount: refund.amount / 100, refund_id: refund.id, motivo: motivo || '' }, getIp(req));
+    if (b.cliente_email) {
+      sendRefundEmail(b, { amount: refund.amount / 100, isTotal }).catch(e => console.error('Email rimborso:', e.message));
+    }
     return res.json({ success: true, refund_id: refund.id, amount: refund.amount / 100 });
   } catch (e) {
     console.error('[admin refund] Stripe error:', e);
