@@ -125,6 +125,7 @@ const IconBell         = IC(<><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9
 const IconDownload     = IC(<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>);
 const IconNote         = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="10" y1="17" x2="8" y2="17"/></>);
 const IconLog          = IC(<><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/><circle cx="16" cy="17" r="2"/></>);
+const IconMore         = IC(<><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></>);
 
 // ─── Bike catalog ────────────────────────────────────────────────────────────
 
@@ -179,6 +180,9 @@ const NAV = [
   { id: 'impostazioni', label: 'Impostazioni',  Icon: IconSettings   },
   { id: 'log',          label: 'Log Azioni',    Icon: IconLog        },
 ];
+
+// Voci sempre visibili nella bottom nav mobile; le restanti vanno nel menu "Altro"
+const PRIMARY_NAV_IDS = ['dashboard', 'oggi', 'prenotazioni', 'calendario', 'cauzioni'];
 
 const VIEW_TITLES = {
   dashboard:    'Dashboard',
@@ -256,6 +260,7 @@ export default function AdminDashboard() {
   const [showToken, setShowToken] = useState(false);
   const [authed,   setAuthed]   = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
+  const [moreOpen,   setMoreOpen]   = useState(false);
 
   // Stats + oggi (loaded at login)
   const [stats,      setStats]      = useState(null);
@@ -1532,13 +1537,40 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
         }}
       />
 
-      {/* ── Mobile bottom nav ── */}
+      {/* ── Menu "Altro" (sezioni secondarie) ── */}
+      {moreOpen && (
+        <>
+          <div className="ac-more-overlay" onClick={() => setMoreOpen(false)} />
+          <div className="ac-more-sheet" role="menu">
+            <div className="ac-more-sheet-handle" />
+            <div className="ac-more-sheet-title">Altre sezioni</div>
+            <div className="ac-more-grid">
+              {NAV.filter(n => !PRIMARY_NAV_IDS.includes(n.id)).map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  className={`ac-more-item${activeView === id ? ' active' : ''}`}
+                  onClick={() => { setActiveView(id); setMoreOpen(false); }}
+                >
+                  <span className="ac-more-item-icon"><Icon /></span>
+                  <span>{label}</span>
+                </button>
+              ))}
+              <button className="ac-more-item ac-more-item-logout" onClick={logout}>
+                <span className="ac-more-item-icon"><IconLogout /></span>
+                <span>Esci</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Mobile bottom nav (5 voci fisse + Altro) ── */}
       <nav className="ac-bottom-nav">
-        {NAV.map(({ id, label, Icon }) => (
+        {NAV.filter(n => PRIMARY_NAV_IDS.includes(n.id)).map(({ id, label, Icon }) => (
           <button
             key={id}
             className={`ac-bottom-nav-item${activeView === id ? ' active' : ''}`}
-            onClick={() => setActiveView(id)}
+            onClick={() => { setActiveView(id); setMoreOpen(false); }}
           >
             <span className="ac-bottom-nav-icon">
               <Icon />
@@ -1549,9 +1581,12 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             <span>{label}</span>
           </button>
         ))}
-        <button className="ac-bottom-nav-item ac-bottom-nav-logout" onClick={logout}>
-          <span className="ac-bottom-nav-icon"><IconLogout /></span>
-          <span>Esci</span>
+        <button
+          className={`ac-bottom-nav-item${(moreOpen || !PRIMARY_NAV_IDS.includes(activeView)) ? ' active' : ''}`}
+          onClick={() => setMoreOpen(o => !o)}
+        >
+          <span className="ac-bottom-nav-icon"><IconMore /></span>
+          <span>Altro</span>
         </button>
       </nav>
     </div>

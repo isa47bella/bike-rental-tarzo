@@ -2339,7 +2339,7 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
     overflow-y: auto;
   }
 
-  /* ── Bottom navigation bar ── */
+  /* ── Bottom navigation bar (6 voci fisse, niente scroll) ── */
   .ac-bottom-nav {
     display: flex;
     position: fixed;
@@ -2348,33 +2348,36 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
     right: 0;
     background: #0B1219;
     border-top: 1px solid #1A2840;
-    overflow-x: auto;
-    overflow-y: hidden;
-    z-index: 200;
+    z-index: 202;
     padding-bottom: env(safe-area-inset-bottom, 0);
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
     box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
   }
-  .ac-bottom-nav::-webkit-scrollbar { display: none; }
   .ac-bottom-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    padding: 8px 10px 6px;
-    min-width: 56px;
-    flex-shrink: 0;
+    padding: 8px 4px 6px;
+    flex: 1 1 0;
+    min-width: 0;
     border: none;
     background: transparent;
     color: #3A5070;
     font-family: 'Barlow', sans-serif;
     font-size: 0.58rem;
     font-weight: 600;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     cursor: pointer;
     transition: color 0.15s;
     position: relative;
+  }
+  .ac-bottom-nav-item > span:last-child {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ac-bottom-nav-item.active { color: #EA580C; }
   .ac-bottom-nav-item.active svg { stroke: #EA580C; }
@@ -2411,6 +2414,83 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
     background: #EA580C;
     border-radius: 0 0 3px 3px;
   }
+
+  /* ── Menu "Altro" (bottom sheet) ── */
+  .ac-more-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 200;
+    animation: ac-more-fade 0.15s ease;
+  }
+  .ac-more-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0));
+    background: #0B1219;
+    border-top: 1px solid #1A2840;
+    border-radius: 16px 16px 0 0;
+    z-index: 201;
+    padding: 8px 12px 16px;
+    padding-left: calc(12px + env(safe-area-inset-left, 0));
+    padding-right: calc(12px + env(safe-area-inset-right, 0));
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.55);
+    animation: ac-more-slide 0.2s ease;
+  }
+  @keyframes ac-more-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes ac-more-slide {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .ac-more-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: #2A3A52;
+    border-radius: 2px;
+    margin: 4px auto 12px;
+  }
+  .ac-more-sheet-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #3A5070;
+    margin: 0 4px 12px;
+  }
+  .ac-more-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .ac-more-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 16px 6px;
+    border: 1px solid #1A2840;
+    border-radius: 12px;
+    background: #0F1A28;
+    color: #8499B5;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .ac-more-item.active {
+    color: #EA580C;
+    border-color: #EA580C;
+  }
+  .ac-more-item.active svg { stroke: #EA580C; }
+  .ac-more-item-logout { color: #F87171; }
+  .ac-more-item-icon { display: flex; }
 
   /* ── Dashboard ── */
   .ac-stats-grid {
