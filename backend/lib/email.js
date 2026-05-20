@@ -380,25 +380,52 @@ function row(label, value) {
 // ─── Template email notifica gestore ─────────────────────────────────────────
 
 function buildGestoreHtml(p) {
-  return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
-  <div style="background:#fff;border-radius:8px;padding:24px;max-width:500px;">
-    <h2 style="color:#2D8659;margin:0 0 16px;">🚲 Nuova Prenotazione!</h2>
-    <p><strong>Codice:</strong> ${esc(p.id.toUpperCase().substring(0, 8))}</p>
-    <p><strong>Cliente:</strong> ${esc(p.cliente_nome)}</p>
-    <p><strong>Email:</strong> ${esc(p.cliente_email)}</p>
-    <p><strong>Telefono:</strong> ${esc(p.cliente_telefono)}</p>
-    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-    <p><strong>Tipo:</strong> ${tipoLabel(p.tipo_noleggio)}</p>
-    <p><strong>Ritiro:</strong> ${formatDate(p.data_ritiro)} alle ${esc((p.orario_ritiro || '').substring(0,5))}</p>
-    <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${esc((p.orario_restituzione || '').substring(0,5))}</p>
-    <p><strong>Bicicletta:</strong> #${Number(p.bicicletta_id)}</p>
-    <p><strong>Totale:</strong> €${Number(p.prezzo_totale).toFixed(2)} — <span style="color:#2D8659;font-weight:bold;">PAGATO ✓</span></p>
-    ${parseAccessori(p.accessori).length > 0 ? `<p><strong>Accessori richiesti:</strong> ${parseAccessori(p.accessori).map(accLabel).join(', ')}</p>` : '<p><strong>Accessori:</strong> Nessuno</p>'}
-    ${p.cliente_note ? `<p><strong>Note:</strong> ${esc(p.cliente_note)}</p>` : ''}
-  </div>
-</body></html>`;
+  const codice = String(p.id).toUpperCase().substring(0, 8);
+  const oraRitiro = (p.orario_ritiro || '').substring(0, 5);
+  const oraRestit = (p.orario_restituzione || '').substring(0, 5);
+  const accessoriStr = parseAccessori(p.accessori).join(', ');
+  const noteCliente = (p.cliente_note || '').trim();
+
+  // Riga etichetta/valore della tabella riepilogo (stesso stile di buildClienteHtml).
+  const summaryRow = (label, value) => `
+              <tr>
+                <td style="padding:13px 0;border-bottom:1px solid #EFE8DA;font-family:'Barlow',Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.13em;color:#9A8F80;text-transform:uppercase;">${label}</td>
+                <td style="padding:13px 0;border-bottom:1px solid #EFE8DA;text-align:right;font-size:15px;font-weight:600;color:#2B2520;">${value}</td>
+              </tr>`;
+
+  const bodyHtml = `
+        <!-- ── Corpo ── -->
+        <tr>
+          <td style="padding:38px 48px 40px;">
+
+            <h1 style="margin:0 0 6px;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:28px;line-height:1.1;font-weight:700;color:#2B2520;letter-spacing:-0.01em;">
+              Nuova prenotazione
+            </h1>
+            <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#7C7268;">
+              <strong style="color:#2B2520;font-weight:600;">${esc(p.cliente_nome)}</strong>
+            </p>
+
+            <!-- Riepilogo: coppie etichetta/valore -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px;">
+              ${summaryRow('Email', esc(p.cliente_email))}
+              ${summaryRow('Telefono', esc(p.cliente_telefono))}
+              ${summaryRow('Codice', esc(codice))}
+              ${summaryRow('Tipo noleggio', esc(tipoLabel(p.tipo_noleggio, 'it')))}
+              ${summaryRow('Ritiro', esc(formatDate(p.data_ritiro, 'it')) + ' &nbsp;·&nbsp; ' + esc(oraRitiro))}
+              ${summaryRow('Restituzione', esc(formatDate(p.data_restituzione, 'it')) + ' &nbsp;·&nbsp; ' + esc(oraRestit))}
+              ${summaryRow('Bicicletta', esc(biciLabel(p.bicicletta_id)))}
+              ${accessoriStr ? summaryRow('Accessori', esc(accessoriStr)) : ''}
+              ${noteCliente ? summaryRow('Note cliente', esc(noteCliente)) : ''}
+              <tr>
+                <td style="padding:15px 0 0;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.03em;color:#2B2520;text-transform:uppercase;">Totale</td>
+                <td style="padding:15px 0 0;text-align:right;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:24px;font-weight:700;color:#2B2520;">€&thinsp;${Number(p.prezzo_totale).toFixed(2)}</td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>`;
+
+  return buildEmailShell({ lang: 'it', heroAlt: 'Arfanta Bike Rental — Colline del Prosecco', bodyHtml });
 }
 
 // ─── Esportazioni ─────────────────────────────────────────────────────────────
@@ -684,6 +711,7 @@ module.exports = {
   sendConfirmationToCliente,
   _buildClienteHtml: buildClienteHtml,
   sendNotificationToGestore,
+  _buildGestoreHtml: buildGestoreHtml,
   sendAdminEmail,
   sendFirmaLinkEmail,
   sendWhatsAppAlert,
