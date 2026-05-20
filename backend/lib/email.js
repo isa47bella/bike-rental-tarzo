@@ -369,14 +369,6 @@ function buildClienteHtml(p) {
   return buildEmailShell({ lang, heroAlt: t.footerUnesco, bodyHtml });
 }
 
-function row(label, value) {
-  if (!value) return '';
-  return `<tr>
-    <td style="padding:8px 0;border-bottom:1px solid #eee;color:#666;font-size:14px;width:50%;">${label}</td>
-    <td style="padding:8px 0;border-bottom:1px solid #eee;color:#333;font-size:14px;font-weight:600;">${value}</td>
-  </tr>`;
-}
-
 // ─── Template email notifica gestore ─────────────────────────────────────────
 
 function buildGestoreHtml(p) {
