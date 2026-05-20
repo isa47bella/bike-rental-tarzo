@@ -25,23 +25,26 @@ const BICI_NOMI = {
 };
 function biciLabel(id) { return BICI_NOMI[Number(id)] || `Bici #${id}`; }
 
-function formatDate(dateStr) {
+const LOCALE_MAP = { it: 'it-IT', en: 'en-GB', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+
+function formatDate(dateStr, lang = 'it') {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('it-IT', {
+  return d.toLocaleDateString(LOCALE_MAP[lang] || 'it-IT', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 }
 
-function tipoLabel(tipo) {
-  const labels = {
-    'mezza_mattina':    'Mezza Giornata Mattina (09:00–13:00)',
-    'mezza_pomeriggio': 'Mezza Giornata Pomeriggio (14:00–18:00)',
-    'intera_giornata':  'Giornata Intera (09:00–18:00)',
-    'multi_giorno':     'Multi-Giorno',
-    '4_ore':            'Noleggio 4 Ore',
-    '3_piu_giorni':     'Noleggio Multi-Giorno',
-  };
-  return labels[tipo] || tipo;
+const TIPO_LABELS = {
+  it: { mezza_mattina: 'Mezza giornata — Mattina (09:00–13:00)', mezza_pomeriggio: 'Mezza giornata — Pomeriggio (14:00–18:00)', intera_giornata: 'Giornata intera (09:00–18:00)', multi_giorno: 'Multi-giorno' },
+  en: { mezza_mattina: 'Half day — Morning (09:00–13:00)',       mezza_pomeriggio: 'Half day — Afternoon (14:00–18:00)',     intera_giornata: 'Full day (09:00–18:00)',        multi_giorno: 'Multi-day' },
+  de: { mezza_mattina: 'Halbtags — Vormittag (09:00–13:00)',     mezza_pomeriggio: 'Halbtags — Nachmittag (14:00–18:00)',    intera_giornata: 'Ganztags (09:00–18:00)',        multi_giorno: 'Mehrtägig' },
+  es: { mezza_mattina: 'Media jornada — Mañana (09:00–13:00)',   mezza_pomeriggio: 'Media jornada — Tarde (14:00–18:00)',    intera_giornata: 'Jornada completa (09:00–18:00)', multi_giorno: 'Varios días' },
+  fr: { mezza_mattina: 'Demi-journée — Matin (09h00–13h00)',     mezza_pomeriggio: 'Demi-journée — Après-midi (14h00–18h00)', intera_giornata: 'Journée entière (09h00–18h00)',  multi_giorno: 'Plusieurs jours' },
+};
+
+function tipoLabel(tipo, lang = 'it') {
+  const set = TIPO_LABELS[lang] || TIPO_LABELS.it;
+  return set[tipo] || TIPO_LABELS.it[tipo] || tipo;
 }
 
 function accLabel(key) {
@@ -52,6 +55,142 @@ function accLabel(key) {
 function parseAccessori(raw) {
   return (raw || '').split(',').filter(Boolean);
 }
+
+// ─── Stringhe email multilingua (it/en/de/es/fr) ─────────────────────────────
+const EMAIL_I18N = {
+  it: {
+    tagline:        'Noleggio e-bike · Colline del Prosecco UNESCO',
+    footerUnesco:   'Colline del Prosecco di Conegliano e Valdobbiadene — Patrimonio UNESCO',
+    footerContatto: 'Per modifiche o cancellazioni scrivici su WhatsApp al',
+    saluto:         (nome) => `Gentile ${nome},`,
+    confSubject:    'Prenotazione confermata',
+    confTitolo:     'Prenotazione confermata',
+    confIntro:      'la tua e-bike ti aspetta tra i vigneti. Ecco tutti i dettagli del noleggio.',
+    lCodice:        'Codice prenotazione',
+    lTipo:          'Tipo noleggio',
+    lRitiro:        'Ritiro',
+    lRestituzione:  'Restituzione',
+    lBici:          'Bicicletta',
+    lAccessori:     'Accessori',
+    lTotale:        'Totale pagato',
+    firmaTitolo:    'Un ultimo passaggio',
+    firmaTesto:     'Firma il contratto di noleggio prima del ritiro. Bastano due minuti, dal tuo telefono.',
+    firmaBottone:   'Firma il contratto',
+    dove:           'Dove venirci a trovare',
+    cosaPortare:    'Cosa portare',
+    documento:      "Documento d'identità",
+    codicePort:     'Il codice prenotazione',
+    remSubject:     'Il tuo noleggio è domani',
+    remTitolo:      'Il tuo noleggio è domani',
+    remTesto:       "Ti ricordiamo che domani è il giorno del tuo noleggio. Ti aspettiamo a Via Pecol 22, Arfanta di Tarzo (TV). Ricordati di portare un documento d'identità valido e il tuo codice prenotazione.",
+  },
+  en: {
+    tagline:        'E-bike rental · Prosecco Hills UNESCO Site',
+    footerUnesco:   'Prosecco Hills of Conegliano and Valdobbiadene — UNESCO World Heritage Site',
+    footerContatto: 'For changes or cancellations, message us on WhatsApp at',
+    saluto:         (nome) => `Dear ${nome},`,
+    confSubject:    'Booking confirmed',
+    confTitolo:     'Booking confirmed',
+    confIntro:      'your e-bike is waiting among the vineyards. Here are all the details of your rental.',
+    lCodice:        'Booking code',
+    lTipo:          'Rental type',
+    lRitiro:        'Pick-up',
+    lRestituzione:  'Return',
+    lBici:          'Bicycle',
+    lAccessori:     'Accessories',
+    lTotale:        'Total paid',
+    firmaTitolo:    'One last step',
+    firmaTesto:     'Sign the rental agreement before pick-up. It only takes two minutes, from your phone.',
+    firmaBottone:   'Sign the agreement',
+    dove:           'Where to find us',
+    cosaPortare:    'What to bring',
+    documento:      'ID document',
+    codicePort:     'Your booking code',
+    remSubject:     'Your rental is tomorrow',
+    remTitolo:      'Your rental is tomorrow',
+    remTesto:       "A friendly reminder that tomorrow is your rental day. We'll be waiting for you at Via Pecol 22, Arfanta di Tarzo (TV), Italy. Remember to bring a valid ID document and your booking code.",
+  },
+  de: {
+    tagline:        'E-Bike-Verleih · Prosecco-Hügel UNESCO-Welterbe',
+    footerUnesco:   'Prosecco-Hügel von Conegliano und Valdobbiadene — UNESCO-Welterbe',
+    footerContatto: 'Für Änderungen oder Stornierungen schreiben Sie uns auf WhatsApp:',
+    saluto:         (nome) => `Hallo ${nome},`,
+    confSubject:    'Buchung bestätigt',
+    confTitolo:     'Buchung bestätigt',
+    confIntro:      'Ihr E-Bike wartet schon zwischen den Weinbergen. Hier sind alle Details Ihrer Buchung.',
+    lCodice:        'Buchungscode',
+    lTipo:          'Mietart',
+    lRitiro:        'Abholung',
+    lRestituzione:  'Rückgabe',
+    lBici:          'Fahrrad',
+    lAccessori:     'Zubehör',
+    lTotale:        'Bezahlter Betrag',
+    firmaTitolo:    'Ein letzter Schritt',
+    firmaTesto:     'Unterzeichnen Sie den Mietvertrag vor der Abholung. Es dauert nur zwei Minuten, direkt vom Handy.',
+    firmaBottone:   'Vertrag unterzeichnen',
+    dove:           'So finden Sie uns',
+    cosaPortare:    'Was mitbringen',
+    documento:      'Gültiger Ausweis',
+    codicePort:     'Ihren Buchungscode',
+    remSubject:     'Ihre Vermietung ist morgen',
+    remTitolo:      'Ihre Vermietung ist morgen',
+    remTesto:       'Eine kurze Erinnerung: Morgen ist Ihr Miettag. Wir erwarten Sie in Via Pecol 22, Arfanta di Tarzo (TV), Italien. Bitte denken Sie an einen gültigen Ausweis und Ihren Buchungscode.',
+  },
+  es: {
+    tagline:        'Alquiler de e-bike · Colinas del Prosecco UNESCO',
+    footerUnesco:   'Colinas del Prosecco de Conegliano y Valdobbiadene — Patrimonio de la UNESCO',
+    footerContatto: 'Para cambios o cancelaciones, escríbenos por WhatsApp al',
+    saluto:         (nome) => `Hola ${nome},`,
+    confSubject:    'Reserva confirmada',
+    confTitolo:     'Reserva confirmada',
+    confIntro:      'tu e-bike te espera entre los viñedos. Aquí tienes todos los detalles del alquiler.',
+    lCodice:        'Código de reserva',
+    lTipo:          'Tipo de alquiler',
+    lRitiro:        'Recogida',
+    lRestituzione:  'Devolución',
+    lBici:          'Bicicleta',
+    lAccessori:     'Accesorios',
+    lTotale:        'Total pagado',
+    firmaTitolo:    'Un último paso',
+    firmaTesto:     'Firma el contrato de alquiler antes de la recogida. Solo lleva dos minutos, desde tu móvil.',
+    firmaBottone:   'Firmar el contrato',
+    dove:           'Dónde encontrarnos',
+    cosaPortare:    'Qué llevar',
+    documento:      'Documento de identidad',
+    codicePort:     'Tu código de reserva',
+    remSubject:     'Tu alquiler es mañana',
+    remTitolo:      'Tu alquiler es mañana',
+    remTesto:       'Te recordamos que mañana es el día de tu alquiler. Te esperamos en Via Pecol 22, Arfanta di Tarzo (TV), Italia. Recuerda llevar un documento de identidad válido y tu código de reserva.',
+  },
+  fr: {
+    tagline:        "Location d'e-bikes · Collines du Prosecco UNESCO",
+    footerUnesco:   'Collines du Prosecco de Conegliano et Valdobbiadene — Patrimoine mondial UNESCO',
+    footerContatto: 'Pour toute modification ou annulation, écrivez-nous sur WhatsApp au',
+    saluto:         (nome) => `Bonjour ${nome},`,
+    confSubject:    'Réservation confirmée',
+    confTitolo:     'Réservation confirmée',
+    confIntro:      'votre e-bike vous attend parmi les vignobles. Voici tous les détails de votre location.',
+    lCodice:        'Code de réservation',
+    lTipo:          'Type de location',
+    lRitiro:        'Retrait',
+    lRestituzione:  'Restitution',
+    lBici:          'Vélo',
+    lAccessori:     'Accessoires',
+    lTotale:        'Total payé',
+    firmaTitolo:    'Une dernière étape',
+    firmaTesto:     'Signez le contrat de location avant le retrait. Cela ne prend que deux minutes, depuis votre téléphone.',
+    firmaBottone:   'Signer le contrat',
+    dove:           'Où nous trouver',
+    cosaPortare:    'Quoi apporter',
+    documento:      "Pièce d'identité",
+    codicePort:     'Votre code de réservation',
+    remSubject:     'Votre location est demain',
+    remTitolo:      'Votre location est demain',
+    remTesto:       "Petit rappel : demain, c'est le jour de votre location. Nous vous attendons au Via Pecol 22, Arfanta di Tarzo (TV), Italie. Pensez à apporter une pièce d'identité valide et votre code de réservation.",
+  },
+};
+
+function emailT(lang) { return EMAIL_I18N[lang] || EMAIL_I18N.it; }
 
 // URL pagina firma. Include il firma_token come query param (se presente):
 // senza il token corretto la pagina/API rifiuta lettura e firma.
