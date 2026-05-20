@@ -570,9 +570,12 @@ async function sendFirmaLinkEmail(prenotazione) {
 // ─── Email promemoria ritiro (cron giorno prima) ──────────────────────────────
 
 async function sendReminderEmail(prenotazione) {
-  const subject = `🚲 Il tuo noleggio è domani — Arfanta Bike Rental`;
-  const message = `Ti ricordiamo che domani è il giorno del tuo noleggio!\n\n📋 Codice prenotazione: ${prenotazione.id.toUpperCase().substring(0, 8)}\n📅 Ritiro: ${formatDate(prenotazione.data_ritiro)} alle ${(prenotazione.orario_ritiro || '').substring(0, 5)}\n📍 Dove: Via Pecol 22, Arfanta di Tarzo (TV)\n\nRicorda di portare:\n• Documento di identità valido\n• Il codice prenotazione sopra\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.\n\nTi aspettiamo!`;
-  await sendAdminEmail(prenotazione, subject, message);
+  const lang = prenotazione.lingua || 'it';
+  const t = emailT(lang);
+  const codice = String(prenotazione.id).toUpperCase().substring(0, 8);
+  const ora = (prenotazione.orario_ritiro || '').substring(0, 5);
+  const message = `${t.remTesto}\n\n${t.lCodice}: ${codice}\n${t.lRitiro}: ${formatDate(prenotazione.data_ritiro, lang)} · ${ora}`;
+  await sendAdminEmail(prenotazione, `${t.remSubject} | Arfanta Bike Rental`, message);
 }
 
 // ─── Email post check-out (ringraziamento, senza recensione) ─────────────────

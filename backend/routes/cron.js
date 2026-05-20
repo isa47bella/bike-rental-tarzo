@@ -281,7 +281,7 @@ router.get('/reminder', cronAuth, async (req, res) => {
 
   const { data: bookings, error } = await supabase
     .from('prenotazioni')
-    .select('id, cliente_nome, cliente_email, orario_ritiro, data_ritiro')
+    .select('id, cliente_nome, cliente_email, orario_ritiro, data_ritiro, lingua')
     .eq('data_ritiro', dateStr)
     .eq('pagamento_status', 'paid');
 
