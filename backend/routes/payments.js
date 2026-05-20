@@ -6,6 +6,7 @@
  */
 
 const express  = require('express');
+const crypto   = require('crypto');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
@@ -194,6 +195,7 @@ router.post('/checkout', async (req, res) => { try {
     accessori:           accessoriUnione.join(','),
     lingua:              linguaValida,
     pagamento_status:    'pending',
+    firma_token:         crypto.randomBytes(16).toString('hex'),
   }];
 
   const { data: prenotazioni, error: dbError } = await supabase

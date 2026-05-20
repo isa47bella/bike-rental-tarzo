@@ -502,7 +502,7 @@ router.post('/bookings/:id/send-email', async (req, res) => {
 router.post('/bookings/:id/send-firma', async (req, res) => {
   const { data: p, error } = await supabase
     .from('prenotazioni')
-    .select('id, cliente_nome, cliente_email, lingua, firma_at')
+    .select('id, cliente_nome, cliente_email, lingua, firma_at, firma_token')
     .eq('id', req.params.id)
     .single();
 
@@ -1052,6 +1052,7 @@ router.post('/bookings/manual', async (req, res) => {
     accessori:           accessoriUnione.join(','),
     pagamento_status:    'paid',
     stripe_session_id:   `manual_${crypto.randomUUID()}`,
+    firma_token:         crypto.randomBytes(16).toString('hex'),
   }];
 
   const { data: prenotazioni, error } = await supabase

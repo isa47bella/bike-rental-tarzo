@@ -119,3 +119,11 @@ CREATE TABLE IF NOT EXISTS stripe_events (
   created_at TIMESTAMPTZ  DEFAULT NOW()
 );
 ALTER TABLE stripe_events DISABLE ROW LEVEL SECURITY;
+
+-- ─── Token segreto firma contratto ────────────────────────────────────────────
+-- Senza questo token la pagina /firma/:id e le sue API rifiutano lettura e firma.
+-- Le prenotazioni create dal codice ricevono un token random; le righe
+-- pre-migrazione restano NULL → modalità legacy (nessun token richiesto).
+-- NB: NON fare il backfill delle righe esistenti, altrimenti i link firma
+-- già inviati via email (senza token) smetterebbero di funzionare.
+ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS firma_token TEXT;

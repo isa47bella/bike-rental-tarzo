@@ -53,6 +53,14 @@ function parseAccessori(raw) {
   return (raw || '').split(',').filter(Boolean);
 }
 
+// URL pagina firma. Include il firma_token come query param (se presente):
+// senza il token corretto la pagina/API rifiuta lettura e firma.
+// encodeURIComponent protegge da URL injection su id/token.
+function buildFirmaUrl(p) {
+  const base = `${process.env.FRONTEND_URL}/firma/${encodeURIComponent(p.id)}`;
+  return p.firma_token ? `${base}?token=${encodeURIComponent(p.firma_token)}` : base;
+}
+
 // ─── Template email conferma cliente ─────────────────────────────────────────
 
 function buildClienteHtml(p) {
@@ -115,7 +123,7 @@ function buildClienteHtml(p) {
             <div style="background:#e8f5e9;border:1.5px solid #2D8659;border-radius:10px;padding:18px 20px;margin-bottom:24px;text-align:center;">
               <strong style="color:#1a5c3a;font-size:15px;">✍️ Firma il contratto di noleggio</strong><br>
               <p style="color:#555;font-size:13px;margin:6px 0 14px;">Leggi e accetta le condizioni prima del ritiro. Bastano 30 secondi.</p>
-              <a href="${process.env.FRONTEND_URL}/firma/${p.id}"
+              <a href="${buildFirmaUrl(p)}"
                  style="display:inline-block;background:#2D8659;color:#fff;text-decoration:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:14px;">
                 → Firma ora
               </a>
@@ -304,7 +312,7 @@ async function sendWhatsAppAlert(prenotazione) {
 // ─── Email link firma (inviata dall'admin panel) ──────────────────────────────
 
 async function sendFirmaLinkEmail(prenotazione) {
-  const firmaUrl = `${process.env.FRONTEND_URL}/firma/${prenotazione.id}`;
+  const firmaUrl = buildFirmaUrl(prenotazione);
   const lang = prenotazione.lingua || 'it';
 
   const subjects = {

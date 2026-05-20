@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 // ─── Termini e Condizioni completi (5 lingue) ─────────────────────────────────
 
@@ -386,6 +386,8 @@ const S = {
 
 export default function FirmaPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
   const [booking,   setBooking]   = useState(null);
   const [loadErr,   setLoadErr]   = useState(null);
   const [fetching,  setFetching]  = useState(true);
@@ -399,7 +401,7 @@ export default function FirmaPage() {
   const termsRef = useRef(null);
 
   useEffect(() => {
-    fetch(`/api/firma/${id}`)
+    fetch(`/api/firma/${id}?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
       .then(d => {
         if (d.error) setLoadErr(d.error);
@@ -410,7 +412,7 @@ export default function FirmaPage() {
       })
       .catch(e => setLoadErr(e.message))
       .finally(() => setFetching(false));
-  }, [id]);
+  }, [id, token]);
 
   const lang       = booking?.lingua || 'it';
   const t          = T[lang]     || T.it;
@@ -431,7 +433,7 @@ export default function FirmaPage() {
       const res = await fetch(`/api/firma/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firma_nome: nome.trim() }),
+        body: JSON.stringify({ firma_nome: nome.trim(), token }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t.errGeneric);
