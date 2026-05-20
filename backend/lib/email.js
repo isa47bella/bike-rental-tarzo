@@ -202,6 +202,57 @@ function buildFirmaUrl(p) {
 
 // ─── Template email conferma cliente ─────────────────────────────────────────
 
+// ─── Shell email condiviso ───────────────────────────────────────────────────
+// Header (foto Colline del Prosecco + logo) e footer identici per ogni email.
+const HERO_URL = 'https://bike-rental-tarzo-app.vercel.app/email-hero.jpg';
+
+function buildEmailShell({ lang = 'it', heroAlt, bodyHtml }) {
+  const t = emailT(lang);
+  return `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#F6F1E8;font-family:'Barlow','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E8;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#FFFDFA;border:1px solid #EBE3D4;">
+
+        <tr><td style="padding:0;font-size:0;line-height:0;">
+          <img src="${HERO_URL}" alt="${esc(heroAlt)}" width="600" style="display:block;width:100%;max-width:600px;height:240px;object-fit:cover;">
+        </td></tr>
+
+        <tr><td style="padding:26px 48px 22px;text-align:center;border-bottom:1px solid #EFE8DA;">
+          <div style="font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:26px;font-weight:700;letter-spacing:0.04em;color:#2B2520;text-transform:uppercase;">
+            Arfanta <span style="color:#EA580C;">Bike Rental</span>
+          </div>
+          <div style="font-size:11px;font-weight:500;letter-spacing:0.16em;color:#9A8F80;text-transform:uppercase;margin-top:6px;">
+            ${esc(t.tagline)}
+          </div>
+        </td></tr>
+
+        ${bodyHtml}
+
+        <tr><td style="background:#F6F1E8;padding:26px 48px;text-align:center;border-top:1px solid #EBE3D4;">
+          <div style="font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.05em;color:#2B2520;text-transform:uppercase;">Arfanta Bike Rental</div>
+          <div style="font-size:12px;line-height:1.7;color:#9A8F80;margin-top:8px;">
+            Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italia<br>${esc(t.footerUnesco)}
+          </div>
+          <div style="font-size:12px;color:#9A8F80;margin-top:12px;">
+            ${esc(t.footerContatto)}
+            <a href="https://wa.me/393928614635" style="color:#EA580C;text-decoration:none;font-weight:600;">+39 392 8614635</a>
+          </div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 function buildClienteHtml(p) {
   return `<!DOCTYPE html>
 <html lang="it">
