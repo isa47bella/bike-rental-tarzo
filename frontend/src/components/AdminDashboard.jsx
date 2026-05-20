@@ -1539,29 +1539,37 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 
       {/* ── Menu "Altro" (sezioni secondarie) ── */}
       {moreOpen && (
-        <>
-          <div className="ac-more-overlay" onClick={() => setMoreOpen(false)} />
-          <div className="ac-more-sheet" role="menu">
-            <div className="ac-more-sheet-handle" />
-            <div className="ac-more-sheet-title">Altre sezioni</div>
-            <div className="ac-more-grid">
+        <div className="ac-overlay ac-overlay-sheet" onClick={() => setMoreOpen(false)}>
+          <div className="ac-actionsheet" onClick={e => e.stopPropagation()}>
+            <div className="ac-actionsheet-header">
+              <div>
+                <div className="ac-actionsheet-name">Altre sezioni</div>
+                <div className="ac-actionsheet-meta">Tocca una sezione per aprirla</div>
+              </div>
+              <button className="ac-actionsheet-close" onClick={() => setMoreOpen(false)}>
+                <IconX />
+              </button>
+            </div>
+            <div className="ac-actionsheet-body">
               {NAV.filter(n => !PRIMARY_NAV_IDS.includes(n.id)).map(({ id, label, Icon }) => (
                 <button
                   key={id}
-                  className={`ac-more-item${activeView === id ? ' active' : ''}`}
+                  className="ac-actionsheet-btn"
                   onClick={() => { setActiveView(id); setMoreOpen(false); }}
                 >
-                  <span className="ac-more-item-icon"><Icon /></span>
+                  <Icon />
                   <span>{label}</span>
+                  {activeView === id && <span className="ac-actionsheet-dot" />}
                 </button>
               ))}
-              <button className="ac-more-item ac-more-item-logout" onClick={logout}>
-                <span className="ac-more-item-icon"><IconLogout /></span>
+              <div className="ac-actionsheet-sep" />
+              <button className="ac-actionsheet-btn danger" onClick={logout}>
+                <IconLogout />
                 <span>Esci</span>
               </button>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ── Mobile bottom nav (5 voci fisse + Altro) ── */}
