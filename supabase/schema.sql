@@ -109,3 +109,13 @@ CREATE INDEX IF NOT EXISTS idx_notifiche_booking
 -- ─── Cauzione retry counter (per auto-retry cron) ─────────────────────────────
 ALTER TABLE prenotazioni
   ADD COLUMN IF NOT EXISTS cauzione_retry_count INT DEFAULT 0;
+
+-- ─── Idempotenza webhook Stripe ───────────────────────────────────────────────
+-- Registra ogni event.id processato. Stripe può ritentare lo stesso evento:
+-- la PK impedisce di rieseguirlo (email/push/update duplicati).
+CREATE TABLE IF NOT EXISTS stripe_events (
+  id         TEXT         PRIMARY KEY,
+  type       TEXT,
+  created_at TIMESTAMPTZ  DEFAULT NOW()
+);
+ALTER TABLE stripe_events DISABLE ROW LEVEL SECURITY;

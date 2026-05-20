@@ -301,6 +301,24 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Idempotenza: Stripe può ritentare lo stesso evento. Registriamo event.id in
+  // stripe_events (PK su id): se l'INSERT fallisce per conflitto, l'evento è già
+  // stato processato → usciamo subito senza rieseguire email/push/update.
+  {
+    const { error: dupErr } = await supabase
+      .from('stripe_events')
+      .insert({ id: event.id, type: event.type });
+    if (dupErr) {
+      if (dupErr.code === '23505') {
+        console.log(`[webhook] evento ${event.id} già processato — skip`);
+        return res.json({ received: true, duplicate: true });
+      }
+      // Errore DB diverso dal conflitto: logghiamo ma proseguiamo (meglio
+      // processare due volte che perdere l'evento).
+      console.error('[webhook] errore registrazione evento:', dupErr.message);
+    }
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 

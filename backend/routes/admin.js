@@ -25,15 +25,22 @@ const {
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
 const { writeNotification }                 = require('../lib/notifications');
-const { CAUZIONE_AMOUNT_EUR }               = require('../lib/config');
+const { CAUZIONE_AMOUNT_EUR, CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
 
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
+// Confronto timing-safe: evita di rivelare il token byte-per-byte via timing.
+function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a ?? ''));
+  const bufB = Buffer.from(String(b ?? ''));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 function authMiddleware(req, res, next) {
-  const token = req.headers['x-admin-token'];
-  if (!token || token !== process.env.ADMIN_TOKEN) {
+  if (!safeEqual(req.headers['x-admin-token'], process.env.ADMIN_TOKEN)) {
     return res.status(401).json({ error: 'Non autorizzato' });
   }
   next();
@@ -213,6 +220,9 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
       confirm:        true,
       off_session:    true,
       description:    `Danno bici — ${prenotazione.cliente_nome}${motivo ? ': ' + motivo : ''}`,
+    }, {
+      // Idempotency: un doppio click con lo stesso importo non addebita due volte.
+      idempotencyKey: `damage-${req.params.id}-${Math.round(amountNum * 100)}`,
     });
 
     await supabase
@@ -280,7 +290,7 @@ router.post('/bookings/:id/autorizza-cauzione', async (req, res) => {
 
   try {
     const pi = await stripe.paymentIntents.create({
-      amount:         50000,
+      amount:         CAUZIONE_AMOUNT_CENTS,
       currency:       'eur',
       customer:       prenotazione.stripe_customer_id,
       payment_method: prenotazione.stripe_payment_method_id,
@@ -321,7 +331,9 @@ router.post('/bookings/:id/release-deposit', async (req, res) => {
   }
 
   try {
-    await stripe.paymentIntents.cancel(prenotazione.cauzione_pi_id);
+    await stripe.paymentIntents.cancel(prenotazione.cauzione_pi_id, {}, {
+      idempotencyKey: `release-${req.params.id}-${prenotazione.cauzione_pi_id}`,
+    });
     await supabase
       .from('prenotazioni')
       .update({ cauzione_status: 'cancelled' })
@@ -381,6 +393,8 @@ router.post('/bookings/:id/capture-deposit', async (req, res) => {
   try {
     await stripe.paymentIntents.capture(prenotazione.cauzione_pi_id, {
       amount_to_capture: Math.round(amountNum * 100),
+    }, {
+      idempotencyKey: `capture-${req.params.id}-${Math.round(amountNum * 100)}`,
     });
     await supabase
       .from('prenotazioni')
@@ -427,6 +441,8 @@ router.post('/bookings/:id/refund-deposit', async (req, res) => {
       payment_intent: p.cauzione_pi_id,
       amount:         Math.round(refundAmount * 100),
       metadata:       { booking_id: req.params.id, kind: 'cauzione' },
+    }, {
+      idempotencyKey: `refunddep-${req.params.id}-${Math.round(refundAmount * 100)}`,
     });
 
     const newCaptured = Number((capturedAmount - refundAmount).toFixed(2));
@@ -1485,7 +1501,10 @@ router.post('/bookings/:id/refund', async (req, res) => {
     if (amount) refundParams.amount = Math.round(parseFloat(amount) * 100);
     if (motivo) refundParams.metadata = { motivo, booking_id: req.params.id };
 
-    const refund = await stripe.refunds.create(refundParams);
+    // Idempotency: un doppio click con lo stesso importo non rimborsa due volte.
+    const refund = await stripe.refunds.create(refundParams, {
+      idempotencyKey: `refund-${req.params.id}-${refundParams.amount || 'full'}`,
+    });
 
     const amountNum = parseFloat(amount) || Number(b.prezzo_totale);
     const isTotal   = amountNum >= Number(b.prezzo_totale) - 0.01;

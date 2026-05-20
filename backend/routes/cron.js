@@ -6,6 +6,7 @@
  */
 
 const express  = require('express');
+const crypto   = require('crypto');
 const router   = express.Router();
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../lib/supabase');
@@ -16,15 +17,23 @@ const { writeNotification } = require('../lib/notifications');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
+// Confronto timing-safe: evita di rivelare il secret byte-per-byte via timing.
+function safeEqual(a, b) {
+  const bufA = Buffer.from(String(a ?? ''));
+  const bufB = Buffer.from(String(b ?? ''));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 function cronAuth(req, res, next) {
   const cronSecret = process.env.CRON_SECRET;
   // In sviluppo locale senza CRON_SECRET, permetti accesso con admin token
   if (!cronSecret) {
     const adminToken = req.headers['x-admin-token'];
-    if (adminToken && adminToken === process.env.ADMIN_TOKEN) return next();
+    if (adminToken && safeEqual(adminToken, process.env.ADMIN_TOKEN)) return next();
     return res.status(401).json({ error: 'CRON_SECRET non configurato' });
   }
-  if (req.headers.authorization !== `Bearer ${cronSecret}`) {
+  if (!safeEqual(req.headers.authorization, `Bearer ${cronSecret}`)) {
     return res.status(401).json({ error: 'Non autorizzato' });
   }
   next();
@@ -154,8 +163,13 @@ router.get('/deposit', cronAuth, async (req, res) => {
       results.push({ id: booking.id, status });
     } catch (err) {
       console.error(`[CRON deposit] ${booking.id} — errore Stripe: ${err.message}`);
-      // Torna a 'failed' senza pi_id: al prossimo giro verrà riprovato
-      await supabase.from('prenotazioni').update({ cauzione_status: 'failed' }).eq('id', booking.id);
+      // Se Stripe ha comunque creato un PaymentIntent prima di fallire (es. timeout
+      // di rete dopo la creazione), ne salviamo l'id: evita che al giro successivo
+      // venga creato un SECONDO hold da €${CAUZIONE_AMOUNT_CENTS / 100} sulla carta del cliente.
+      const failedPiId = err.payment_intent?.id || err.raw?.payment_intent?.id || null;
+      const failUpdate = { cauzione_status: 'failed' };
+      if (failedPiId) failUpdate.cauzione_pi_id = failedPiId;
+      await supabase.from('prenotazioni').update(failUpdate).eq('id', booking.id);
 
       await sendPushToAll({
         title: '⚠️ Cauzione fallita',
