@@ -425,33 +425,39 @@ async function sendNotificationToGestore(prenotazione) {
 // ─── Email manuale dall'admin panel ──────────────────────────────────────────
 
 async function sendAdminEmail(prenotazione, subject, messageText) {
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
-  <div style="background:#fff;border-radius:8px;padding:24px;max-width:560px;margin:0 auto;">
-    <div style="background:#2D8659;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;margin:-24px -24px 20px;">
-      <h2 style="margin:0;font-size:18px;">🚲 Arfanta Bike Rental</h2>
-    </div>
-    <p style="font-size:16px;color:#333;margin:0 0 16px;">
-      Gentile <strong>${esc(prenotazione.cliente_nome)}</strong>,
-    </p>
-    <div style="background:#f8f8f8;border-radius:8px;padding:16px 20px;font-size:15px;color:#444;line-height:1.65;">
-      ${esc(messageText).replace(/\n/g, '<br>')}
-    </div>
-    <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-    <p style="font-size:12px;color:#aaa;margin:0;">
-      Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)<br>
-      Per risposta: <a href="mailto:arfantabikerental@gmail.com" style="color:#2D8659;">arfantabikerental@gmail.com</a>
-      · WhatsApp: <a href="https://wa.me/393928614635" style="color:#2D8659;">+39 392 8614635</a>
-    </p>
-  </div>
-</body></html>`;
+  const lang = prenotazione.lingua || 'it';
+  const t = emailT(lang);
+
+  // Estrae un eventuale URL dal testo: diventa un bottone, il resto paragrafi.
+  const urlMatch = String(messageText).match(/https?:\/\/[^\s]+/);
+  const ctaUrl = urlMatch ? urlMatch[0] : null;
+  const testoSenzaUrl = ctaUrl
+    ? String(messageText).replace(/→?\s*https?:\/\/[^\s]+/, '').trim()
+    : String(messageText);
+
+  const paragrafi = testoSenzaUrl.split('\n').filter(r => r.trim() !== '')
+    .map(r => `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:#5C5349;">${esc(r)}</p>`)
+    .join('');
+
+  const ctaHtml = ctaUrl ? `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+      <tr><td style="background:#EA580C;">
+        <a href="${esc(ctaUrl)}" style="display:inline-block;padding:14px 34px;font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;">${esc(t.firmaBottone)}</a>
+      </td></tr>
+    </table>` : '';
+
+  const bodyHtml = `
+    <tr><td style="padding:38px 48px 40px;">
+      <p style="margin:0 0 22px;font-size:16px;font-weight:600;color:#2B2520;">${esc(t.saluto(prenotazione.cliente_nome))}</p>
+      ${paragrafi}
+      ${ctaHtml}
+    </td></tr>`;
 
   await transporter.sendMail({
     from:    process.env.EMAIL_FROM,
     to:      prenotazione.cliente_email,
     subject: subject,
-    html:    html,
+    html:    buildEmailShell({ lang, heroAlt: t.footerUnesco, bodyHtml }),
   });
 }
 
