@@ -25,6 +25,21 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
+// Data (YYYY-MM-DD) nel fuso Europe/Rome, indipendente dal fuso del server.
+// I cron Vercel girano in UTC: senza questo, "domani" calcolato in UTC poteva
+// sfasare di un giorno rispetto a data_ritiro (salvata come data locale IT).
+// offsetGiorni: 0 = oggi, 1 = domani, -1 = ieri.
+function romeDateStr(offsetGiorni = 0) {
+  const oggiRoma = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date()); // formato YYYY-MM-DD
+  if (offsetGiorni === 0) return oggiRoma;
+  // Mezzogiorno UTC della data Roma: aggiungere/togliere giorni senza incappare nel DST.
+  const d = new Date(`${oggiRoma}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + offsetGiorni);
+  return d.toISOString().split('T')[0];
+}
+
 function cronAuth(req, res, next) {
   const cronSecret = process.env.CRON_SECRET;
   // In sviluppo locale senza CRON_SECRET, permetti accesso con admin token
@@ -44,13 +59,8 @@ function cronAuth(req, res, next) {
 router.get('/deposit', cronAuth, async (req, res) => {
   // Target primario: domani (oggi + 1 giorno)
   // Fallback: oggi (per prenotazioni che ieri non hanno ricevuto la cauzione)
-  const makeDateStr = (daysAhead) => {
-    const d = new Date();
-    d.setDate(d.getDate() + daysAhead);
-    return d.toISOString().split('T')[0];
-  };
-  const dateMain     = makeDateStr(1);
-  const dateFallback = makeDateStr(0);
+  const dateMain     = romeDateStr(1);
+  const dateFallback = romeDateStr(0);
 
   console.log(`[CRON deposit] Target principale: ${dateMain} — Fallback: ${dateFallback}`);
 
@@ -197,9 +207,7 @@ router.get('/deposit', cronAuth, async (req, res) => {
 // Invia promemoria firma ai clienti con ritiro domani e contratto non firmato
 
 router.get('/firma-reminder', cronAuth, async (req, res) => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dateStr = tomorrow.toISOString().split('T')[0];
+  const dateStr = romeDateStr(1);
 
   console.log(`[CRON firma-reminder] Cerco prenotazioni senza firma per il ${dateStr}`);
 
@@ -267,9 +275,7 @@ router.get('/firma-reminder', cronAuth, async (req, res) => {
 // Invia promemoria ritiro ai clienti con noleggio domani
 
 router.get('/reminder', cronAuth, async (req, res) => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const dateStr = tomorrow.toISOString().split('T')[0];
+  const dateStr = romeDateStr(1);
 
   console.log(`[CRON reminder] Cerco prenotazioni per il ${dateStr}`);
 
@@ -412,7 +418,7 @@ router.get('/auto-cancel-pending', cronAuth, async (req, res) => {
 // Max 3 tentativi, poi marca 'failed_permanent' e notifica.
 
 router.get('/retry-cauzioni', cronAuth, async (req, res) => {
-  const today = new Date().toISOString().substring(0, 10);
+  const today = romeDateStr(0);
 
   const { data: bookings, error } = await supabase
     .from('prenotazioni')
