@@ -2350,8 +2350,10 @@ input[type="range"].ac-input:focus { box-shadow: none; border: none; }
     border-top: 1px solid #1A2840;
     z-index: 202;
     padding-bottom: env(safe-area-inset-bottom, 0);
-    padding-left: env(safe-area-inset-left, 0);
-    padding-right: env(safe-area-inset-right, 0);
+    /* Gli angoli curvi dello schermo iPhone "mangiano" le voci estreme:
+       safe-area-inset laterale è 0 in portrait, quindi serve un minimo fisso. */
+    padding-left: max(16px, env(safe-area-inset-left, 0));
+    padding-right: max(16px, env(safe-area-inset-right, 0));
     box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
   }
   .ac-bottom-nav-item {
