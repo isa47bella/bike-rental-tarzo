@@ -253,114 +253,120 @@ function buildEmailShell({ lang = 'it', heroAlt, bodyHtml }) {
 </html>`;
 }
 
+// Etichette accessori multilingua per l'email di conferma.
+const ACC_LABELS = {
+  it: { casco: 'Casco', lucchetto: 'Lucchetto' },
+  en: { casco: 'Helmet', lucchetto: 'Lock' },
+  de: { casco: 'Helm', lucchetto: 'Schloss' },
+  es: { casco: 'Casco', lucchetto: 'Candado' },
+  fr: { casco: 'Casque', lucchetto: 'Antivol' },
+};
+
 function buildClienteHtml(p) {
-  return `<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Conferma Prenotazione — Arfanta Bike Rental</title>
-</head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0"
-             style="background:#fff;border-radius:12px;overflow:hidden;max-width:600px;">
+  const lang = p.lingua || 'it';
+  const t = emailT(lang);
 
-        <!-- Header -->
-        <tr>
-          <td style="background:#2D8659;padding:32px 40px;text-align:center;">
-            <div style="font-size:40px;">🚲</div>
-            <h1 style="color:#fff;margin:8px 0 4px;font-size:24px;">Prenotazione Confermata!</h1>
-            <p style="color:#b7e4c7;margin:0;font-size:14px;">Arfanta Bike Rental — Colline Prosecco UNESCO</p>
-          </td>
-        </tr>
+  const accSet = ACC_LABELS[lang] || ACC_LABELS.it;
+  const accessoriList = parseAccessori(p.accessori);
+  const accessoriStr = accessoriList.map(a => accSet[a] || a).join(', ');
 
-        <!-- Body -->
+  const codice = String(p.id).toUpperCase().substring(0, 8);
+  const oraRitiro = (p.orario_ritiro || '').substring(0, 5);
+  const oraRestit = (p.orario_restituzione || '').substring(0, 5);
+
+  // Riga etichetta/valore della tabella riepilogo (stile mockup).
+  const summaryRow = (label, value) => `
+              <tr>
+                <td style="padding:13px 0;border-bottom:1px solid #EFE8DA;font-family:'Barlow',Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.13em;color:#9A8F80;text-transform:uppercase;">${label}</td>
+                <td style="padding:13px 0;border-bottom:1px solid #EFE8DA;text-align:right;font-size:15px;font-weight:600;color:#2B2520;">${value}</td>
+              </tr>`;
+
+  const bodyHtml = `
+        <!-- ── Corpo ── -->
         <tr>
-          <td style="padding:32px 40px;">
-            <p style="font-size:16px;color:#333;margin:0 0 24px;">
-              Ciao <strong>${esc(p.cliente_nome)}</strong>,<br>
-              la tua prenotazione è confermata e il pagamento ricevuto. Ti aspettiamo!
+          <td style="padding:38px 48px 8px;">
+
+            <h1 style="margin:0 0 6px;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:34px;line-height:1.1;font-weight:700;color:#2B2520;letter-spacing:-0.01em;">
+              ${t.confTitolo}
+            </h1>
+            <p style="margin:0 0 30px;font-size:15px;line-height:1.6;color:#7C7268;">
+              ${t.saluto(`<strong style="color:#2B2520;font-weight:600;">${esc(p.cliente_nome)}</strong>`)} ${t.confIntro}
             </p>
 
-            <!-- Riepilogo prenotazione -->
-            <table width="100%" cellpadding="0" cellspacing="0"
-                   style="background:#f0faf4;border-radius:8px;padding:20px;margin-bottom:24px;">
+            <!-- Codice prenotazione -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
               <tr>
-                <td style="padding:6px 0;">
-                  <strong style="color:#2D8659;">📋 Codice Prenotazione</strong><br>
-                  <span style="font-size:18px;font-weight:bold;letter-spacing:2px;color:#1a5c3a;">
-                    ${p.id.toUpperCase().substring(0, 8)}
-                  </span>
+                <td style="border:1px solid #F0D9C6;background:#FDF6EF;padding:18px 24px;">
+                  <div style="font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.2em;color:#A88B6E;text-transform:uppercase;">
+                    ${t.lCodice}
+                  </div>
+                  <div style="font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:30px;font-weight:700;letter-spacing:0.14em;color:#EA580C;margin-top:3px;">
+                    ${esc(codice)}
+                  </div>
                 </td>
               </tr>
             </table>
 
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-              ${row('🚲 Tipo Noleggio',   tipoLabel(p.tipo_noleggio))}
-              ${row('📅 Giorno Ritiro',   formatDate(p.data_ritiro))}
-              ${row('🕗 Orario Ritiro',   esc((p.orario_ritiro || '').substring(0,5)))}
-              ${row('📅 Giorno Restituzione', formatDate(p.data_restituzione))}
-              ${row('🕔 Orario Restituzione', esc((p.orario_restituzione || '').substring(0,5)))}
-              ${p.giorni > 1 ? row('📆 Numero Giorni', p.giorni + ' giorni') : ''}
-              ${row('💶 Totale Pagato',   '€' + Number(p.prezzo_totale).toFixed(2))}
-              ${row('🚲 Bicicletta',      esc(biciLabel(p.bicicletta_id)))}
-              ${parseAccessori(p.accessori).length > 0 ? row('🎒 Accessori inclusi', parseAccessori(p.accessori).map(accLabel).join(', ')) : ''}
+            <!-- Riepilogo: coppie etichetta/valore -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px;">
+              ${summaryRow(t.lTipo, esc(tipoLabel(p.tipo_noleggio, lang)))}
+              ${summaryRow(t.lRitiro, esc(formatDate(p.data_ritiro, lang)) + ' &nbsp;·&nbsp; ' + esc(oraRitiro))}
+              ${summaryRow(t.lRestituzione, esc(formatDate(p.data_restituzione, lang)) + ' &nbsp;·&nbsp; ' + esc(oraRestit))}
+              ${summaryRow(t.lBici, esc(biciLabel(p.bicicletta_id)))}
+              ${accessoriList.length > 0 ? summaryRow(t.lAccessori, esc(accessoriStr)) : ''}
+              <tr>
+                <td style="padding:15px 0 0;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.03em;color:#2B2520;text-transform:uppercase;">${t.lTotale}</td>
+                <td style="padding:15px 0 0;text-align:right;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:24px;font-weight:700;color:#2B2520;">€&thinsp;${Number(p.prezzo_totale).toFixed(2)}</td>
+              </tr>
             </table>
 
-            <!-- Firma contratto -->
-            <div style="background:#e8f5e9;border:1.5px solid #2D8659;border-radius:10px;padding:18px 20px;margin-bottom:24px;text-align:center;">
-              <strong style="color:#1a5c3a;font-size:15px;">✍️ Firma il contratto di noleggio</strong><br>
-              <p style="color:#555;font-size:13px;margin:6px 0 14px;">Leggi e accetta le condizioni prima del ritiro. Bastano 30 secondi.</p>
-              <a href="${buildFirmaUrl(p)}"
-                 style="display:inline-block;background:#2D8659;color:#fff;text-decoration:none;padding:11px 28px;border-radius:8px;font-weight:700;font-size:14px;">
-                → Firma ora
-              </a>
-            </div>
-
-            <!-- Dove venire -->
-            <div style="background:#fff8e1;border-left:4px solid #FF6B6B;padding:16px 20px;
-                        border-radius:0 8px 8px 0;margin-bottom:24px;">
-              <strong style="color:#c0392b;">📍 Dove veniamo</strong><br>
-              <span style="color:#555;font-size:14px;">
-                Via Pecol 22, Arfanta di Tarzo (TV)<br>
-                ${process.env.BUSINESS_PHONE || ''}
-              </span>
-            </div>
-
-            <!-- Cosa portare -->
-            <div style="background:#e8f5e9;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
-              <strong style="color:#2D8659;">✅ Cosa portare al ritiro</strong>
-              <ul style="color:#555;font-size:14px;margin:8px 0 0;padding-left:20px;">
-                <li>Documento di identità</li>
-                <li>Questo codice prenotazione: <strong>${p.id.toUpperCase().substring(0, 8)}</strong></li>
-                ${parseAccessori(p.accessori).includes('casco') ? '<li>Casco <span style="color:#2D8659;font-weight:600;">(prenotato +€2 ✓)</span></li>' : '<li>Casco <span style="color:#888;">(consigliato, non prenotato)</span></li>'}
-                ${parseAccessori(p.accessori).includes('lucchetto') ? '<li>Lucchetto <span style="color:#2D8659;font-weight:600;">(prenotato +€1 ✓)</span></li>' : ''}
-              </ul>
-            </div>
-
-            <p style="font-size:13px;color:#888;margin:0;">
-              Per cancellazioni o modifiche contattaci via WhatsApp al
-              <strong>${process.env.BUSINESS_PHONE || 'numero in bio'}</strong>
-            </p>
           </td>
         </tr>
 
-        <!-- Footer -->
+        <!-- ── CTA firma ── -->
         <tr>
-          <td style="background:#f0faf4;padding:20px 40px;text-align:center;
-                     color:#888;font-size:12px;">
-            Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)<br>
-            Colline del Prosecco di Conegliano e Valdobbiadene — Patrimonio UNESCO
+          <td style="padding:30px 48px 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #EFE8DA;">
+              <tr><td style="padding-top:30px;">
+                <h2 style="margin:0 0 4px;font-family:'Barlow Semi Condensed','Barlow',Arial,sans-serif;font-size:20px;font-weight:700;color:#2B2520;">
+                  ${t.firmaTitolo}
+                </h2>
+                <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#7C7268;">
+                  ${t.firmaTesto}
+                </p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr><td style="background:#EA580C;">
+                    <a href="${buildFirmaUrl(p)}" style="display:inline-block;padding:15px 38px;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.02em;color:#FFFFFF;text-decoration:none;">
+                      ${t.firmaBottone}
+                    </a>
+                  </td></tr>
+                </table>
+              </td></tr>
+            </table>
           </td>
         </tr>
 
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
+        <!-- ── Info pratiche ── -->
+        <tr>
+          <td style="padding:0 48px 40px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FAF5EC;border:1px solid #EFE8DA;">
+              <tr>
+                <td style="padding:22px 26px;width:50%;vertical-align:top;border-right:1px solid #EFE8DA;">
+                  <div style="font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.16em;color:#A88B6E;text-transform:uppercase;margin-bottom:8px;">${t.dove}</div>
+                  <div style="font-size:14px;line-height:1.6;color:#2B2520;font-weight:600;">Via Pecol 22</div>
+                  <div style="font-size:14px;line-height:1.6;color:#7C7268;">Arfanta di Tarzo (TV)</div>
+                </td>
+                <td style="padding:22px 26px;width:50%;vertical-align:top;">
+                  <div style="font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.16em;color:#A88B6E;text-transform:uppercase;margin-bottom:8px;">${t.cosaPortare}</div>
+                  <div style="font-size:14px;line-height:1.7;color:#2B2520;">${t.documento}</div>
+                  <div style="font-size:14px;line-height:1.7;color:#2B2520;">${t.codicePort}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`;
+
+  return buildEmailShell({ lang, heroAlt: t.footerUnesco, bodyHtml });
 }
 
 function row(label, value) {
@@ -398,10 +404,11 @@ function buildGestoreHtml(p) {
 // ─── Esportazioni ─────────────────────────────────────────────────────────────
 
 async function sendConfirmationToCliente(prenotazione) {
+  const t = emailT(prenotazione.lingua || 'it');
   await transporter.sendMail({
     from:    process.env.EMAIL_FROM,
     to:      prenotazione.cliente_email,
-    subject: `✅ Prenotazione confermata — ${formatDate(prenotazione.data_ritiro)} | Arfanta Bike Rental`,
+    subject: `${t.confSubject} — ${formatDate(prenotazione.data_ritiro, prenotazione.lingua || 'it')} | Arfanta Bike Rental`,
     html:    buildClienteHtml(prenotazione),
   });
 }
@@ -669,6 +676,7 @@ async function sendDepositReleasedEmail(prenotazione) {
 
 module.exports = {
   sendConfirmationToCliente,
+  _buildClienteHtml: buildClienteHtml,
   sendNotificationToGestore,
   sendAdminEmail,
   sendFirmaLinkEmail,
