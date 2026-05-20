@@ -188,7 +188,7 @@ router.get('/stats', async (req, res) => {
   ] = await Promise.all([
     supabase.from('prenotazioni').select('*', { count: 'exact', head: true }).eq('pagamento_status', 'paid'),
     supabase.from('prenotazioni').select('*', { count: 'exact', head: true }).eq('pagamento_status', 'paid').eq('data_ritiro', oggi),
-    supabase.from('prenotazioni').select('prezzo_totale').eq('pagamento_status', 'paid'),
+    supabase.from('prenotazioni').select('prezzo_totale').eq('pagamento_status', 'paid').limit(20000),
     supabase.from('prenotazioni').select('*', { count: 'exact', head: true }).eq('pagamento_status', 'paid').gte('data_ritiro', oggi),
   ]);
 
@@ -854,10 +854,13 @@ router.post('/bookings/:id/checkout', async (req, res) => {
 // ─── GET /api/admin/report ────────────────────────────────────────────────────
 
 router.get('/report', async (req, res) => {
+  // limit(20000): safety cap — l'app non si avvicina a questo volume per anni.
+  // Oltre, sostituire la somma JS con un aggregato lato DB.
   const { data: all, error } = await supabase
     .from('prenotazioni')
     .select('prezzo_totale, tipo_noleggio, giorni, data_ritiro')
-    .eq('pagamento_status', 'paid');
+    .eq('pagamento_status', 'paid')
+    .limit(20000);
 
   if (error) return res.status(500).json({ error: error.message });
 

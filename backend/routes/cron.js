@@ -350,18 +350,32 @@ router.get('/gdpr-cleanup', cronAuth, async (req, res) => {
 
   console.log(`[CRON gdpr-cleanup] Cancello prenotazioni create prima del ${cutoffStr}`);
 
-  const { data, error } = await supabase
-    .from('prenotazioni')
-    .delete()
-    .lt('created_at', cutoff.toISOString())
-    .select('id');
-
-  if (error) {
-    console.error('[CRON gdpr-cleanup] Errore Supabase:', error);
-    return res.status(500).json({ error: error.message });
+  // Cancellazione a batch da 500: un DELETE unico su molti record rischierebbe
+  // il timeout della serverless function (maxDuration 60s).
+  let deleted = 0;
+  while (true) {
+    const { data: batch, error: selErr } = await supabase
+      .from('prenotazioni')
+      .select('id')
+      .lt('created_at', cutoff.toISOString())
+      .limit(500);
+    if (selErr) {
+      console.error('[CRON gdpr-cleanup] Errore Supabase:', selErr);
+      return res.status(500).json({ error: selErr.message });
+    }
+    if (!batch || batch.length === 0) break;
+    const { error: delErr } = await supabase
+      .from('prenotazioni')
+      .delete()
+      .in('id', batch.map(r => r.id));
+    if (delErr) {
+      console.error('[CRON gdpr-cleanup] Errore delete:', delErr);
+      return res.status(500).json({ error: delErr.message });
+    }
+    deleted += batch.length;
+    if (batch.length < 500) break;
   }
 
-  const deleted = data?.length || 0;
   console.log(`[CRON gdpr-cleanup] Done — ${deleted} prenotazioni cancellate`);
   return res.json({ deleted, cutoff: cutoffStr });
 });
@@ -498,18 +512,33 @@ router.get('/retry-cauzioni', cronAuth, async (req, res) => {
 router.get('/cleanup-audit', cronAuth, async (req, res) => {
   const cutoff = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
 
-  const { error, count } = await supabase
-    .from('audit_log')
-    .delete({ count: 'exact' })
-    .lt('created_at', cutoff);
-
-  if (error) {
-    console.error('[cron cleanup-audit] db error:', error.message);
-    return res.status(500).json({ error: error.message });
+  // Cancellazione a batch da 500 (vedi gdpr-cleanup): evita il timeout 60s.
+  let deleted = 0;
+  while (true) {
+    const { data: batch, error: selErr } = await supabase
+      .from('audit_log')
+      .select('id')
+      .lt('created_at', cutoff)
+      .limit(500);
+    if (selErr) {
+      console.error('[cron cleanup-audit] db error:', selErr.message);
+      return res.status(500).json({ error: selErr.message });
+    }
+    if (!batch || batch.length === 0) break;
+    const { error: delErr } = await supabase
+      .from('audit_log')
+      .delete()
+      .in('id', batch.map(r => r.id));
+    if (delErr) {
+      console.error('[cron cleanup-audit] delete error:', delErr.message);
+      return res.status(500).json({ error: delErr.message });
+    }
+    deleted += batch.length;
+    if (batch.length < 500) break;
   }
 
-  console.log(`[cron cleanup-audit] eliminati ${count || 0} record (cutoff ${cutoff})`);
-  return res.json({ deleted: count || 0, cutoff });
+  console.log(`[cron cleanup-audit] eliminati ${deleted} record (cutoff ${cutoff})`);
+  return res.json({ deleted, cutoff });
 });
 
 // ─── GET /api/cron/daily-summary ──────────────────────────────────────────────
