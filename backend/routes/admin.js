@@ -29,6 +29,10 @@ const { CAUZIONE_AMOUNT_EUR, CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
 
+// Feature flag: attivare SOLO dopo aver creato la colonna prenotazioni.firma_token
+// su Supabase. Imposta FIRMA_TOKEN_ENABLED=1 nelle env vars dopo la migrazione.
+const FIRMA_TOKEN_ENABLED = process.env.FIRMA_TOKEN_ENABLED === '1';
+
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
 // Confronto timing-safe: evita di rivelare il token byte-per-byte via timing.
@@ -1052,7 +1056,7 @@ router.post('/bookings/manual', async (req, res) => {
     accessori:           accessoriUnione.join(','),
     pagamento_status:    'paid',
     stripe_session_id:   `manual_${crypto.randomUUID()}`,
-    firma_token:         crypto.randomBytes(16).toString('hex'),
+    ...(FIRMA_TOKEN_ENABLED ? { firma_token: crypto.randomBytes(16).toString('hex') } : {}),
   }];
 
   const { data: prenotazioni, error } = await supabase

@@ -16,6 +16,11 @@ const { sendPushToAll } = require('../lib/push');
 
 const TIPO_IDS_BICI = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
 
+// Feature flag: attivare SOLO dopo aver creato la colonna prenotazioni.firma_token
+// su Supabase. Con flag spento le prenotazioni non includono firma_token nell'INSERT
+// (la colonna potrebbe non esistere). Imposta FIRMA_TOKEN_ENABLED=1 dopo la migrazione.
+const FIRMA_TOKEN_ENABLED = process.env.FIRMA_TOKEN_ENABLED === '1';
+
 
 function tipoLabel(tipo) {
   const labels = {
@@ -209,7 +214,7 @@ router.post('/checkout', async (req, res) => { try {
     accessori:           accessoriUnione.join(','),
     lingua:              linguaValida,
     pagamento_status:    'pending',
-    firma_token:         crypto.randomBytes(16).toString('hex'),
+    ...(FIRMA_TOKEN_ENABLED ? { firma_token: crypto.randomBytes(16).toString('hex') } : {}),
   }];
 
   const { data: prenotazioni, error: dbError } = await supabase
