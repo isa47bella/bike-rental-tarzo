@@ -106,14 +106,28 @@ router.post('/checkout', async (req, res) => { try {
   const { start, end } = calcRange(data_ritiro, tipo_noleggio, numGiorni);
   const { data_restituzione, orario_restituzione } = calcRestituzione(data_ritiro, tipo_noleggio, numGiorni);
 
-  // Trova bici occupate nel range (tutti i tipi in un'unica query)
-  const tuttiGliId = Object.values(TIPO_IDS_BICI).flat();
-  const { data: conflitti } = await supabase
-    .from('prenotazioni')
-    .select('bicicletta_id, bici_ids')
-    .eq('pagamento_status', 'paid')
-    .lt('start_ts', end.toISOString())
-    .gt('end_ts', start.toISOString());
+  // Trova bici occupate nel range. Consideriamo:
+  //  - tutte le prenotazioni 'paid' (occupazione confermata)
+  //  - le 'pending' create nell'ultima ora: rappresentano un checkout in corso
+  //    di un altro cliente → vanno trattate come occupate per evitare overbooking.
+  //    Le pending più vecchie sono abbandonate (le pulisce il cron auto-cancel).
+  const pendingCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const [paidRes, pendingRes] = await Promise.all([
+    supabase
+      .from('prenotazioni')
+      .select('bicicletta_id, bici_ids')
+      .eq('pagamento_status', 'paid')
+      .lt('start_ts', end.toISOString())
+      .gt('end_ts', start.toISOString()),
+    supabase
+      .from('prenotazioni')
+      .select('bicicletta_id, bici_ids')
+      .eq('pagamento_status', 'pending')
+      .gte('created_at', pendingCutoff)
+      .lt('start_ts', end.toISOString())
+      .gt('end_ts', start.toISOString()),
+  ]);
+  const conflitti = [...(paidRes.data || []), ...(pendingRes.data || [])];
 
   const biciOccupate = new Set();
   for (const r of (conflitti || [])) {
