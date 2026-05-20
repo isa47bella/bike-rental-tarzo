@@ -110,9 +110,9 @@ function buildClienteHtml(p) {
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
               ${row('🚲 Tipo Noleggio',   tipoLabel(p.tipo_noleggio))}
               ${row('📅 Giorno Ritiro',   formatDate(p.data_ritiro))}
-              ${row('🕗 Orario Ritiro',   esc(p.orario_ritiro.substring(0,5)))}
+              ${row('🕗 Orario Ritiro',   esc((p.orario_ritiro || '').substring(0,5)))}
               ${row('📅 Giorno Restituzione', formatDate(p.data_restituzione))}
-              ${row('🕔 Orario Restituzione', esc(p.orario_restituzione.substring(0,5)))}
+              ${row('🕔 Orario Restituzione', esc((p.orario_restituzione || '').substring(0,5)))}
               ${p.giorni > 1 ? row('📆 Numero Giorni', p.giorni + ' giorni') : ''}
               ${row('💶 Totale Pagato',   '€' + Number(p.prezzo_totale).toFixed(2))}
               ${row('🚲 Bicicletta',      esc(biciLabel(p.bicicletta_id)))}
@@ -195,8 +195,8 @@ function buildGestoreHtml(p) {
     <p><strong>Telefono:</strong> ${esc(p.cliente_telefono)}</p>
     <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
     <p><strong>Tipo:</strong> ${tipoLabel(p.tipo_noleggio)}</p>
-    <p><strong>Ritiro:</strong> ${formatDate(p.data_ritiro)} alle ${esc(p.orario_ritiro.substring(0,5))}</p>
-    <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${esc(p.orario_restituzione.substring(0,5))}</p>
+    <p><strong>Ritiro:</strong> ${formatDate(p.data_ritiro)} alle ${esc((p.orario_ritiro || '').substring(0,5))}</p>
+    <p><strong>Restituzione:</strong> ${formatDate(p.data_restituzione)} alle ${esc((p.orario_restituzione || '').substring(0,5))}</p>
     <p><strong>Bicicletta:</strong> #${Number(p.bicicletta_id)}</p>
     <p><strong>Totale:</strong> €${Number(p.prezzo_totale).toFixed(2)} — <span style="color:#2D8659;font-weight:bold;">PAGATO ✓</span></p>
     ${parseAccessori(p.accessori).length > 0 ? `<p><strong>Accessori richiesti:</strong> ${parseAccessori(p.accessori).map(accLabel).join(', ')}</p>` : '<p><strong>Accessori:</strong> Nessuno</p>'}

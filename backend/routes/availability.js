@@ -116,6 +116,9 @@ router.post('/', async (req, res) => {
   const { data: chiusureRows } = await supabase.from('chiusure').select('data');
   const chiusureSet = new Set((chiusureRows || []).map(c => c.data));
   const numGiorniReq = Number(giorni);
+  if (!Number.isInteger(numGiorniReq) || numGiorniReq < 1 || numGiorniReq > 30) {
+    return res.status(400).json({ error: 'Numero giorni non valido (1-30)' });
+  }
   for (let i = 0; i < (tipo_noleggio === 'multi_giorno' ? numGiorniReq : 1); i++) {
     const d = new Date(`${data_ritiro}T00:00:00`);
     d.setDate(d.getDate() + i);
@@ -166,7 +169,11 @@ router.post('/', async (req, res) => {
 router.post('/calcola-restituzione', (req, res) => {
   const { data_ritiro, tipo_noleggio, giorni = 1 } = req.body;
   if (!data_ritiro || !tipo_noleggio) return res.status(400).json({ error: 'Parametri mancanti' });
-  return res.json(calcRestituzione(data_ritiro, tipo_noleggio, Number(giorni)));
+  const g = Number(giorni);
+  if (!Number.isInteger(g) || g < 1 || g > 30) {
+    return res.status(400).json({ error: 'Numero giorni non valido (1-30)' });
+  }
+  return res.json(calcRestituzione(data_ritiro, tipo_noleggio, g));
 });
 
 // ─── POST /api/availability/calendario ───────────────────────────────────────
@@ -175,8 +182,14 @@ router.post('/calendario', async (req, res) => {
   const { anno, mese } = req.body;
   if (!anno || !mese) return res.status(400).json({ error: 'anno e mese obbligatori' });
 
-  const primoGiorno  = new Date(anno, mese - 1, 1);
-  const ultimoGiorno = new Date(anno, mese, 0);
+  const annoN = Number(anno), meseN = Number(mese);
+  if (!Number.isInteger(annoN) || annoN < 2024 || annoN > 2035 ||
+      !Number.isInteger(meseN) || meseN < 1 || meseN > 12) {
+    return res.status(400).json({ error: 'anno (2024-2035) o mese (1-12) non validi' });
+  }
+
+  const primoGiorno  = new Date(annoN, meseN - 1, 1);
+  const ultimoGiorno = new Date(annoN, meseN, 0);
   const dataInizio   = primoGiorno.toISOString().substring(0, 10);
   const dataFine     = ultimoGiorno.toISOString().substring(0, 10);
 

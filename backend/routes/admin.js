@@ -33,6 +33,16 @@ const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || re
 // su Supabase. Imposta FIRMA_TOKEN_ENABLED=1 nelle env vars dopo la migrazione.
 const FIRMA_TOKEN_ENABLED = process.env.FIRMA_TOKEN_ENABLED === '1';
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Valida un payload immagine (data-URL base64). Limita tipo e dimensione per
+// impedire che venga salvato nel DB un payload arbitrario o enorme.
+function validImagePayload(s) {
+  if (typeof s !== 'string' || s === '') return false;
+  if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(s)) return false;
+  return s.length <= 8 * 1024 * 1024; // ~8 MB di stringa base64
+}
+
 // ─── Middleware auth ──────────────────────────────────────────────────────────
 
 // Confronto timing-safe: evita di rivelare il token byte-per-byte via timing.
@@ -785,6 +795,11 @@ router.patch('/flotta/:id', async (req, res) => {
 
 router.post('/bookings/:id/checkin', async (req, res) => {
   const { checkin_note, documento_foto, documento_foto_retro, bici_foto_consegna } = req.body;
+  for (const [nome, val] of [['documento_foto', documento_foto], ['documento_foto_retro', documento_foto_retro], ['bici_foto_consegna', bici_foto_consegna]]) {
+    if (val != null && val !== '' && !validImagePayload(val)) {
+      return res.status(400).json({ error: `Foto "${nome}" non valida (atteso JPEG/PNG/WebP, max 8MB)` });
+    }
+  }
   const update = { checkin_at: new Date().toISOString() };
   if (checkin_note)          update.checkin_note          = checkin_note;
   if (documento_foto)        update.documento_foto        = documento_foto;
@@ -801,6 +816,9 @@ router.post('/bookings/:id/checkin', async (req, res) => {
 
 router.post('/bookings/:id/checkout', async (req, res) => {
   const { checkout_note, bici_foto_rientro } = req.body;
+  if (bici_foto_rientro != null && bici_foto_rientro !== '' && !validImagePayload(bici_foto_rientro)) {
+    return res.status(400).json({ error: 'Foto "bici_foto_rientro" non valida (atteso JPEG/PNG/WebP, max 8MB)' });
+  }
   const update = { checkout_at: new Date().toISOString() };
   if (checkout_note)   update.checkout_note   = checkout_note;
   if (bici_foto_rientro) update.bici_foto_rientro = bici_foto_rientro;
@@ -911,6 +929,15 @@ router.post('/bookings/manual', async (req, res) => {
   if (tipo_noleggio === 'multi_giorno' && Number(giorni) < 2) {
     return res.status(400).json({ error: 'Multi-giorno richiede almeno 2 giorni' });
   }
+  if (!DATE_RE.test(data_ritiro)) {
+    return res.status(400).json({ error: 'Data ritiro non valida (formato AAAA-MM-GG)' });
+  }
+  if (tipo_noleggio === 'multi_giorno') {
+    const g = Number(giorni);
+    if (!Number.isInteger(g) || g < 2 || g > 30) {
+      return res.status(400).json({ error: 'Numero giorni non valido (2-30)' });
+    }
+  }
 
   // Solo multi_giorno usa giorni > 1; per gli altri tipi forziamo 1
   const numGiorni = tipo_noleggio === 'multi_giorno' ? Number(giorni) : 1;
@@ -1011,6 +1038,9 @@ router.post('/bookings/manual', async (req, res) => {
   let prezziPerBici; // array stesso indice di assignedBikes
   if (prezzoOverride !== undefined && prezzoOverride !== null && prezzoOverride !== '') {
     const totale = parseFloat(prezzoOverride);
+    if (!Number.isFinite(totale) || totale <= 0 || totale > 10000) {
+      return res.status(400).json({ error: 'Prezzo manuale non valido (deve essere tra €0 e €10.000)' });
+    }
     const each   = Math.floor((totale / totBici) * 100) / 100;
     const remainder = +(totale - each * totBici).toFixed(2);
     prezziPerBici = assignedBikes.map((_, i) => i === 0 ? +(each + remainder).toFixed(2) : each);
@@ -1490,6 +1520,14 @@ router.post('/bookings/:id/refund', async (req, res) => {
   if (error || !b) return res.status(404).json({ error: 'Prenotazione non trovata' });
   if (b.pagamento_status !== 'paid') return res.status(400).json({ error: 'Prenotazione non pagata — rimborso non applicabile' });
 
+  // Valida l'importo: se fornito deve essere positivo e non superare il pagato.
+  if (amount != null && amount !== '') {
+    const a = parseFloat(amount);
+    if (!Number.isFinite(a) || a <= 0 || a > Number(b.prezzo_totale) + 0.01) {
+      return res.status(400).json({ error: `Importo rimborso non valido (max €${Number(b.prezzo_totale).toFixed(2)})` });
+    }
+  }
+
   let paymentIntentId = b.stripe_payment_id;
   if (!paymentIntentId && b.stripe_session_id) {
     try {
@@ -1511,8 +1549,9 @@ router.post('/bookings/:id/refund', async (req, res) => {
       idempotencyKey: `refund-${req.params.id}-${refundParams.amount || 'full'}`,
     });
 
-    const amountNum = parseFloat(amount) || Number(b.prezzo_totale);
-    const isTotal   = amountNum >= Number(b.prezzo_totale) - 0.01;
+    // isTotal calcolato sull'importo REALMENTE rimborsato da Stripe (refund.amount),
+    // non sull'input del client: garantisce che lo stato DB rifletta il rimborso vero.
+    const isTotal = (refund.amount / 100) >= Number(b.prezzo_totale) - 0.01;
     if (isTotal) await supabase.from('prenotazioni').update({ pagamento_status: 'cancelled' }).eq('id', req.params.id);
 
     console.log(`[admin refund] ${req.params.id} — €${refund.amount / 100} rimborsati`);
