@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminApi, api } from '../lib/api.js';
+import { EMAIL_TEMPLATES } from '../lib/emailTemplates';
 import KpiStrip    from './admin/KpiStrip.jsx';
 import ActionFeed  from './admin/ActionFeed.jsx';
 import SearchModal from './admin/SearchModal.jsx';
@@ -207,62 +208,6 @@ const VIEW_TITLES = {
   log:          'Log Azioni Admin',
 };
 
-// ─── Email templates ──────────────────────────────────────────────────────────
-
-const EMAIL_TEMPLATES = [
-  {
-    label: 'Promemoria ritiro domani',
-    subject: 'Promemoria: il tuo noleggio è domani — Arfanta Bike Rental',
-    message: `Ti ricordiamo che domani è il giorno del tuo noleggio bici!\n\nRicorda di portare con te:\n• Documento di identità valido\n• Il codice della tua prenotazione\n\nTi aspettiamo in Via Pecol 22, Arfanta di Tarzo (TV).\n\nPer qualsiasi necessità contattaci via WhatsApp al +39 392 8614635.`,
-  },
-  {
-    label: 'Conferma rimborso',
-    subject: 'Rimborso confermato — Arfanta Bike Rental',
-    message: `Abbiamo elaborato il rimborso per la tua prenotazione.\n\nI fondi torneranno sul tuo conto entro 5-10 giorni lavorativi, a seconda della tua banca.\n\nCi dispiace non aver potuto ospitarti questa volta. Speriamo di vederti presto sulle Colline del Prosecco!\n\nPer qualsiasi dubbio contattaci via WhatsApp al +39 392 8614635.`,
-  },
-  {
-    label: 'Cauzione non autorizzata',
-    subject: 'Importante: cauzione non autorizzata — Arfanta Bike Rental',
-    message: `Abbiamo tentato di bloccare la cauzione di €500 sulla tua carta come garanzia per il noleggio, ma l'operazione non è andata a buon fine.\n\nSe non risolviamo questo problema entro domani, saremo costretti ad annullare la tua prenotazione.\n\nContattaci via WhatsApp al +39 392 8614635 o rispondi a questa email.\n\nGrazie per la comprensione.`,
-  },
-  {
-    label: 'Cambio bicicletta',
-    subject: 'Aggiornamento prenotazione: cambio bicicletta — Arfanta Bike Rental',
-    message: `Ti informiamo che per la tua prenotazione è stato necessario assegnarti una bicicletta diversa rispetto a quella originale.\n\nLa bicicletta che riceverai è della stessa tipologia e qualità. Il tuo noleggio non subisce altre modifiche.\n\nPer qualsiasi domanda siamo disponibili via WhatsApp al +39 392 8614635.`,
-  },
-  {
-    label: 'Ritardo restituzione',
-    subject: 'Promemoria restituzione bicicletta — Arfanta Bike Rental',
-    message: `Ci risulta che la bicicletta noleggiata non sia stata ancora restituita all'orario previsto.\n\nTi chiediamo di riconsegnare la bici il prima possibile in Via Pecol 22, Arfanta di Tarzo (TV).\n\nIn caso di difficoltà contattaci subito via WhatsApp al +39 392 8614635.\n\nGrazie per la collaborazione.`,
-  },
-  {
-    label: 'Danni rilevati',
-    subject: 'Comunicazione danni — Arfanta Bike Rental',
-    message: `A seguito dell'ispezione della bicicletta restituita, abbiamo rilevato dei danni che non erano presenti al momento della consegna.\n\nAbbiamo proceduto con l'addebito del costo di riparazione sulla tua carta, come previsto dal contratto di noleggio firmato.\n\nPer qualsiasi chiarimento siamo disponibili via WhatsApp al +39 392 8614635 o via email.\n\nGrazie per la comprensione.`,
-  },
-  {
-    label: 'Ringraziamento post-noleggio',
-    subject: 'Grazie per aver scelto Arfanta Bike Rental!',
-    message: `Grazie per aver noleggiato con noi! Speriamo che tu abbia trascorso una splendida giornata sulle Colline del Prosecco.\n\nSe ti è piaciuta l'esperienza, ti saremmo grati se lasciassi una recensione su Google — ci aiuta molto a far conoscere questo posto magico!\n\nSperiamo di rivederti presto!\n\nLo staff di Arfanta Bike Rental 🚲`,
-  },
-  {
-    label: 'Avviso meteo avverso',
-    subject: 'Avviso meteo per il tuo noleggio — Arfanta Bike Rental',
-    message: `Ti informiamo che per la data del tuo noleggio sono previste condizioni meteo avverse (pioggia/temporale).\n\nSe desideri spostare la data, contattaci il prima possibile via WhatsApp al +39 392 8614635 e troveremo insieme una soluzione.\n\nIn alternativa, puoi comunque effettuare il noleggio: le nostre bici sono adatte anche a condizioni umide, ma ti consigliamo abbigliamento impermeabile.\n\nGrazie per la comprensione.`,
-  },
-  {
-    label: 'Richiesta recensione',
-    subject: 'Come è andata la tua esperienza? — Arfanta Bike Rental',
-    message: `Speriamo che il tuo noleggio sia stato di tuo gradimento!\n\nLa tua opinione è molto importante per noi. Se hai 2 minuti, lascia una recensione su Google — ci aiuta enormemente:\n\nhttps://g.page/r/[LINK_GOOGLE]\n\nE se qualcosa non ha funzionato al meglio, scrivici direttamente via WhatsApp al +39 392 8614635: vogliamo sempre migliorare.\n\nGrazie e a presto!`,
-  },
-  {
-    label: 'Richiesta modifica',
-    subject: 'Modifica prenotazione — Arfanta Bike Rental',
-    message: `In merito alla tua prenotazione, vorremmo chiederti di contattarci per definire alcuni dettagli.\n\nPuoi raggiungerci via WhatsApp al +39 392 8614635 oppure rispondendo a questa email.\n\nGrazie.`,
-  },
-  { label: 'Messaggio libero', subject: '', message: '' },
-];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -323,6 +268,8 @@ export default function AdminDashboard() {
   const [emailModal,   setEmailModal]   = useState(null);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
+  const [emailLang,    setEmailLang]    = useState('it');
+  const [emailTemplateIdx, setEmailTemplateIdx] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
 
   // Damage modal
@@ -927,13 +874,22 @@ const loadOccupazione = useCallback(async () => {
     finally { setDepositLoading(false); }
   }
 
+  // Riempie Oggetto e Messaggio col template `idx` nella lingua `lang`.
+  function applyTemplate(idx, lang) {
+    const tpl = EMAIL_TEMPLATES[idx];
+    if (!tpl) return;
+    const testo = tpl[lang] || tpl.it;
+    setEmailSubject(testo.subject);
+    setEmailMessage(testo.message);
+  }
+
   async function handleSendEmail() {
     if (!emailSubject.trim() || !emailMessage.trim()) return;
     setEmailLoading(true);
     try {
-      await adminApi.sendEmail(emailModal.id, emailSubject, emailMessage);
+      await adminApi.sendEmail(emailModal.id, emailSubject, emailMessage, emailLang);
       alert(`Email inviata a ${emailModal.email}`);
-      setEmailModal(null); setEmailSubject(''); setEmailMessage('');
+      setEmailModal(null); setEmailSubject(''); setEmailMessage(''); setEmailTemplateIdx('');
     } catch (e) { alert('Errore invio email: ' + e.message); }
     finally { setEmailLoading(false); }
   }
@@ -2684,8 +2640,26 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           <div className="ac-modal-info">A: <strong>{emailModal.nome}</strong> &lt;{emailModal.email}&gt;</div>
 
           <div className="ac-field">
+            <label className="ac-label">Lingua email</label>
+            <select className="ac-select" value={emailLang} onChange={e => {
+              const lang = e.target.value;
+              setEmailLang(lang);
+              if (emailTemplateIdx !== '') applyTemplate(Number(emailTemplateIdx), lang);
+            }}>
+              <option value="it">Italiano</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
+          <div className="ac-field">
             <label className="ac-label">Template rapido</label>
-            <select className="ac-select" onChange={e => { const t = EMAIL_TEMPLATES[e.target.value]; if (t) { setEmailSubject(t.subject); setEmailMessage(t.message); } }} defaultValue="">
+            <select className="ac-select" value={emailTemplateIdx} onChange={e => {
+              const idx = e.target.value;
+              setEmailTemplateIdx(idx);
+              if (idx !== '') applyTemplate(Number(idx), emailLang);
+            }}>
               <option value="" disabled>Scegli template…</option>
               {EMAIL_TEMPLATES.map((t, i) => <option key={i} value={i}>{t.label}</option>)}
             </select>
@@ -3045,7 +3019,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
             <button className="ac-actionsheet-btn" onClick={act(() => handleWhatsApp(b))}>
               <IconBell /><span>WhatsApp rapido</span>
             </button>
-            <button className="ac-actionsheet-btn" onClick={act(() => { setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email }); setEmailSubject(''); setEmailMessage(''); })}>
+            <button className="ac-actionsheet-btn" onClick={act(() => { setEmailModal({ id: b.id, nome: b.cliente_nome, email: b.cliente_email, lingua: b.lingua || 'it' }); setEmailSubject(''); setEmailMessage(''); setEmailLang(b.lingua || 'it'); setEmailTemplateIdx(''); })}>
               <IconMail /><span>Invia email</span>
             </button>
 
