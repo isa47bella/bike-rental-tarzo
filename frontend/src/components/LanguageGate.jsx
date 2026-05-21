@@ -44,12 +44,19 @@ export default function LanguageGate() {
     if (!localStorage.getItem('langChosen')) setVisible(true);
   }, []);
 
-  // Chiusura: marca la scelta come fatta e sfuma via il pop-up.
+  // Chiusura: marca la scelta come fatta e avvia l'animazione di uscita.
   function dismiss() {
     localStorage.setItem('langChosen', '1');
     setLeaving(true);
-    setTimeout(() => setVisible(false), 240);
   }
+
+  // Dopo l'animazione di uscita smonta il pop-up. Il cleanup annulla il
+  // timeout se il componente viene smontato prima che scada.
+  useEffect(() => {
+    if (!leaving) return;
+    const t = setTimeout(() => setVisible(false), 240);
+    return () => clearTimeout(t);
+  }, [leaving]);
 
   function choose(code) {
     i18n.changeLanguage(code);
@@ -73,7 +80,7 @@ export default function LanguageGate() {
       onClick={dismiss}
       role="dialog"
       aria-modal="true"
-      aria-label="Seleziona la lingua / Select language"
+      aria-labelledby="lg-title"
     >
       <div className="lg-glass" onClick={(e) => e.stopPropagation()}>
         <button className="lg-x" onClick={dismiss} aria-label="Chiudi / Close">&#10005;</button>
@@ -84,7 +91,7 @@ export default function LanguageGate() {
             <ellipse cx="22" cy="22" rx="9" ry="20" stroke="#EA580C" strokeWidth="2.4" />
             <path d="M3 16 H41 M3 28 H41" stroke="#EA580C" strokeWidth="2.4" />
           </svg>
-          <div className="lg-title">Scegli la tua lingua</div>
+          <div className="lg-title" id="lg-title">Scegli la tua lingua</div>
           <div className="lg-sub">Choose &middot; Sprache &middot; Idioma &middot; Langue</div>
         </div>
 
