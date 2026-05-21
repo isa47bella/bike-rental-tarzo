@@ -505,14 +505,14 @@ router.post('/bookings/:id/refund-deposit', async (req, res) => {
 // Invia email personalizzata al cliente dall'admin panel
 
 router.post('/bookings/:id/send-email', async (req, res) => {
-  const { subject, message } = req.body;
+  const { subject, message, lang } = req.body;
   if (!subject?.trim() || !message?.trim()) {
     return res.status(400).json({ error: 'Oggetto e messaggio sono obbligatori' });
   }
 
   const { data: prenotazione, error } = await supabase
     .from('prenotazioni')
-    .select('id, cliente_nome, cliente_email, data_ritiro')
+    .select('id, cliente_nome, cliente_email, data_ritiro, lingua')
     .eq('id', req.params.id)
     .single();
 
@@ -520,10 +520,15 @@ router.post('/bookings/:id/send-email', async (req, res) => {
     return res.status(404).json({ error: 'Prenotazione non trovata' });
   }
 
+  // Lingua dell'email: quella scelta dall'admin, validata; fallback alla
+  // lingua della prenotazione e infine all'italiano.
+  const LINGUE_VALIDE = ['it', 'en', 'de', 'es', 'fr'];
+  const lingua = LINGUE_VALIDE.includes(lang) ? lang : (prenotazione.lingua || 'it');
+
   try {
-    await sendAdminEmail(prenotazione, subject.trim(), message.trim());
-    console.log(`[admin send-email] Email inviata a ${prenotazione.cliente_email} — "${subject}"`);
-    await logAction('send_email', req.params.id, { subject: subject.trim(), to: prenotazione.cliente_email }, getIp(req));
+    await sendAdminEmail(prenotazione, subject.trim(), message.trim(), lingua);
+    console.log(`[admin send-email] Email (${lingua}) inviata a ${prenotazione.cliente_email} — "${subject}"`);
+    await logAction('send_email', req.params.id, { subject: subject.trim(), lingua, to: prenotazione.cliente_email }, getIp(req));
     return res.json({ success: true });
   } catch (e) {
     console.error('[admin send-email] Errore:', e.message);
