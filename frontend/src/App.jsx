@@ -6,6 +6,7 @@ import CancelPage      from './pages/Cancel.jsx';
 import FirmaPage       from './pages/Firma.jsx';
 import PrivacyPage     from './pages/Privacy.jsx';
 import CookieBanner    from './components/CookieBanner.jsx';
+import LanguageGate    from './components/LanguageGate.jsx';
 
 function Footer() {
   return (
@@ -43,7 +44,7 @@ function PublicLayout({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/"        element={<PublicLayout><BookingWizard /></PublicLayout>} />
+      <Route path="/"        element={<PublicLayout><LanguageGate /><BookingWizard /></PublicLayout>} />
       <Route path="/success" element={<PublicLayout><SuccessPage /></PublicLayout>} />
       <Route path="/cancel"  element={<PublicLayout><CancelPage /></PublicLayout>} />
       <Route path="/admin"   element={<AdminDashboard />} />
