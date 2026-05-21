@@ -638,18 +638,23 @@ router.get('/cleanup-documenti', cronAuth, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
+  const scanned = (rows || []).length;
   let cleaned = 0;
   for (const r of (rows || [])) {
     await removeBookingFoto(r.id, ['documento-fronte', 'documento-retro']);
-    await supabase
+    const { error: updErr } = await supabase
       .from('prenotazioni')
       .update({ documento_foto: null, documento_foto_retro: null })
       .eq('id', r.id);
-    cleaned++;
+    if (updErr) {
+      console.error(`[CRON cleanup-documenti] update error ${r.id}:`, updErr.message);
+    } else {
+      cleaned++;
+    }
   }
 
-  console.log(`[CRON cleanup-documenti] ${cleaned} documenti cancellati (cutoff ${cutoff})`);
-  return res.json({ cleaned, cutoff });
+  console.log(`[CRON cleanup-documenti] ${cleaned}/${scanned} documenti cancellati (cutoff ${cutoff})`);
+  return res.json({ cleaned, scanned, cutoff });
 });
 
 module.exports = router;
