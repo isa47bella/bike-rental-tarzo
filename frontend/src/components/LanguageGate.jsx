@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // Bandiere come SVG inline (no emoji): viewBox quadrato, ritagliate in cerchio via CSS.
