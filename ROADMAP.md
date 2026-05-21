@@ -37,6 +37,9 @@ Stato aggiornato al 2026-05-21.
 - **Email manuali multilingua** — i template rapidi dell'email manuale (menu 3 puntini →
   "Invia email") sono tradotti in 5 lingue; un selettore "Lingua email" sceglie la lingua,
   preimpostato su quella con cui il cliente ha prenotato
+- **Monitoraggio salute cron** — ogni cron registra un "battito" a ogni esecuzione
+  riuscita (tabella `cron_health`); un cron guardiano alle 22:00 avvisa (push + campanella)
+  se un cron non gira da troppo tempo
 
 ## 💡 Possibili sviluppi futuri
 
