@@ -30,6 +30,9 @@ Stato aggiornato al 2026-05-21.
 - **Pop-up selezione lingua** liquid glass all'apertura del sito
 - **Badge lingua del cliente** sulle prenotazioni nell'admin
 - **Icona PWA** col logo Arfanta
+- **Foto su Supabase Storage** — documenti d'identità e foto bici spostati da base64 nel
+  database a un bucket privato `prenotazioni-foto`; visualizzazione admin via signed URL
+  temporanei; retention automatica (documenti 30 giorni, foto bici 5 anni col `gdpr-cleanup`)
 
 ## 💡 Possibili sviluppi futuri
 
