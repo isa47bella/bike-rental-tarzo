@@ -41,6 +41,8 @@ Stato aggiornato al 2026-05-21.
 - **Monitoraggio salute cron** — ogni cron registra un "battito" a ogni esecuzione
   riuscita (tabella `cron_health`); un cron guardiano alle 22:00 avvisa (push + campanella)
   se un cron non gira da troppo tempo
+- **Lista del giorno stampabile** — dalla vista "Oggi" un foglio stampabile (data
+  scegliibile) con ritiri, restituzioni e bici in ritardo di una giornata
 
 ## 💡 Possibili sviluppi futuri
 
