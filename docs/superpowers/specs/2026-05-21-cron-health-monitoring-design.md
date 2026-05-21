@@ -58,32 +58,35 @@ il `.env` non ha la connection string Postgres per il DDL). Il seed delle 9 righ
 zero. La feature funziona solo dopo che la migrazione è stata eseguita; finché non lo è,
 il codice non crasha (vedi Error handling).
 
-### Heartbeat su ogni cron — `withHeartbeat`
+### Heartbeat: middleware unico
 
-Un wrapper `withHeartbeat(jobName, handler)` avvolge ognuna delle rotte cron esistenti:
+Un solo middleware in cima a `cron.js`, registrato prima delle rotte. Per le richieste
+cron sostituisce `res.json` con una versione che, su risposta di successo (stato 2xx),
+registra il battito in `cron_health` **prima** di inviare la risposta:
 
 ```javascript
-function withHeartbeat(job, handler) {
-  return async (req, res) => {
-    try {
-      await handler(req, res);
-    } catch (e) {
-      console.error(`[CRON ${job}] errore non gestito:`, e.message);
-      if (!res.headersSent) res.status(500).json({ error: e.message });
-    }
-    if (res.statusCode < 400) {
-      await recordCronRun(job);
-    }
-  };
-}
+const { recordCronRun, CRON_EXPECTATIONS } = require('../lib/cronHealth');
+
+router.use((req, res, next) => {
+  const job = req.path.split('/').pop();
+  if (CRON_EXPECTATIONS[job]) {
+    const sendJson = res.json.bind(res);
+    res.json = async (body) => {
+      if (res.statusCode < 400) await recordCronRun(job);
+      return sendJson(body);
+    };
+  }
+  next();
+});
 ```
 
-Registra il battito solo se la risposta è 2xx. Se il handler lancia un'eccezione, la
-cattura, risponde 500 e **non** registra il battito (così il guasto resta visibile). Questo
-migliora anche la robustezza attuale: oggi un'eccezione non gestita in un cron resta
-una promise rejection non gestita.
-
-Le rotte diventano: `router.get('/deposit', cronAuth, withHeartbeat('deposit', async (req, res) => { ... }))`.
+Un solo punto di inserimento, zero modifiche alle 9 rotte cron esistenti. Il battito viene
+scritto **prima** del flush della risposta: necessario perché su Vercel il lavoro
+asincrono *dopo* l'invio della risposta non è garantito. Se un cron fallisce, va in errore
+o non parte affatto, non risponde 2xx → il battito non viene registrato → il guasto resta
+visibile. `CRON_EXPECTATIONS` (vedi sotto) fa anche da elenco dei path da monitorare: un
+path non-cron lascia `res.json` invariato. Tutte le rotte cron usano `return res.json(...)`,
+quindi questa sostituzione le copre tutte.
 
 ### Helper `backend/lib/cronHealth.js` (nuovo)
 
@@ -95,8 +98,8 @@ Modulo di sola logica (nessuna dipendenza da Express), esporta:
   con la sua soglia, ritorna l'elenco dei job "in ritardo" (con nome ed età in ore). Un
   job senza riga viene considerato in ritardo (anomalia da segnalare).
 
-`withHeartbeat` vive invece in `cron.js` accanto alle rotte (è un wrapper di handler
-Express). `cronHealth.js` resta puro: non importa né Express né il modulo push/notifiche.
+Il middleware heartbeat vive invece in `cron.js` accanto alle rotte (usa l'API Express
+`res`). `cronHealth.js` resta puro: non importa né Express né il modulo push/notifiche.
 
 ### Soglie — `CRON_EXPECTATIONS` (ore)
 
@@ -111,7 +114,8 @@ scatta solo per un guasto reale.
 
 ### Cron guardiano — `GET /api/cron/cron-health`
 
-Nuova rotta in `cron.js`, protetta da `cronAuth`, anch'essa avvolta da `withHeartbeat`.
+Nuova rotta in `cron.js`, protetta da `cronAuth`. Il guardiano non è incluso in
+`CRON_EXPECTATIONS`, quindi non registra un proprio battito (non è auto-monitorato).
 Schedule in `vercel.json`: `0 22 * * *` (22:00 UTC), dopo che tutti i cron giornalieri
 hanno girato — così un guasto in giornata di un cron giornaliero viene rilevato la sera
 stessa. Logica:
@@ -133,7 +137,8 @@ Aggiungere ai `crons`: `{ "path": "/api/cron/cron-health", "schedule": "0 22 * *
 
 - `recordCronRun` è non-bloccante: un errore nella scrittura del battito (incluso "tabella
   inesistente" prima della migrazione) viene solo loggato, non rompe il lavoro del cron.
-- `withHeartbeat` cattura le eccezioni non gestite del handler e risponde 500.
+- Se un cron va in errore e non risponde 2xx, il middleware non registra il battito: il
+  guardiano lo rileva al giro successivo.
 - Il guardiano: se la lettura di `cron_health` fallisce, logga e risponde 500.
 
 ## Edge case
@@ -160,7 +165,7 @@ ecc.) è fuori scope.
 |---|---|
 | `supabase/schema.sql` | Modify — DDL `cron_health` + seed (migrazione manuale su Supabase) |
 | `backend/lib/cronHealth.js` | Create — `recordCronRun`, `CRON_EXPECTATIONS`, `checkCronHealth` |
-| `backend/routes/cron.js` | Modify — wrapper `withHeartbeat` su tutte le rotte; nuova rotta `/cron-health` |
+| `backend/routes/cron.js` | Modify — middleware heartbeat (un solo punto); nuova rotta `/cron-health` |
 | `vercel.json` | Modify — schedule del cron `cron-health` |
 
 ## Testing
