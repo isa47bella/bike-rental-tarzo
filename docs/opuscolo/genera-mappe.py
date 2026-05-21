@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Genera le immagini dell'opuscolo a partire dai file GPX dei percorsi:
 
-  mappe/<nome>.png       mappa del percorso (basemap CARTO/OSM + traccia GPS)
-  mappe/qr-<nome>.png    QR code che apre la traccia su Wikiloc
+  mappe/<nome>.png           mappa del percorso (basemap CARTO/OSM + traccia GPS)
+  mappe/qr-<nome>.png        QR della traccia su Wikiloc (segui il percorso)
+  mappe/qr-start-<nome>.png  QR del punto di partenza su Google Maps
 
 Niente e' disegnato a memoria: la linea del percorso e' la traccia GPS reale
-del file GPX, il fondo cartografico e' OpenStreetMap, e il link del QR e' la
-pagina Wikiloc indicata nei metadati dello stesso GPX. Uso una tantum.
+del file GPX, il fondo cartografico e' OpenStreetMap, il QR del percorso punta
+alla pagina Wikiloc indicata nei metadati del GPX e il QR di partenza al primo
+punto della traccia. Uso una tantum.
 
     python3 genera-mappe.py
 
@@ -171,10 +173,10 @@ def build_map(name, pts):
     print(f"  mappa: zoom {z}, {len(pts)} punti -> {out} ({W}x{H})")
 
 
-def build_qr(name, url):
-    out = os.path.join(MAPPE, "qr-" + name + ".png")
+def make_qr(out_name, url):
+    out = os.path.join(MAPPE, out_name)
     segno.make(url, error="m").save(out, scale=16, border=3, dark="#2a2723", light="#ffffff")
-    print(f"  qr:    {out}  ->  {url}")
+    print(f"  qr: {out_name}  ->  {url}")
 
 
 if __name__ == "__main__":
@@ -182,8 +184,13 @@ if __name__ == "__main__":
         print(f"- {name}")
         pts, url = parse_gpx(os.path.join(TRACCE, gpx))
         build_map(name, pts)
+        # QR della traccia completa (Wikiloc)
         if url:
-            build_qr(name, url)
+            make_qr(f"qr-{name}.png", url)
         else:
             print("  ATTENZIONE: nessun link Wikiloc trovato nel GPX")
+        # QR del punto di partenza (Google Maps)
+        lat, lon = pts[0]
+        make_qr(f"qr-start-{name}.png",
+                f"https://www.google.com/maps/search/?api=1&query={lat:.6f},{lon:.6f}")
     print("Fatto.")

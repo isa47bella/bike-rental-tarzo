@@ -122,19 +122,21 @@ h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight:
   letter-spacing: 0; text-transform: none; color: var(--inchiostro); margin-bottom: 1mm;
 }
 .percorso .descrizione { font-size: 9.7pt; line-height: 1.62; margin-bottom: 2.5mm; }
-/* pannello navigazione: QR verso la traccia GPS online */
+/* pannello navigazione: due QR — partenza (Google Maps) e percorso (Wikiloc) */
 .naviga {
-  display: flex; align-items: center; gap: 3.5mm;
+  display: flex; gap: 4mm;
   background: var(--crema); border-radius: 2mm;
-  padding: 2.7mm 4.5mm; margin-top: 4mm;
+  padding: 3mm 4mm; margin-top: 4mm;
 }
+.naviga .navi { flex: 1; display: flex; align-items: center; gap: 3mm; }
+.naviga .navi + .navi { border-left: 1px solid var(--hairline); padding-left: 4mm; }
 .naviga .qr {
-  width: 19mm; height: 19mm; flex-shrink: 0;
+  width: 18mm; height: 18mm; flex-shrink: 0;
   background: var(--paper); border: 1px solid var(--hairline); border-radius: 1mm;
 }
-.naviga .testo { font-size: 8.8pt; line-height: 1.5; }
-.naviga .testo b { color: var(--arancio-sc); }
-.naviga .testo .gps { display: block; margin-top: 1.2mm; color: var(--grigio); }
+.naviga .testo { font-size: 8pt; line-height: 1.42; }
+.naviga .testo b { display: block; color: var(--arancio-sc); }
+.naviga .testo .gps { color: var(--grigio); }
 .mappa {
   display: block; width: 100%; margin-top: 5mm;
   border: 1px solid var(--hairline); border-radius: 2mm;
