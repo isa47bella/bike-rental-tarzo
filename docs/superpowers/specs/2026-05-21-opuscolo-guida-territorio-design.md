@@ -23,7 +23,8 @@ generato dinamicamente. È un documento statico, stampato, dato a mano.
 | Distribuzione | Cartaceo, consegnato a mano al negozio (no sito, no email, no app) |
 | Versioni | 5 opuscoli separati, uno per lingua (it/en/de/es/fr) |
 | Formato | Libretto A5 di poche pagine |
-| Ampiezza contenuti | Essenziale e curata: 3 percorsi, ~4-5 cantine, ~5-6 ristoranti |
+| Ampiezza contenuti | Essenziale e curata: 4 percorsi (3 e-MTB + 1 e-city), ~4-5 cantine, ~5-6 ristoranti |
+| Bici adatta | Ogni percorso etichettato con la bici adatta: e-city / e-MTB |
 | Navigazione percorsi | Mappa stampata per ogni percorso (QR code = piano B se la mappa risulta scomoda) |
 | Fonte percorsi | File GPX forniti dall'utente |
 | Fonte cantine/ristoranti | Ricerca web → bozza documentata → **verifica obbligatoria** del proprietario |
@@ -55,33 +56,37 @@ stampa / salva in PDF.
    Colline del Prosecco.
 2. **Intro** — dove siamo (Via Pecol 22, Arfanta di Tarzo), benvenuto, consigli pratici
    (casco, acqua, autonomia della e-bike, numero del negozio).
-3. **Percorsi** — i 3 itinerari. Per ognuno: nome, distanza, dislivello positivo, durata
-   stimata, difficoltà, breve descrizione (cosa si vede / cosa si incontra), e una mappa.
+3. **Percorsi** — i 4 itinerari. Per ognuno: nome, **bici adatta** (e-city / e-MTB),
+   distanza, dislivello positivo, durata stimata, difficoltà, breve descrizione, e una mappa.
 4. **Cantine** — ~4-5 cantine: nome, posizione (e vicino a quale percorso), cosa offrono
    (degustazioni), contatti, nota su orari/prenotazione.
 5. **Ristoranti** — ~5-6 ristoranti: nome, tipo di cucina, **fascia di prezzo** (€/€€/€€€),
    posizione, contatti.
 6. **Retro** — contatti Arfanta Bike Rental + mappa d'insieme della zona con i punti.
 
-## I percorsi (dai file GPX forniti)
+## I percorsi
 
-I 3 percorsi sono stati selezionati tra 6 tracce GPX fornite dall'utente (cartella
-`Desktop/percorsi/`). Scartati: i tracciati rivelatisi a piedi, quelli di sola andata
-(inadatti a un noleggio — la bici va riportata) e i doppioni. **I dislivelli si prendono
-dai dati ufficiali Wikiloc** (note RTF), non dai calcoli grezzi sul GPS: la quota nei
-tracciati GPS è rumorosa e gonfia i totali.
+L'opuscolo presenta **4 percorsi**: i 3 selezionati dai file GPX forniti dall'utente
+(cartella `Desktop/percorsi/`) — tutti classificati **MTB** su Wikiloc, quindi adatti alle
+e-bike mountain bike — più un **percorso e-city** su asfalto, ancora da fornire. **I
+dislivelli si prendono dai dati ufficiali Wikiloc** (note RTF), non dai calcoli grezzi sul
+GPS: la quota nei tracciati GPS è rumorosa e gonfia i totali.
 
-| Percorso | Distanza | Dislivello + | Tipo | Difficoltà | File GPX |
+| Percorso | Bici | Distanza | Dislivello + | Difficoltà | File GPX |
 |---|---|---|---|---|---|
-| Follina – Laghi di Revine | 27,7 km | +263 m | anello | Facile | `follina-laghi-di-revine-anello.gpx` |
-| Refrontolo – Val Trippera | 33,5 km | +753 m | anello | Medio | `refrontolo-val-trippera.gpx` |
-| Pian de le Femene – Bivacco Col dei Gai | 30,4 km | +1.133 m | anello | Impegnativo | `pian-de-le-femene-bivacco-col-dei-gai.gpx` |
+| Follina – Laghi di Revine | e-MTB | 27,7 km | +263 m | Facile | `follina-laghi-di-revine-anello.gpx` |
+| Refrontolo – Val Trippera | e-MTB | 33,5 km | +753 m | Medio | `refrontolo-val-trippera.gpx` |
+| Pian de le Femene – Bivacco Col dei Gai | e-MTB | 30,4 km | +1.133 m | Impegnativo | `pian-de-le-femene-bivacco-col-dei-gai.gpx` |
+| Percorso e-city (su asfalto) | e-city | da definire | da definire | Facile | GPX in arrivo dall'utente |
 
-I 3 anelli partono rispettivamente a ~6,4 km (Follina), ~3,5 km (Refrontolo) e ~2,9 km
-(Pian de le Femene) dal noleggio: l'opuscolo indicherà come raggiungere in bici il punto
-di partenza di ciascun anello. **Da verificare con il proprietario** che "Refrontolo – Val
-Trippera" (ritmo lento nella traccia → possibili tratti sterrati/tecnici) sia adatto alle
-e-bike a noleggio.
+I 3 percorsi MTB sono anelli; partono a ~6,4 / ~3,5 / ~2,9 km dal noleggio (Follina /
+Refrontolo / Pian de le Femene): l'opuscolo indicherà come raggiungere il punto di
+partenza. Il quarto percorso, per le e-bike **city**, dev'essere su strada o ciclabile
+**asfaltata** (su Wikiloc categoria "Cicloturismo" / "Bici da strada", non MTB) e facile.
+Sono stati scartati altri 3 tracciati: rivelatisi a piedi, di sola andata o doppioni.
+
+Ogni percorso nell'opuscolo riporta l'etichetta della **bici adatta** (e-city / e-MTB):
+nessun cliente deve poter partire con la bici sbagliata per quel terreno.
 
 ## Le mappe
 
@@ -103,7 +108,7 @@ contatti restano invariati in ogni lingua.
 
 ## Fasi del lavoro
 
-1. Raccolta percorsi: i 3 GPX selezionati sono stati analizzati (dati confermati).
+1. Raccolta percorsi: 3 GPX MTB analizzati e confermati; 1 GPX e-city in attesa dall'utente.
 2. Ricerca web di cantine e ristoranti → bozza documentata con le fonti.
 3. **Verifica del proprietario** su ogni voce (percorsi, cantine, ristoranti).
 4. Mappe: export delle immagini dai GPX (via Komoot o simile).
