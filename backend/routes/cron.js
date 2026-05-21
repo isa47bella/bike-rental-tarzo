@@ -15,6 +15,7 @@ const { sendPushToAll } = require('../lib/push');
 const { CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 const { writeNotification } = require('../lib/notifications');
 const { removeFoto } = require('../lib/storage');
+const { recordCronRun, CRON_EXPECTATIONS, checkCronHealth } = require('../lib/cronHealth');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -54,6 +55,23 @@ function cronAuth(req, res, next) {
   }
   next();
 }
+
+// ─── Heartbeat: registra l'esecuzione riuscita di ogni cron ──────────────────
+// Per le richieste cron sostituisce res.json con una versione che, su risposta
+// di successo (stato 2xx), registra il battito in cron_health PRIMA di inviare
+// la risposta. Su Vercel il lavoro async DOPO l'invio della risposta non è
+// garantito: scrivere prima del flush rende il battito affidabile.
+router.use((req, res, next) => {
+  const job = req.path.split('/').pop();
+  if (CRON_EXPECTATIONS[job]) {
+    const sendJson = res.json.bind(res);
+    res.json = async (body) => {
+      if (res.statusCode < 400) await recordCronRun(job);
+      return sendJson(body);
+    };
+  }
+  next();
+});
 
 // ─── GET /api/cron/deposit ────────────────────────────────────────────────────
 
@@ -655,6 +673,43 @@ router.get('/cleanup-documenti', cronAuth, async (req, res) => {
 
   console.log(`[CRON cleanup-documenti] ${cleaned}/${scanned} documenti cancellati (cutoff ${cutoff})`);
   return res.json({ cleaned, scanned, cutoff });
+});
+
+// ─── GET /api/cron/cron-health ────────────────────────────────────────────────
+// Cron guardiano: verifica che ogni cron abbia un battito recente.
+// Schedule: 0 22 * * * UTC — dopo che tutti i cron giornalieri hanno girato.
+router.get('/cron-health', cronAuth, async (req, res) => {
+  let down;
+  try {
+    down = await checkCronHealth();
+  } catch (e) {
+    console.error('[CRON cron-health] errore:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+
+  if (down.length === 0) {
+    console.log('[CRON cron-health] Tutti i cron OK');
+    return res.json({ ok: true, down: [] });
+  }
+
+  const nomi = down.map(d => d.job).join(', ');
+  const dettaglio = down
+    .map(d => d.ageHours == null ? `${d.job} (mai eseguito)` : `${d.job} (${d.ageHours}h fa)`)
+    .join(', ');
+  console.warn(`[CRON cron-health] Cron in ritardo: ${dettaglio}`);
+
+  await sendPushToAll({
+    title: '⚠️ Cron non eseguiti',
+    body:  `${nomi} — controlla i log su Vercel`,
+    url:   '/admin',
+  }).catch(e => console.error('[CRON cron-health] push error:', e.message));
+
+  await writeNotification('cron_down', {
+    titolo: `Cron non eseguiti: ${nomi}`,
+    descrizione: `Ultimo battito: ${dettaglio}. Controlla i log su Vercel.`,
+  }).catch(_ => {});
+
+  return res.json({ ok: false, down });
 });
 
 module.exports = router;
