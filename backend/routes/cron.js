@@ -14,7 +14,7 @@ const { sendFirmaLinkEmail, sendReminderEmail } = require('../lib/email');
 const { sendPushToAll } = require('../lib/push');
 const { CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 const { writeNotification } = require('../lib/notifications');
-const { removeBookingFoto } = require('../lib/storage');
+const { removeFoto } = require('../lib/storage');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -357,7 +357,7 @@ router.get('/gdpr-cleanup', cronAuth, async (req, res) => {
   while (true) {
     const { data: batch, error: selErr } = await supabase
       .from('prenotazioni')
-      .select('id')
+      .select('id, documento_foto, documento_foto_retro, bici_foto_consegna, bici_foto_rientro')
       .lt('created_at', cutoff.toISOString())
       .limit(500);
     if (selErr) {
@@ -365,9 +365,9 @@ router.get('/gdpr-cleanup', cronAuth, async (req, res) => {
       return res.status(500).json({ error: selErr.message });
     }
     if (!batch || batch.length === 0) break;
-    // Prima di eliminare le righe, rimuove le foto dal bucket.
+    // Prima di eliminare le righe, rimuove le foto dal bucket (per path salvato).
     for (const r of batch) {
-      await removeBookingFoto(r.id, ['documento-fronte', 'documento-retro', 'bici-consegna', 'bici-rientro']);
+      await removeFoto([r.documento_foto, r.documento_foto_retro, r.bici_foto_consegna, r.bici_foto_rientro]);
     }
     const { error: delErr } = await supabase
       .from('prenotazioni')
@@ -629,7 +629,7 @@ router.get('/cleanup-documenti', cronAuth, async (req, res) => {
 
   const { data: rows, error } = await supabase
     .from('prenotazioni')
-    .select('id')
+    .select('id, documento_foto, documento_foto_retro')
     .lt('data_ritiro', cutoff)
     .or('documento_foto.not.is.null,documento_foto_retro.not.is.null');
 
@@ -641,7 +641,7 @@ router.get('/cleanup-documenti', cronAuth, async (req, res) => {
   const scanned = (rows || []).length;
   let cleaned = 0;
   for (const r of (rows || [])) {
-    await removeBookingFoto(r.id, ['documento-fronte', 'documento-retro']);
+    await removeFoto([r.documento_foto, r.documento_foto_retro]);
     const { error: updErr } = await supabase
       .from('prenotazioni')
       .update({ documento_foto: null, documento_foto_retro: null })

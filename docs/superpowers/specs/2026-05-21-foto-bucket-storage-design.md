@@ -32,13 +32,18 @@ Le foto sono salvate come **data-URL base64** nelle colonne TEXT di `prenotazion
 
 ### Bucket
 
-Bucket privato `prenotazioni-foto`. File organizzati per prenotazione, path deterministici:
+Bucket privato `prenotazioni-foto`. Una cartella per prenotazione, nominata in modo
+leggibile `{nome-cliente-slug}-{id-breve}` (slug del nome senza accenti + primi 8 caratteri
+dell'UUID), con dentro i file dei 4 slot:
 ```
-{booking_id}/documento-fronte.jpg
-{booking_id}/documento-retro.jpg
-{booking_id}/bici-consegna.jpg
-{booking_id}/bici-rientro.jpg
+mario-rossi-ca9ec549/documento-fronte.jpg
+mario-rossi-ca9ec549/documento-retro.jpg
+mario-rossi-ca9ec549/bici-consegna.jpg
+mario-rossi-ca9ec549/bici-rientro.jpg
 ```
+Il nome leggibile rende le cartelle facili da trovare nel Dashboard Supabase; l'id breve le
+mantiene univoche tra clienti omonimi. Il path completo viene salvato nelle colonne DB, così
+nessun consumatore deve ricostruirlo.
 Privato = nessun accesso via URL pubblico. L'accesso avviene solo: dal backend con la service key (upload, remove, signed URL), o tramite signed URL temporaneo.
 
 ### Upload
@@ -75,7 +80,7 @@ Nuovo cron `GET /api/cron/cleanup-documenti`, schedule giornaliero alle `0 2 * *
 
 ### Foto bici — vita = prenotazione
 
-Il cron esistente `gdpr-cleanup` (cancella prenotazioni > 5 anni) viene esteso: per ogni prenotazione che sta per essere eliminata, prima cancella dal bucket i suoi file passando a `remove` la lista dei 4 path deterministici noti (`{id}/documento-fronte.jpg`, `documento-retro.jpg`, `bici-consegna.jpg`, `bici-rientro.jpg`). `remove` ignora silenziosamente i path che non esistono, quindi è sicuro elencarli tutti e quattro.
+Il cron esistente `gdpr-cleanup` (cancella prenotazioni > 5 anni) viene esteso: per ogni prenotazione che sta per essere eliminata, prima cancella dal bucket i suoi file passando a `remove` i path salvati nelle 4 colonne foto della riga (`documento_foto`, `documento_foto_retro`, `bici_foto_consegna`, `bici_foto_rientro`). `remove` ignora silenziosamente i path null o inesistenti, quindi è sicuro passarli tutti.
 
 ## Edge case
 

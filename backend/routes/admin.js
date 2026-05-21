@@ -25,7 +25,7 @@ const {
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
 const { writeNotification }                 = require('../lib/notifications');
-const { uploadFoto, getSignedUrl, removeBookingFoto } = require('../lib/storage');
+const { uploadFoto, getSignedUrl, folderFor } = require('../lib/storage');
 const { CAUZIONE_AMOUNT_EUR, CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
@@ -826,13 +826,20 @@ router.post('/bookings/:id/checkin', async (req, res) => {
     }
   }
 
+  // Recupera la prenotazione: serve il nome per la cartella del bucket e
+  // conferma che la prenotazione esista prima di caricare qualsiasi file.
+  const { data: pren, error: findErr } = await supabase
+    .from('prenotazioni').select('cliente_nome').eq('id', req.params.id).single();
+  if (findErr || !pren) return res.status(404).json({ error: 'Prenotazione non trovata' });
+
   const update = { checkin_at: new Date().toISOString() };
   if (checkin_note) update.checkin_note = checkin_note;
 
   // Carica le foto nel bucket; nelle colonne va il path, non il base64.
+  const folder = folderFor(req.params.id, pren.cliente_nome);
   try {
     for (const [colonna, slot, val] of fotoInput) {
-      if (val) update[colonna] = await uploadFoto(req.params.id, slot, val);
+      if (val) update[colonna] = await uploadFoto(folder, slot, val);
     }
   } catch (e) {
     console.error('[checkin] upload foto:', e.message);
@@ -855,8 +862,13 @@ router.post('/bookings/:id/checkout', async (req, res) => {
   const update = { checkout_at: new Date().toISOString() };
   if (checkout_note) update.checkout_note = checkout_note;
   if (bici_foto_rientro) {
+    // Recupera il nome per la cartella del bucket (e conferma che esista).
+    const { data: pren, error: findErr } = await supabase
+      .from('prenotazioni').select('cliente_nome').eq('id', req.params.id).single();
+    if (findErr || !pren) return res.status(404).json({ error: 'Prenotazione non trovata' });
     try {
-      update.bici_foto_rientro = await uploadFoto(req.params.id, 'bici-rientro', bici_foto_rientro);
+      update.bici_foto_rientro = await uploadFoto(
+        folderFor(req.params.id, pren.cliente_nome), 'bici-rientro', bici_foto_rientro);
     } catch (e) {
       console.error('[checkout] upload foto:', e.message);
       return res.status(500).json({ error: 'Errore caricamento foto: ' + e.message });
