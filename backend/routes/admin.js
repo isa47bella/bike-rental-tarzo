@@ -923,14 +923,17 @@ router.get('/report', async (req, res) => {
   // Oltre, sostituire la somma JS con un aggregato lato DB.
   const { data: all, error } = await supabase
     .from('prenotazioni')
-    .select('prezzo_totale, tipo_noleggio, giorni, data_ritiro')
+    .select('prezzo_totale, tipo_noleggio, giorni, data_ritiro, bicicletta_id, bici_ids, cliente_telefono')
     .eq('pagamento_status', 'paid')
     .limit(20000);
 
   if (error) return res.status(500).json({ error: error.message });
 
-  const byMonth = {};
-  const byType  = {};
+  const byMonth   = {};
+  const byType    = {};
+  const byBike    = {};
+  const byWeekday = [0, 0, 0, 0, 0, 0, 0];   // 0 = Lunedì … 6 = Domenica
+  const perCliente = {};                      // telefono normalizzato -> n. prenotazioni
   let total = 0;
 
   (all || []).forEach(b => {
@@ -939,6 +942,20 @@ router.get('/report', async (req, res) => {
     const month = b.data_ritiro ? b.data_ritiro.substring(0, 7) : 'unknown';
     byMonth[month] = (byMonth[month] || 0) + n;
     byType[b.tipo_noleggio] = (byType[b.tipo_noleggio] || 0) + n;
+
+    // Bici più noleggiate: una prenotazione multi-bici conta per ciascuna sua bici.
+    const bici = (Array.isArray(b.bici_ids) && b.bici_ids.length) ? b.bici_ids : [b.bicicletta_id];
+    bici.forEach(id => { if (id != null) byBike[id] = (byBike[id] || 0) + 1; });
+
+    // Giorni più richiesti: giorno della settimana del ritiro, lunedì-primo.
+    if (b.data_ritiro) {
+      const giorno = new Date(b.data_ritiro + 'T12:00:00').getDay(); // 0=Dom … 6=Sab
+      byWeekday[(giorno + 6) % 7] += 1;                              // 0=Lun … 6=Dom
+    }
+
+    // Clienti di ritorno: raggruppa per telefono normalizzato (sole cifre).
+    const tel = String(b.cliente_telefono || '').replace(/\D/g, '');
+    if (tel) perCliente[tel] = (perCliente[tel] || 0) + 1;
   });
 
   const months = Object.entries(byMonth)
@@ -946,12 +963,22 @@ router.get('/report', async (req, res) => {
     .slice(-12)
     .map(([m, v]) => ({ month: m, revenue: parseFloat(v.toFixed(2)) }));
 
+  const clientiTotali  = Object.keys(perCliente).length;
+  const clientiRitorno = Object.values(perCliente).filter(c => c >= 2).length;
+
   return res.json({
     total_revenue:  total.toFixed(2),
     total_bookings: (all || []).length,
     avg_booking:    all?.length ? (total / all.length).toFixed(2) : '0',
     by_month:       months,
     by_type:        byType,
+    by_bike:        byBike,
+    by_weekday:     byWeekday,
+    returning: {
+      totali:      clientiTotali,
+      di_ritorno:  clientiRitorno,
+      percentuale: clientiTotali ? Math.round((clientiRitorno / clientiTotali) * 100) : 0,
+    },
   });
 });
 
