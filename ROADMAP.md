@@ -32,7 +32,11 @@ Stato aggiornato al 2026-05-21.
 - **Icona PWA** col logo Arfanta
 - **Foto su Supabase Storage** — documenti d'identità e foto bici spostati da base64 nel
   database a un bucket privato `prenotazioni-foto`; visualizzazione admin via signed URL
-  temporanei; retention automatica (documenti 30 giorni, foto bici 5 anni col `gdpr-cleanup`)
+  temporanei; retention automatica (documenti 30 giorni, foto bici 5 anni col `gdpr-cleanup`).
+  Cartelle del bucket nominate `nome-cliente-codice` per ritrovarle facilmente
+- **Email manuali multilingua** — i template rapidi dell'email manuale (menu 3 puntini →
+  "Invia email") sono tradotti in 5 lingue; un selettore "Lingua email" sceglie la lingua,
+  preimpostato su quella con cui il cliente ha prenotato
 
 ## 💡 Possibili sviluppi futuri
 
