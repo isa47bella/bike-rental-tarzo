@@ -113,6 +113,9 @@ export const adminApi = {
   getBooking: (id) =>
     adminGet(`/admin/bookings/${id}`),
 
+  getBookingFoto: (id) =>
+    adminGet(`/admin/bookings/${id}/foto`),
+
   cancelBooking: (id) =>
     adminPost(`/admin/bookings/${id}/cancel`, {}),
 

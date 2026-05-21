@@ -108,6 +108,25 @@ router.get('/bookings/:id', async (req, res) => {
   return res.json(data);
 });
 
+// ─── GET /api/admin/bookings/:id/foto ─────────────────────────────────────────
+// Ritorna signed URL temporanei (10 min) per le foto della prenotazione.
+router.get('/bookings/:id/foto', async (req, res) => {
+  const { data, error } = await supabase
+    .from('prenotazioni')
+    .select('documento_foto, documento_foto_retro, bici_foto_consegna, bici_foto_rientro')
+    .eq('id', req.params.id)
+    .single();
+  if (error || !data) return res.status(404).json({ error: 'Prenotazione non trovata' });
+
+  const [documento, documentoRetro, consegna, rientro] = await Promise.all([
+    getSignedUrl(data.documento_foto),
+    getSignedUrl(data.documento_foto_retro),
+    getSignedUrl(data.bici_foto_consegna),
+    getSignedUrl(data.bici_foto_rientro),
+  ]);
+  return res.json({ documento, documentoRetro, consegna, rientro });
+});
+
 // ─── POST /api/admin/bookings/:id/cancel ─────────────────────────────────────
 
 router.post('/bookings/:id/cancel', async (req, res) => {

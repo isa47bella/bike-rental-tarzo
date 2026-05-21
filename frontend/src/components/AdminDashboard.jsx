@@ -1226,15 +1226,15 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
     setActionSheet(null);
     setFotoModal({ loading: true, nome, foto: {} });
     try {
-      const data = await adminApi.getBooking(id);
+      const data = await adminApi.getBookingFoto(id);
       setFotoModal({
         loading: false,
         nome,
         foto: {
-          documento:      data.documento_foto        || null,
-          documentoRetro: data.documento_foto_retro  || null,
-          consegna:       data.bici_foto_consegna    || null,
-          rientro:        data.bici_foto_rientro     || null,
+          documento:      data.documento      || null,
+          documentoRetro: data.documentoRetro || null,
+          consegna:       data.consegna       || null,
+          rientro:        data.rientro        || null,
         },
       });
     } catch {
