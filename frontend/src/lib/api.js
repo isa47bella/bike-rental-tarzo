@@ -131,8 +131,8 @@ export const adminApi = {
   sendEmail: (id, subject, message, lang) =>
     adminPost(`/admin/bookings/${id}/send-email`, { subject, message, lang }),
 
-  getOggi: () =>
-    adminGet('/admin/oggi'),
+  getOggi: (data) =>
+    adminGet(data ? `/admin/oggi?data=${encodeURIComponent(data)}` : '/admin/oggi'),
 
   getFlotta: () =>
     adminGet('/admin/flotta'),

@@ -221,6 +221,7 @@ export default function AdminDashboard() {
   const [stats,      setStats]      = useState(null);
   const [oggiData,   setOggiData]   = useState(null);
   const [oggiLoading, setOggiLoading] = useState(false);
+  const [printDate,  setPrintDate]  = useState(() => new Date().toISOString().slice(0, 10));
 
   // Prenotazioni
   const [bookings,  setBookings]  = useState([]);
@@ -932,6 +933,90 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
 </div>
 <button class="btn" onclick="window.print()">Stampa / Salva PDF</button>
 <div class="ftr">Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV) · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO</div>
+</div></body></html>`;
+    const blob = new Blob([html], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, '_blank');
+    if (win) setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  // ─── Stampa lista del giorno ─────────────────────────────────────────────────
+
+  async function handlePrintGiornata() {
+    let dati;
+    try {
+      dati = await adminApi.getOggi(printDate);
+    } catch (e) {
+      alert('Impossibile caricare la lista: ' + e.message);
+      return;
+    }
+    const esc = s => String(s ?? '').replace(/[&<>"]/g,
+      c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+    const ritiri       = dati.ritiri       || [];
+    const restituzioni = dati.restituzioni || [];
+    const inRitardo    = dati.inRitardo    || [];
+    const isOggi   = dati.data === new Date().toISOString().slice(0, 10);
+    const dataLunga = new Date(dati.data + 'T00:00:00')
+      .toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const biciStr = b => (b.bici_ids && b.bici_ids.length ? b.bici_ids : [b.bicicletta_id])
+      .map(x => '#' + x).join(', ');
+
+    const ritiriRows = ritiri.length
+      ? ritiri.map(b => `<tr><td class="chk">&#9744;</td><td>${(b.orario_ritiro||'').slice(0,5)}</td>`
+          + `<td>${esc(b.cliente_nome)}</td><td>${esc(b.cliente_telefono)}</td>`
+          + `<td>${biciStr(b)}</td><td>${esc(tipoLabel(b.tipo_noleggio))}</td>`
+          + `<td>${esc(parseAccessori(b.accessori).join(', '))}</td>`
+          + `<td class="ctr">${b.firma_at ? '&#10003;' : '&#10007;'}</td></tr>`).join('')
+      : '<tr><td colspan="8" class="empty">Nessun ritiro</td></tr>';
+
+    const restRows = restituzioni.length
+      ? restituzioni.map(b => `<tr><td class="chk">&#9744;</td><td>${(b.orario_restituzione||'').slice(0,5)}</td>`
+          + `<td>${esc(b.cliente_nome)}</td><td>${esc(b.cliente_telefono)}</td>`
+          + `<td>${biciStr(b)}</td><td>${esc(tipoLabel(b.tipo_noleggio))}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="empty">Nessuna restituzione</td></tr>';
+
+    const ritardoSection = (isOggi && inRitardo.length)
+      ? `<h2>Bici ancora da rientrare (in ritardo)</h2>`
+        + `<table><thead><tr><th>Cliente</th><th>Telefono</th><th>Bici</th>`
+        + `<th>Restituzione prevista</th></tr></thead><tbody>`
+        + inRitardo.map(b => `<tr><td>${esc(b.cliente_nome)}</td>`
+            + `<td>${esc(b.cliente_telefono)}</td><td>${biciStr(b)}</td>`
+            + `<td>${b.data_restituzione}</td></tr>`).join('')
+        + `</tbody></table>`
+      : '';
+
+    const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Lista del giorno — ${dataLunga}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}@page{margin:14mm 12mm;size:A4}
+body{font-family:Arial,sans-serif;font-size:10pt;color:#1a1a1a;background:#f0f4f0}
+.page{max-width:760px;margin:0 auto;background:#fff}
+.hdr{background:#2D8659;color:#fff;padding:18px 28px}
+.hdr h1{font-size:1.15rem;margin-bottom:2px}
+.hdr p{font-size:.92rem;text-transform:capitalize}
+.hdr .sub{font-size:.7rem;opacity:.82;text-transform:none;margin-top:4px}
+.body{padding:20px 28px}
+h2{font-size:.95rem;color:#2D8659;margin:18px 0 8px;border-bottom:2px solid #2D8659;padding-bottom:3px}
+h2:first-child{margin-top:0}
+table{width:100%;border-collapse:collapse;margin-bottom:6px}
+th{text-align:left;font-size:.68rem;color:#777;border-bottom:1px solid #ccc;padding:5px 6px}
+td{font-size:.82rem;border-bottom:1px solid #eee;padding:7px 6px}
+.chk{font-size:1.1rem;color:#999}.ctr{text-align:center}
+.empty{color:#999;font-style:italic;text-align:center}
+.btn{display:block;margin:18px auto 0;padding:9px 26px;background:#2D8659;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.88rem;font-weight:600}
+.ftr{text-align:center;margin-top:16px;font-size:.66rem;color:#aaa;border-top:1px solid #ddd;padding:10px 28px}
+@media print{.btn{display:none!important}body{background:#fff}}</style>
+</head><body><div class="page">
+<div class="hdr"><h1>Lista del giorno</h1><p>${dataLunga}</p>
+<p class="sub">Arfanta Bike Rental · Via Pecol 22, Arfanta di Tarzo (TV)</p></div>
+<div class="body">
+<h2>Ritiri (${ritiri.length})</h2>
+<table><thead><tr><th></th><th>Ora</th><th>Cliente</th><th>Telefono</th><th>Bici</th><th>Tipo</th><th>Accessori</th><th>Firma</th></tr></thead><tbody>${ritiriRows}</tbody></table>
+<h2>Restituzioni (${restituzioni.length})</h2>
+<table><thead><tr><th></th><th>Ora</th><th>Cliente</th><th>Telefono</th><th>Bici</th><th>Tipo</th></tr></thead><tbody>${restRows}</tbody></table>
+${ritardoSection}
+</div>
+<button class="btn" onclick="window.print()">Stampa / Salva PDF</button>
+<div class="ftr">Arfanta Bike Rental · Stampato il ${new Date().toLocaleDateString('it-IT')}</div>
 </div></body></html>`;
     const blob = new Blob([html], { type: 'text/html' });
     const url  = URL.createObjectURL(blob);
@@ -1723,6 +1808,19 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
           refreshTick={feedRefresh}
           onCount={setFeedCount}
         />
+        <div className="ac-print-bar" style={{ display:'flex', alignItems:'center', gap:8, margin:'0 0 20px' }}>
+          <span style={{ fontSize:'.85rem', color:'#6B7280' }}>Stampa lista del giorno:</span>
+          <input
+            type="date"
+            className="ac-input"
+            style={{ maxWidth:170 }}
+            value={printDate}
+            onChange={e => setPrintDate(e.target.value)}
+          />
+          <button className="ac-btn ghost sm" onClick={handlePrintGiornata} title="Genera il foglio stampabile">
+            <IconDownload /> Stampa lista
+          </button>
+        </div>
         {inRitardo.length > 0 && (
           <div className="ac-alert-banner" style={{ marginBottom: 24 }}>
             <IconAlert />
