@@ -1,105 +1,165 @@
 /* Opuscolo "Guida del Territorio" — Arfanta Bike Rental
-   Foglio di stile condiviso, ottimizzato per la stampa in formato A5.
-   Aprire un file opuscolo-XX.html nel browser e usare Stampa / Salva come PDF. */
+   Foglio di stile condiviso, formato A5 stampabile.
+   Aprire un file opuscolo-XX.html nel browser → Stampa / Salva come PDF. */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --arancio: #EA580C;
-  --scuro:   #2B2520;
-  --grigio:  #6B7280;
-  --crema:   #FBF7F0;
-  --verde:   #2D8659;
-  --giallo:  #B45309;
-  --rosso:   #B91C1C;
+  --arancio:    oklch(0.645 0.195 42);   /* arancio brand */
+  --arancio-sc: oklch(0.52 0.16 40);     /* arancio scuro, per testo su crema */
+  --inchiostro: oklch(0.27 0.014 58);    /* "nero" caldo */
+  --grigio:     oklch(0.53 0.018 60);    /* testo secondario */
+  --paper:      oklch(0.987 0.008 78);   /* bianco caldo, "carta" */
+  --crema:      oklch(0.955 0.022 74);   /* tinta crema per i blocchi */
+  --hairline:   oklch(0.88 0.013 70);    /* filetti sottili */
+  --verde:      oklch(0.55 0.10 152);    /* difficoltà facile */
+  --ambra:      oklch(0.62 0.12 67);     /* difficoltà media */
+  --terra:      oklch(0.53 0.15 33);     /* difficoltà impegnativa */
+  --notte:      oklch(0.30 0.018 60);    /* retro scuro */
 }
+
+/* I fondi colorati devono comparire anche in stampa */
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+  font-family: 'Barlow', system-ui, -apple-system, sans-serif;
+  color: var(--inchiostro); background: var(--paper); line-height: 1.6;
+}
+
+h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight: 700; line-height: 1.04; }
 
 @page { size: A5; margin: 0; }
 
-html, body { font-family: 'Barlow', system-ui, -apple-system, sans-serif; color: var(--scuro); }
-
-/* Una pagina A5 = 148 × 210 mm */
+/* Pagina A5 = 148 × 210 mm */
 .page {
-  width: 148mm;
-  height: 210mm;
-  padding: 13mm 13mm 11mm;
+  width: 148mm; height: 210mm;
+  padding: 15mm 14mm 14mm;
   page-break-after: always;
-  position: relative;
-  overflow: hidden;
-  background: #fff;
+  position: relative; overflow: hidden;
+  background: var(--paper);
 }
 .page:last-child { page-break-after: auto; }
 
-/* A schermo: pagine impilate su sfondo grigio, come un'anteprima */
+/* A schermo: anteprima a pagine impilate su fondo caldo */
 @media screen {
-  body { background: #d8d8d8; padding: 16px 0; }
-  .page { margin: 0 auto 16px; box-shadow: 0 3px 16px rgba(0,0,0,.25); }
+  body { background: oklch(0.83 0.009 72); padding: 22px 0; }
+  .page { margin: 0 auto 20px; box-shadow: 0 5px 26px oklch(0.4 0.02 60 / 0.3); }
 }
-
-h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; line-height: 1.1; }
 
 /* ─── Copertina ─────────────────────────────────────────────── */
-.cover { background: var(--arancio); color: #fff; display: flex; flex-direction: column; }
-.cover .marchio { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 14pt; letter-spacing: .14em; text-transform: uppercase; }
-.cover .foto {
-  margin: 10mm 0; flex: 1; border: 2px solid rgba(255,255,255,.5);
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,.7); font-size: 9pt; text-align: center;
+.cover { background: var(--arancio); color: var(--paper); display: flex; flex-direction: column; padding: 13mm; }
+.cover::before {  /* sottile cornice a filo — dettaglio sartoriale */
+  content: ""; position: absolute; inset: 7mm;
+  border: 1px solid oklch(1 0 0 / 0.38); pointer-events: none;
 }
-.cover h1 { font-size: 40pt; font-weight: 700; }
-.cover .sottotitolo { font-size: 12pt; font-weight: 500; margin-top: 3mm; opacity: .95; }
+.cover .marchio {
+  font-family: 'Barlow Condensed'; font-weight: 600; font-size: 10.5pt;
+  letter-spacing: 0.34em; text-transform: uppercase;
+}
+.cover .foto {
+  flex: 1; margin: 9mm 0;
+  border: 1px solid oklch(1 0 0 / 0.42);
+  display: flex; align-items: flex-end; padding: 4mm;
+  font-size: 7pt; letter-spacing: 0.05em; color: oklch(1 0 0 / 0.7);
+}
+.cover h1 { font-size: 47pt; letter-spacing: -0.015em; }
+.cover .sottotitolo {
+  font-family: 'Barlow'; font-weight: 400; font-size: 10.5pt; line-height: 1.5;
+  margin-top: 5mm; padding-top: 4.5mm; max-width: 80%;
+  border-top: 1px solid oklch(1 0 0 / 0.38);
+}
 
-/* ─── Intestazioni di sezione ───────────────────────────────── */
-.sezione-titolo { font-size: 24pt; font-weight: 700; color: var(--arancio); }
-.sezione-titolo::after { content: ""; display: block; width: 22mm; height: 2.4mm; background: var(--arancio); margin-top: 2mm; }
-.intro-testo { font-size: 10.5pt; line-height: 1.6; margin-top: 4mm; }
+/* ─── Intestazione di sezione ───────────────────────────────── */
+.sezione-titolo {
+  font-size: 29pt; color: var(--arancio); letter-spacing: -0.012em;
+  padding-bottom: 3.5mm; border-bottom: 1px solid var(--hairline);
+}
+.intro-testo { font-size: 10.5pt; line-height: 1.66; margin-top: 5mm; max-width: 106mm; }
 
-/* ─── Riquadro consigli / nota ──────────────────────────────── */
-.nota { background: var(--crema); border-left: 3px solid var(--arancio); padding: 4mm 5mm; margin-top: 5mm; font-size: 9.5pt; line-height: 1.55; }
-.nota strong { color: var(--arancio); }
-.lista-consigli { list-style: none; margin-top: 3mm; font-size: 10pt; line-height: 1.9; }
-.lista-consigli li::before { content: "•"; color: var(--arancio); font-weight: 700; margin-right: 2.5mm; }
+/* ─── Callout / nota — niente bordo laterale ────────────────── */
+.nota {
+  background: var(--crema); border-radius: 2mm;
+  padding: 4.5mm 5mm; margin-top: 6mm;
+  font-size: 9.5pt; line-height: 1.58;
+}
+.nota strong { color: var(--arancio-sc); }
+
+/* ─── Liste di consigli ─────────────────────────────────────── */
+.lista-consigli { list-style: none; margin-top: 3.5mm; font-size: 10pt; }
+.lista-consigli li { position: relative; padding: 2.2mm 0 2.2mm 7mm; line-height: 1.5; }
+.lista-consigli li::before {
+  content: ""; position: absolute; left: 1.5mm; top: 4mm;
+  width: 1.8mm; height: 1.8mm; border-radius: 50%; background: var(--arancio);
+}
 
 /* ─── Scheda percorso ───────────────────────────────────────── */
-.percorso { margin-top: 5mm; }
-.percorso h3 { font-size: 18pt; font-weight: 700; }
-.badge { display: inline-block; font-family: 'Barlow'; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #fff; padding: 1mm 2.6mm; border-radius: 2mm; vertical-align: middle; }
-.badge.facile      { background: var(--verde); }
-.badge.medio       { background: var(--giallo); }
-.badge.impegnativo { background: var(--rosso); }
-.badge.bici        { background: var(--scuro); }
-.stat-riga { display: flex; gap: 4mm; margin: 3mm 0; font-size: 8.5pt; }
-.stat-riga .stat { background: var(--crema); padding: 1.8mm 3mm; border-radius: 1.5mm; }
-.stat-riga .stat b { display: block; font-family: 'Barlow Condensed'; font-size: 12pt; color: var(--arancio); }
-.percorso .descrizione { font-size: 9.5pt; line-height: 1.55; margin: 2mm 0; }
-.percorso .come-arrivare { font-size: 8.5pt; color: var(--grigio); margin-bottom: 2mm; }
-.mappa-placeholder {
-  height: 52mm; border: 1.5px dashed #bbb; border-radius: 2mm;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  color: #999; font-size: 8.5pt; background: #fafafa; text-align: center;
+.percorso { margin-top: 6mm; }
+.percorso h3 { font-size: 21pt; margin-top: 3mm; letter-spacing: -0.01em; }
+
+.badge {
+  display: inline-block; font-family: 'Barlow'; font-size: 6.8pt; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.11em;
+  padding: 1.3mm 2.8mm; border-radius: 1mm; vertical-align: middle;
 }
+.badge.facile      { background: var(--verde); color: var(--paper); }
+.badge.medio       { background: var(--ambra); color: var(--paper); }
+.badge.impegnativo { background: var(--terra); color: var(--paper); }
+.badge.bici        { background: transparent; color: var(--grigio); border: 1px solid var(--hairline); }
+
+/* dati del percorso: striscia a filetti, non riquadri */
+.stat-riga {
+  display: flex; margin: 5.5mm 0;
+  border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+}
+.stat {
+  flex: 1; text-align: center; padding: 3.2mm 1mm;
+  font-size: 7pt; text-transform: uppercase; letter-spacing: 0.11em; color: var(--grigio);
+}
+.stat + .stat { border-left: 1px solid var(--hairline); }
+.stat b {
+  display: block; font-family: 'Barlow Condensed'; font-weight: 700; font-size: 16pt;
+  letter-spacing: 0; text-transform: none; color: var(--inchiostro); margin-bottom: 1mm;
+}
+.percorso .descrizione { font-size: 9.7pt; line-height: 1.62; margin-bottom: 2.5mm; }
+.percorso .come-arrivare { font-size: 8.5pt; color: var(--grigio); font-weight: 500; }
+.mappa-placeholder {
+  height: 50mm; margin-top: 5mm;
+  border: 1px solid var(--hairline); border-radius: 2mm; background: var(--crema);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1mm; color: var(--grigio); font-size: 8.5pt; font-weight: 500;
+}
+.mappa-placeholder small { font-weight: 400; color: oklch(0.62 0.015 60); }
 
 /* ─── Elenco cantine / ristoranti ───────────────────────────── */
-.voce { border-bottom: 1px solid #eee; padding: 3.2mm 0; }
-.voce:last-child { border-bottom: none; }
-.voce .nome { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 13pt; }
-.voce .meta { font-size: 9pt; color: var(--grigio); margin-top: .6mm; }
-.voce .contatti { font-size: 8.5pt; color: var(--scuro); margin-top: .6mm; }
-.prezzo { float: right; font-weight: 700; color: var(--verde); font-size: 11pt; }
-.da-definire { color: #999; font-style: italic; }
+.voce { padding: 3.6mm 0; border-bottom: 1px solid var(--hairline); }
+.voce:last-of-type { border-bottom: none; }
+.voce .nome { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 14pt; }
+.voce .meta { font-size: 9pt; color: var(--grigio); margin-top: 0.8mm; }
+.voce .contatti { font-size: 8.3pt; margin-top: 0.8mm; }
+.prezzo {
+  float: right; font-family: 'Barlow Condensed'; font-weight: 700;
+  font-size: 12pt; color: var(--verde); letter-spacing: 0.04em;
+}
+.da-definire, .da-definire .nome { color: oklch(0.66 0.012 62); font-style: italic; }
 
 /* ─── Footer di pagina ──────────────────────────────────────── */
 .pie {
-  position: absolute; bottom: 7mm; left: 13mm; right: 13mm;
-  font-size: 7pt; color: #aaa; text-align: center;
-  border-top: 1px solid #eee; padding-top: 1.5mm;
+  position: absolute; bottom: 8mm; left: 14mm; right: 14mm;
+  padding-top: 2mm; border-top: 1px solid var(--hairline);
+  font-size: 6.8pt; letter-spacing: 0.06em; color: oklch(0.66 0.012 62); text-align: center;
 }
 
 /* ─── Retro ─────────────────────────────────────────────────── */
-.retro { background: var(--scuro); color: #fff; display: flex; flex-direction: column; justify-content: center; text-align: center; }
-.retro h2 { font-size: 26pt; color: #fff; }
-.retro .contatti-box { margin-top: 6mm; font-size: 10.5pt; line-height: 1.9; }
+.retro {
+  background: var(--notte); color: var(--paper);
+  display: flex; flex-direction: column; justify-content: center; text-align: center;
+}
+.retro h2 { font-size: 30pt; color: var(--paper); }
+.retro .contatti-box { margin-top: 7mm; font-size: 10.5pt; line-height: 2; }
 .retro .contatti-box b { color: var(--arancio); }
-.retro .unesco { margin-top: 8mm; font-size: 8pt; color: rgba(255,255,255,.6); }
+.retro .unesco {
+  margin-top: 9mm; padding-top: 4mm; font-size: 7.5pt; line-height: 1.5;
+  color: oklch(1 0 0 / 0.55); border-top: 1px solid oklch(1 0 0 / 0.18);
+}
