@@ -61,8 +61,7 @@ h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight:
 .cover .foto {
   flex: 1; margin: 9mm 0;
   border: 1px solid oklch(1 0 0 / 0.42);
-  display: flex; align-items: flex-end; padding: 4mm;
-  font-size: 7pt; letter-spacing: 0.05em; color: oklch(1 0 0 / 0.7);
+  background: oklch(0.42 0.02 60) url('copertina.jpg') center / cover no-repeat;
 }
 .cover h1 { font-size: 47pt; letter-spacing: -0.015em; }
 .cover .sottotitolo {
@@ -76,13 +75,13 @@ h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight:
   font-size: 29pt; color: var(--arancio); letter-spacing: -0.012em;
   padding-bottom: 3.5mm; border-bottom: 1px solid var(--hairline);
 }
-.intro-testo { font-size: 10.5pt; line-height: 1.66; margin-top: 5mm; max-width: 106mm; }
+.intro-testo { font-size: 10.5pt; line-height: 1.66; margin-top: 4mm; max-width: 106mm; }
 
 /* ─── Callout / nota — niente bordo laterale ────────────────── */
 .nota {
   background: var(--crema); border-radius: 2mm;
-  padding: 4.5mm 5mm; margin-top: 6mm;
-  font-size: 9.5pt; line-height: 1.58;
+  padding: 3.6mm 5mm; margin-top: 4mm;
+  font-size: 9.5pt; line-height: 1.55;
 }
 .nota strong { color: var(--arancio-sc); }
 
@@ -124,16 +123,13 @@ h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight:
 }
 .percorso .descrizione { font-size: 9.7pt; line-height: 1.62; margin-bottom: 2.5mm; }
 .percorso .come-arrivare { font-size: 8.5pt; color: var(--grigio); font-weight: 500; }
-.mappa-placeholder {
-  height: 50mm; margin-top: 5mm;
-  border: 1px solid var(--hairline); border-radius: 2mm; background: var(--crema);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1mm; color: var(--grigio); font-size: 8.5pt; font-weight: 500;
+.mappa {
+  display: block; width: 100%; margin-top: 5mm;
+  border: 1px solid var(--hairline); border-radius: 2mm;
 }
-.mappa-placeholder small { font-weight: 400; color: oklch(0.62 0.015 60); }
 
 /* ─── Elenco cantine / ristoranti ───────────────────────────── */
-.voce { padding: 3.6mm 0; border-bottom: 1px solid var(--hairline); }
+.voce { padding: 3mm 0; border-bottom: 1px solid var(--hairline); }
 .voce:last-of-type { border-bottom: none; }
 .voce .nome { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 14pt; }
 .voce .meta { font-size: 9pt; color: var(--grigio); margin-top: 0.8mm; }
@@ -142,7 +138,6 @@ h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-weight:
   float: right; font-family: 'Barlow Condensed'; font-weight: 700;
   font-size: 12pt; color: var(--verde); letter-spacing: 0.04em;
 }
-.da-definire, .da-definire .nome { color: oklch(0.66 0.012 62); font-style: italic; }
 
 /* ─── Footer di pagina ──────────────────────────────────────── */
 .pie {
