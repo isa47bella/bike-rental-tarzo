@@ -15,6 +15,7 @@ Stato aggiornato al 2026-05-21.
 - Note interne admin (`note_admin`)
 - Contratto firmato stampabile (`/admin/bookings/:id/contratto`)
 - Prenotazione manuale walk-in, check-in / check-out, gestione flotta
+- Export CSV delle prenotazioni filtrate (+ export audit log CSV/JSON)
 
 ### Lavori 2026-05-20 / 2026-05-21
 - **Notifiche WhatsApp** al proprietario ad ogni prenotazione (CallMeBot)
@@ -60,7 +61,6 @@ Idee emerse durante i lavori, da valutare quando se ne avrà voglia. Nessuna è 
 - `npm audit fix` su `backend/` e `frontend/` (vulnerabilità moderate solo in dev/build).
 
 ### Altro
-- Export CSV delle prenotazioni filtrate dall'admin (mai implementato dalla roadmap originale).
 - Rilevamento automatico della lingua dal browser per pre-evidenziarla nel pop-up.
 
 ---
