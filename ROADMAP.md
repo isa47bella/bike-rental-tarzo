@@ -43,6 +43,8 @@ Stato aggiornato al 2026-05-21.
   se un cron non gira da troppo tempo
 - **Lista del giorno stampabile** — dalla vista "Oggi" un foglio stampabile (data
   scegliibile) con ritiri, restituzioni e bici in ritardo di una giornata
+- **Statistiche più ricche** — la vista "Report" mostra anche le bici più noleggiate,
+  i giorni della settimana più richiesti e la percentuale di clienti di ritorno
 
 ## 💡 Possibili sviluppi futuri
 
