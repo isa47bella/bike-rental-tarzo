@@ -1,36 +1,59 @@
-# Bike Rental Tarzo — Admin Panel Roadmap
+# Arfanta Bike Rental — Roadmap
 
-## 🔴 Alta Priorità (implementato ✓)
+Stato aggiornato al 2026-05-21.
 
-1. **Calendario visivo** — Vista mensile con occupazione bici per giorno (verde/giallo/rosso/chiuso), navigazione mese, click per dettaglio.
-2. **Blocco date / Chiusure** — Tabella `chiusure` su Supabase, CRUD completo da admin, integrazione in prenotazioni online (blocca date chiuse).
-3. **Automazione promemoria firma** — Cron giornaliero `GET /api/cron/firma-reminder`: invia link contratto ai clienti con ritiro domani e firma mancante.
-4. **Ricerca prenotazioni** — Filtro full-text client-side per nome, email, telefono, codice prenotazione.
+## ✅ Completato
 
-## 🟡 Media Priorità
+### Admin panel (roadmap originale)
+- Calendario visivo con occupazione bici per giorno
+- Blocco date / chiusure (tabella `chiusure`, CRUD da admin)
+- Ricerca prenotazioni full-text (nome, email, telefono, codice)
+- Dashboard cauzioni dedicata (`/admin/cauzioni`)
+- Configurazione prezzi da admin (`/admin/config`)
+- Statistiche occupazione (`/admin/occupazione`) e report incassi (`/admin/report`)
+- Storico cliente (`/admin/cliente`)
+- Note interne admin (`note_admin`)
+- Contratto firmato stampabile (`/admin/bookings/:id/contratto`)
+- Prenotazione manuale walk-in, check-in / check-out, gestione flotta
 
-5. **Export CSV** — Esporta lista prenotazioni filtrate (browser-side, no librerie aggiuntive)
-6. **Dashboard cauzioni dedicata** — Vista separata per tutte le cauzioni attive/da liberare
-7. **Configurazione prezzi da admin** — UI per modificare prezzi senza toccare il codice
-8. **Statistiche occupazione** — Grafico % utilizzo flotta per settimana/mese
+### Lavori 2026-05-20 / 2026-05-21
+- **Notifiche WhatsApp** al proprietario ad ogni prenotazione (CallMeBot)
+- **Notifiche push** estese: 9 trigger (nuova prenotazione, cauzione fallita, promemoria
+  inviati, restituzione, cancellazione, rimborso, cauzione rilasciata, riepilogo giornata)
+- **Cron riepilogo giornaliero** (`daily-summary`, push serale se ci sono stati eventi)
+- **4 nuove email automatiche** al cliente (cancellazione, rimborso, cauzione rilasciata,
+  ringraziamento post check-out)
+- **Code review completa**: risolti 6 bug critici (auth timing-safe, idempotency Stripe,
+  cauzione PI su crash, webhook idempotente, token segreto firma, overbooking) + hardening
+  (timezone cron, validazioni input, rate limiting, cron delete a batch)
+- **Redesign email** premium, multilingua completo (it/en/de/es/fr), shell condiviso
+- **Pop-up selezione lingua** liquid glass all'apertura del sito
+- **Badge lingua del cliente** sulle prenotazioni nell'admin
+- **Icona PWA** col logo Arfanta
 
-## 🟢 Bassa Priorità
+## 💡 Possibili sviluppi futuri
 
-9.  **Storico cliente** — Ricerca tutte le prenotazioni per email → timeline cliente
-10. **Note interne admin** — Campo `note_admin` su prenotazione (non visibile al cliente)
-11. **Stampa contratto firmato** — PDF del contratto con firma dal pannello admin
-12. **Notifiche push PWA** — Service worker + push notifications per nuove prenotazioni
+Idee emerse durante i lavori, da valutare quando se ne avrà voglia. Nessuna è urgente.
+
+### Notifiche
+- **Migrazione WhatsApp a Meta Business Cloud API** — più affidabile di CallMeBot.
+  Spec già pronta: `docs/superpowers/specs/2026-05-19-whatsapp-notifications-design.md` (Fase 2).
+- **Push aggiuntive** valutate ma non implementate: bici in ritardo per il rientro,
+  batteria bici sotto soglia, manutenzione imminente, sold-out per una data.
+- Reminder email anche la mattina stessa del ritiro (oggi parte solo la sera prima).
+
+### Sicurezza (dalla code review)
+- Ruotare `ADMIN_TOKEN`: l'attuale `26arfanta` è corto e indovinabile → sostituirlo con
+  una stringa lunga casuale.
+- Valutare l'abilitazione di RLS su Supabase (oggi disabilitato; non sfruttabile perché
+  il frontend non usa la chiave anon, ma è buona difesa in profondità).
+- `npm audit fix` su `backend/` e `frontend/` (vulnerabilità moderate solo in dev/build).
+
+### Altro
+- Export CSV delle prenotazioni filtrate dall'admin (mai implementato dalla roadmap originale).
+- Rilevamento automatico della lingua dal browser per pre-evidenziarla nel pop-up.
 
 ---
 
-## SQL migration richiesta (Supabase)
-
-```sql
--- Feature 2: Blocco date / Chiusure
-CREATE TABLE IF NOT EXISTS chiusure (
-  id        SERIAL PRIMARY KEY,
-  data      DATE   NOT NULL UNIQUE,
-  motivo    TEXT   DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+*La roadmap originale (admin panel) è stata completata. Questo file ora traccia lo stato
+generale del progetto e le idee future.*
