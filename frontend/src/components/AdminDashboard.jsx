@@ -60,6 +60,16 @@ function tipoShort(tipo, giorni) {
   return tipo;
 }
 
+// Lingua scelta dal cliente in prenotazione → etichetta italiana per l'admin.
+// Fallback 'Italiano' per prenotazioni manuali o vecchie senza lingua salvata.
+const LANG_LABELS = { it: 'Italiano', en: 'Inglese', de: 'Tedesco', es: 'Spagnolo', fr: 'Francese' };
+function langLabel(code) { return LANG_LABELS[code] || 'Italiano'; }
+const LANG_TAG_STYLE = {
+  display: 'inline-block', padding: '2px 8px', borderRadius: 6,
+  fontSize: 11, fontWeight: 700, letterSpacing: '0.02em',
+  background: '#FFEDD5', color: '#9A3412',
+};
+
 function parseAccessori(raw) {
   if (!raw) return [];
   const labels = { casco: 'Casco (+€2)', lucchetto: 'Lucchetto (+€1)' };
@@ -2047,6 +2057,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                         </div>
                         <div className="ac-cell-sub">{b.cliente_email}</div>
                         <div className="ac-cell-sub">{b.cliente_telefono}</div>
+                        <span style={{ ...LANG_TAG_STYLE, marginTop: 4 }} title="Lingua scelta dal cliente">{langLabel(b.lingua)}</span>
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{tipoShort(b.tipo_noleggio, b.giorni)}</div>
@@ -2986,6 +2997,7 @@ ${b.note_admin ? `<div class="row"><div class="lbl">Note interne</div><div class
                 {b.note_admin && <span className="ac-note-indicator" title={b.note_admin} />}
               </div>
               <div className="ac-actionsheet-meta">
+                <span style={LANG_TAG_STYLE} title="Lingua scelta dal cliente">{langLabel(b.lingua)}</span>
                 <span className="ac-code" style={{ fontSize: 11 }}>{b.id.toUpperCase().slice(0,8)}</span>
                 <span>· {formatDateIT(b.data_ritiro)} · {tipoShort(b.tipo_noleggio, b.giorni)} · {
                   Array.isArray(b.bici_ids) && b.bici_ids.length > 1

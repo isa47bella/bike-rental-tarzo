@@ -79,7 +79,7 @@ router.get('/bookings', async (req, res) => {
       stripe_payment_method_id, danno_status, danno_amount,
       cauzione_status, cauzione_captured_amount, accessori,
       checkin_at, checkout_at,
-      firma_at, firma_nome, note_admin
+      firma_at, firma_nome, note_admin, lingua
     `)
     .order('data_ritiro', { ascending: true })
     .range(offset, offset + limit - 1);
