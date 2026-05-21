@@ -443,9 +443,9 @@ async function sendNotificationToGestore(prenotazione) {
 
 // ─── Email manuale dall'admin panel ──────────────────────────────────────────
 
-async function sendAdminEmail(prenotazione, subject, messageText) {
-  const lang = prenotazione.lingua || 'it';
-  const t = emailT(lang);
+async function sendAdminEmail(prenotazione, subject, messageText, lang) {
+  const lingua = lang || prenotazione.lingua || 'it';
+  const t = emailT(lingua);
 
   // Estrae un eventuale URL dal testo: diventa un bottone, il resto paragrafi.
   const urlMatch = String(messageText).match(/https?:\/\/[^\s]+/);
@@ -476,7 +476,7 @@ async function sendAdminEmail(prenotazione, subject, messageText) {
     from:    process.env.EMAIL_FROM,
     to:      prenotazione.cliente_email,
     subject: subject,
-    html:    buildEmailShell({ lang, heroAlt: t.footerUnesco, bodyHtml }),
+    html:    buildEmailShell({ lang: lingua, heroAlt: t.footerUnesco, bodyHtml }),
   });
 }
 
