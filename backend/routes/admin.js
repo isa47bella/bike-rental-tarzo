@@ -591,7 +591,15 @@ router.get('/heartbeat', async (req, res) => {
 // ─── GET /api/admin/oggi ──────────────────────────────────────────────────────
 
 router.get('/oggi', async (req, res) => {
-  const oggi = new Date().toISOString().substring(0, 10);
+  const oggiReale = new Date().toISOString().substring(0, 10);
+
+  // Parametro opzionale ?data=AAAA-MM-GG per stampare la lista di un altro giorno.
+  const dataParam = req.query.data;
+  if (dataParam !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(dataParam)) {
+    return res.status(400).json({ error: 'Parametro data non valido (atteso AAAA-MM-GG)' });
+  }
+  const targetDate = dataParam || oggiReale;
+
   const fields = `id, cliente_nome, cliente_email, cliente_telefono, bicicletta_id, bici_ids,
     tipo_noleggio, giorni, data_ritiro, orario_ritiro, data_restituzione,
     orario_restituzione, prezzo_totale, pagamento_status, cauzione_status,
@@ -602,16 +610,16 @@ router.get('/oggi', async (req, res) => {
     { data: restituzioni },
     { data: inRitardo },
   ] = await Promise.all([
-    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_ritiro', oggi).order('orario_ritiro'),
-    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_restituzione', oggi).order('orario_restituzione'),
-    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').lt('data_restituzione', oggi).is('checkout_at', null),
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_ritiro', targetDate).order('orario_ritiro'),
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').eq('data_restituzione', targetDate).order('orario_restituzione'),
+    supabase.from('prenotazioni').select(fields).eq('pagamento_status', 'paid').lt('data_restituzione', oggiReale).is('checkout_at', null),
   ]);
 
   return res.json({
     ritiri:       ritiri       || [],
     restituzioni: restituzioni || [],
     inRitardo:    inRitardo    || [],
-    data:         oggi,
+    data:         targetDate,
   });
 });
 
