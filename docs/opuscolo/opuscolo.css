@@ -1,0 +1,105 @@
+/* Opuscolo "Guida del Territorio" — Arfanta Bike Rental
+   Foglio di stile condiviso, ottimizzato per la stampa in formato A5.
+   Aprire un file opuscolo-XX.html nel browser e usare Stampa / Salva come PDF. */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --arancio: #EA580C;
+  --scuro:   #2B2520;
+  --grigio:  #6B7280;
+  --crema:   #FBF7F0;
+  --verde:   #2D8659;
+  --giallo:  #B45309;
+  --rosso:   #B91C1C;
+}
+
+@page { size: A5; margin: 0; }
+
+html, body { font-family: 'Barlow', system-ui, -apple-system, sans-serif; color: var(--scuro); }
+
+/* Una pagina A5 = 148 × 210 mm */
+.page {
+  width: 148mm;
+  height: 210mm;
+  padding: 13mm 13mm 11mm;
+  page-break-after: always;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+.page:last-child { page-break-after: auto; }
+
+/* A schermo: pagine impilate su sfondo grigio, come un'anteprima */
+@media screen {
+  body { background: #d8d8d8; padding: 16px 0; }
+  .page { margin: 0 auto 16px; box-shadow: 0 3px 16px rgba(0,0,0,.25); }
+}
+
+h1, h2, h3 { font-family: 'Barlow Condensed', 'Barlow', sans-serif; line-height: 1.1; }
+
+/* ─── Copertina ─────────────────────────────────────────────── */
+.cover { background: var(--arancio); color: #fff; display: flex; flex-direction: column; }
+.cover .marchio { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 14pt; letter-spacing: .14em; text-transform: uppercase; }
+.cover .foto {
+  margin: 10mm 0; flex: 1; border: 2px solid rgba(255,255,255,.5);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,.7); font-size: 9pt; text-align: center;
+}
+.cover h1 { font-size: 40pt; font-weight: 700; }
+.cover .sottotitolo { font-size: 12pt; font-weight: 500; margin-top: 3mm; opacity: .95; }
+
+/* ─── Intestazioni di sezione ───────────────────────────────── */
+.sezione-titolo { font-size: 24pt; font-weight: 700; color: var(--arancio); }
+.sezione-titolo::after { content: ""; display: block; width: 22mm; height: 2.4mm; background: var(--arancio); margin-top: 2mm; }
+.intro-testo { font-size: 10.5pt; line-height: 1.6; margin-top: 4mm; }
+
+/* ─── Riquadro consigli / nota ──────────────────────────────── */
+.nota { background: var(--crema); border-left: 3px solid var(--arancio); padding: 4mm 5mm; margin-top: 5mm; font-size: 9.5pt; line-height: 1.55; }
+.nota strong { color: var(--arancio); }
+.lista-consigli { list-style: none; margin-top: 3mm; font-size: 10pt; line-height: 1.9; }
+.lista-consigli li::before { content: "•"; color: var(--arancio); font-weight: 700; margin-right: 2.5mm; }
+
+/* ─── Scheda percorso ───────────────────────────────────────── */
+.percorso { margin-top: 5mm; }
+.percorso h3 { font-size: 18pt; font-weight: 700; }
+.badge { display: inline-block; font-family: 'Barlow'; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #fff; padding: 1mm 2.6mm; border-radius: 2mm; vertical-align: middle; }
+.badge.facile      { background: var(--verde); }
+.badge.medio       { background: var(--giallo); }
+.badge.impegnativo { background: var(--rosso); }
+.badge.bici        { background: var(--scuro); }
+.stat-riga { display: flex; gap: 4mm; margin: 3mm 0; font-size: 8.5pt; }
+.stat-riga .stat { background: var(--crema); padding: 1.8mm 3mm; border-radius: 1.5mm; }
+.stat-riga .stat b { display: block; font-family: 'Barlow Condensed'; font-size: 12pt; color: var(--arancio); }
+.percorso .descrizione { font-size: 9.5pt; line-height: 1.55; margin: 2mm 0; }
+.percorso .come-arrivare { font-size: 8.5pt; color: var(--grigio); margin-bottom: 2mm; }
+.mappa-placeholder {
+  height: 52mm; border: 1.5px dashed #bbb; border-radius: 2mm;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #999; font-size: 8.5pt; background: #fafafa; text-align: center;
+}
+
+/* ─── Elenco cantine / ristoranti ───────────────────────────── */
+.voce { border-bottom: 1px solid #eee; padding: 3.2mm 0; }
+.voce:last-child { border-bottom: none; }
+.voce .nome { font-family: 'Barlow Condensed'; font-weight: 700; font-size: 13pt; }
+.voce .meta { font-size: 9pt; color: var(--grigio); margin-top: .6mm; }
+.voce .contatti { font-size: 8.5pt; color: var(--scuro); margin-top: .6mm; }
+.prezzo { float: right; font-weight: 700; color: var(--verde); font-size: 11pt; }
+.da-definire { color: #999; font-style: italic; }
+
+/* ─── Footer di pagina ──────────────────────────────────────── */
+.pie {
+  position: absolute; bottom: 7mm; left: 13mm; right: 13mm;
+  font-size: 7pt; color: #aaa; text-align: center;
+  border-top: 1px solid #eee; padding-top: 1.5mm;
+}
+
+/* ─── Retro ─────────────────────────────────────────────────── */
+.retro { background: var(--scuro); color: #fff; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.retro h2 { font-size: 26pt; color: #fff; }
+.retro .contatti-box { margin-top: 6mm; font-size: 10.5pt; line-height: 1.9; }
+.retro .contatti-box b { color: var(--arancio); }
+.retro .unesco { margin-top: 8mm; font-size: 8pt; color: rgba(255,255,255,.6); }
