@@ -14,6 +14,7 @@ const { sendFirmaLinkEmail, sendReminderEmail } = require('../lib/email');
 const { sendPushToAll } = require('../lib/push');
 const { CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 const { writeNotification } = require('../lib/notifications');
+const { removeBookingFoto } = require('../lib/storage');
 
 // ─── Middleware: verifica CRON_SECRET ────────────────────────────────────────
 
@@ -364,6 +365,10 @@ router.get('/gdpr-cleanup', cronAuth, async (req, res) => {
       return res.status(500).json({ error: selErr.message });
     }
     if (!batch || batch.length === 0) break;
+    // Prima di eliminare le righe, rimuove le foto dal bucket.
+    for (const r of batch) {
+      await removeBookingFoto(r.id, ['documento-fronte', 'documento-retro', 'bici-consegna', 'bici-rientro']);
+    }
     const { error: delErr } = await supabase
       .from('prenotazioni')
       .delete()
@@ -614,6 +619,37 @@ router.get('/daily-summary', cronAuth, async (req, res) => {
     restituzioni: nRest,
     total_eur:    totalEur,
   });
+});
+
+// ─── GET /api/cron/cleanup-documenti ──────────────────────────────────────────
+// Cancella le foto del documento d'identità 30 giorni dopo il noleggio.
+// Le foto bici NON vengono toccate (vivono quanto la prenotazione).
+router.get('/cleanup-documenti', cronAuth, async (req, res) => {
+  const cutoff = romeDateStr(-30); // data_ritiro più vecchia di 30 giorni
+
+  const { data: rows, error } = await supabase
+    .from('prenotazioni')
+    .select('id')
+    .lt('data_ritiro', cutoff)
+    .or('documento_foto.not.is.null,documento_foto_retro.not.is.null');
+
+  if (error) {
+    console.error('[CRON cleanup-documenti] db error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  let cleaned = 0;
+  for (const r of (rows || [])) {
+    await removeBookingFoto(r.id, ['documento-fronte', 'documento-retro']);
+    await supabase
+      .from('prenotazioni')
+      .update({ documento_foto: null, documento_foto_retro: null })
+      .eq('id', r.id);
+    cleaned++;
+  }
+
+  console.log(`[CRON cleanup-documenti] ${cleaned} documenti cancellati (cutoff ${cutoff})`);
+  return res.json({ cleaned, cutoff });
 });
 
 module.exports = router;

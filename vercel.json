@@ -18,6 +18,7 @@
     { "path": "/api/cron/auto-cancel-pending", "schedule": "0 4 * * *"  },
     { "path": "/api/cron/retry-cauzioni",      "schedule": "0 12 * * *" },
     { "path": "/api/cron/cleanup-audit",       "schedule": "0 3 * * 0"  },
-    { "path": "/api/cron/daily-summary",       "schedule": "0 17 * * *" }
+    { "path": "/api/cron/daily-summary",       "schedule": "0 17 * * *" },
+    { "path": "/api/cron/cleanup-documenti",   "schedule": "0 2 * * *"  }
   ]
 }
