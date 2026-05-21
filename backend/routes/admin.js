@@ -25,6 +25,7 @@ const {
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { logAction }                         = require('../lib/auditLog');
 const { writeNotification }                 = require('../lib/notifications');
+const { uploadFoto, getSignedUrl, removeBookingFoto } = require('../lib/storage');
 const { CAUZIONE_AMOUNT_EUR, CAUZIONE_AMOUNT_CENTS } = require('../lib/config');
 
 const getIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || null;
@@ -795,16 +796,29 @@ router.patch('/flotta/:id', async (req, res) => {
 
 router.post('/bookings/:id/checkin', async (req, res) => {
   const { checkin_note, documento_foto, documento_foto_retro, bici_foto_consegna } = req.body;
-  for (const [nome, val] of [['documento_foto', documento_foto], ['documento_foto_retro', documento_foto_retro], ['bici_foto_consegna', bici_foto_consegna]]) {
+  const fotoInput = [
+    ['documento_foto',       'documento-fronte', documento_foto],
+    ['documento_foto_retro', 'documento-retro',  documento_foto_retro],
+    ['bici_foto_consegna',   'bici-consegna',    bici_foto_consegna],
+  ];
+  for (const [nome, , val] of fotoInput) {
     if (val != null && val !== '' && !validImagePayload(val)) {
       return res.status(400).json({ error: `Foto "${nome}" non valida (atteso JPEG/PNG/WebP, max 8MB)` });
     }
   }
+
   const update = { checkin_at: new Date().toISOString() };
-  if (checkin_note)          update.checkin_note          = checkin_note;
-  if (documento_foto)        update.documento_foto        = documento_foto;
-  if (documento_foto_retro)  update.documento_foto_retro  = documento_foto_retro;
-  if (bici_foto_consegna)    update.bici_foto_consegna    = bici_foto_consegna;
+  if (checkin_note) update.checkin_note = checkin_note;
+
+  // Carica le foto nel bucket; nelle colonne va il path, non il base64.
+  try {
+    for (const [colonna, slot, val] of fotoInput) {
+      if (val) update[colonna] = await uploadFoto(req.params.id, slot, val);
+    }
+  } catch (e) {
+    console.error('[checkin] upload foto:', e.message);
+    return res.status(500).json({ error: 'Errore caricamento foto: ' + e.message });
+  }
 
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
@@ -820,8 +834,15 @@ router.post('/bookings/:id/checkout', async (req, res) => {
     return res.status(400).json({ error: 'Foto "bici_foto_rientro" non valida (atteso JPEG/PNG/WebP, max 8MB)' });
   }
   const update = { checkout_at: new Date().toISOString() };
-  if (checkout_note)   update.checkout_note   = checkout_note;
-  if (bici_foto_rientro) update.bici_foto_rientro = bici_foto_rientro;
+  if (checkout_note) update.checkout_note = checkout_note;
+  if (bici_foto_rientro) {
+    try {
+      update.bici_foto_rientro = await uploadFoto(req.params.id, 'bici-rientro', bici_foto_rientro);
+    } catch (e) {
+      console.error('[checkout] upload foto:', e.message);
+      return res.status(500).json({ error: 'Errore caricamento foto: ' + e.message });
+    }
+  }
 
   const { data, error } = await supabase.from('prenotazioni').update(update).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ error: error.message });
