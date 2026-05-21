@@ -127,3 +127,19 @@ ALTER TABLE stripe_events DISABLE ROW LEVEL SECURITY;
 -- NB: NON fare il backfill delle righe esistenti, altrimenti i link firma
 -- già inviati via email (senza token) smetterebbero di funzionare.
 ALTER TABLE prenotazioni ADD COLUMN IF NOT EXISTS firma_token TEXT;
+
+-- ─── Salute cron: heartbeat dei cron job ──────────────────────────────────────
+-- Ogni cron, completata con successo l'esecuzione, aggiorna la propria riga
+-- (last_run_at). Il cron guardiano /api/cron/cron-health controlla che nessun
+-- battito sia troppo vecchio. Il seed mette NOW() così al deploy nessun cron
+-- risulta già "in ritardo": il conteggio parte da zero.
+CREATE TABLE IF NOT EXISTS cron_health (
+  job          TEXT         PRIMARY KEY,
+  last_run_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+INSERT INTO cron_health (job) VALUES
+  ('deposit'), ('firma-reminder'), ('reminder'), ('auto-cancel-pending'),
+  ('retry-cauzioni'), ('daily-summary'), ('cleanup-documenti'),
+  ('cleanup-audit'), ('gdpr-cleanup')
+ON CONFLICT (job) DO NOTHING;
+ALTER TABLE cron_health DISABLE ROW LEVEL SECURITY;
