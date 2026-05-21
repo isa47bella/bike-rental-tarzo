@@ -65,19 +65,23 @@ stampa / salva in PDF.
 
 ## I percorsi (dai file GPX forniti)
 
-I dati provengono dai GPX in `Desktop/percorsi/`. **I dislivelli si prendono dai dati
-ufficiali Wikiloc** (presenti nelle note RTF), non dai calcoli grezzi sul GPS: la quota
-nei tracciati GPS è rumorosa e gonfia i totali.
+I 3 percorsi sono stati selezionati tra 6 tracce GPX fornite dall'utente (cartella
+`Desktop/percorsi/`). Scartati: i tracciati rivelatisi a piedi, quelli di sola andata
+(inadatti a un noleggio — la bici va riportata) e i doppioni. **I dislivelli si prendono
+dai dati ufficiali Wikiloc** (note RTF), non dai calcoli grezzi sul GPS: la quota nei
+tracciati GPS è rumorosa e gonfia i totali.
 
-| Percorso | Distanza | Dislivello + | Tipo | Difficoltà | Stato |
+| Percorso | Distanza | Dislivello + | Tipo | Difficoltà | File GPX |
 |---|---|---|---|---|---|
-| Giro dei Laghi di Revine | 8,6 km | +36 m | anello | Facile | ⚠️ da verificare che sia percorribile in bici |
-| Pian de le Femene – Bivacco Col dei Gai | 30,4 km | +1.133 m | anello | Impegnativo | confermato |
-| (sostituto di "Arfanta–Lavadina") | — | — | anello da Arfanta | Media | GPX in arrivo dall'utente |
+| Follina – Laghi di Revine | 27,7 km | +263 m | anello | Facile | `follina-laghi-di-revine-anello.gpx` |
+| Refrontolo – Val Trippera | 33,5 km | +753 m | anello | Medio | `refrontolo-val-trippera.gpx` |
+| Pian de le Femene – Bivacco Col dei Gai | 30,4 km | +1.133 m | anello | Impegnativo | `pian-de-le-femene-bivacco-col-dei-gai.gpx` |
 
-"Arfanta–Lavadina" è stato scartato perché **solo andata**, terminava a ~21 km dal
-noleggio: inadatto a chi deve riportare la bici. Verrà sostituito da un percorso ad anello
-con partenza e arrivo ad Arfanta.
+I 3 anelli partono rispettivamente a ~6,4 km (Follina), ~3,5 km (Refrontolo) e ~2,9 km
+(Pian de le Femene) dal noleggio: l'opuscolo indicherà come raggiungere in bici il punto
+di partenza di ciascun anello. **Da verificare con il proprietario** che "Refrontolo – Val
+Trippera" (ritmo lento nella traccia → possibili tratti sterrati/tecnici) sia adatto alle
+e-bike a noleggio.
 
 ## Le mappe
 
@@ -99,7 +103,7 @@ contatti restano invariati in ogni lingua.
 
 ## Fasi del lavoro
 
-1. Raccolta percorsi: analisi dei 3 GPX (2 fatti, 1 in attesa del nuovo file).
+1. Raccolta percorsi: i 3 GPX selezionati sono stati analizzati (dati confermati).
 2. Ricerca web di cantine e ristoranti → bozza documentata con le fonti.
 3. **Verifica del proprietario** su ogni voce (percorsi, cantine, ristoranti).
 4. Mappe: export delle immagini dai GPX (via Komoot o simile).
