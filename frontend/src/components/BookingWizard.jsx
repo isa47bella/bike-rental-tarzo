@@ -59,7 +59,7 @@ export default function BookingWizard() {
             alt="Arfanta Bike Rental"
             className="header-logo-img"
           />
-          <span className="header-sub header-sub-tagline">{t('header.subtitle')}</span>
+          <span className="header-sub-tagline">{t('header.subtitle')}</span>
         </div>
         <LanguageSwitcher />
       </header>
