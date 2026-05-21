@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mockup — Pop-up lingua liquid glass | Arfanta Bike Rental</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Barlow','Helvetica Neue',Arial,sans-serif; }
+
+  /* ===== BACKGROUND: la home del sito (il calendario) ===== */
+  .site {
+    min-height:100vh;
+    background:
+      radial-gradient(1100px 520px at 78% -8%, #FDE4CF 0%, rgba(253,228,207,0) 60%),
+      linear-gradient(180deg, #F6F1E8 0%, #F1EADC 100%);
+    padding:0 0 60px;
+  }
+  .site-top {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px; border-bottom:1px solid #E6DCC8;
+  }
+  .site-brand {
+    font-family:'Barlow Semi Condensed',sans-serif; font-weight:700;
+    font-size:22px; letter-spacing:0.04em; color:#2B2520; text-transform:uppercase;
+  }
+  .site-brand span { color:#EA580C; }
+  .site-lang { display:flex; gap:6px; }
+  .site-lang b {
+    font-size:12px; font-weight:600; color:#9A8F80;
+    padding:4px 7px; border-radius:6px;
+  }
+  .site-lang b.on { color:#EA580C; background:#FDE9D3; }
+  .site-hero { text-align:center; padding:46px 24px 30px; }
+  .site-hero h1 {
+    font-family:'Barlow Semi Condensed',sans-serif; font-weight:700;
+    font-size:40px; color:#2B2520; letter-spacing:-0.01em;
+  }
+  .site-hero p { color:#7C7268; font-size:16px; margin-top:6px; }
+  .cal {
+    max-width:560px; margin:14px auto 0; background:#FFFDFA;
+    border:1px solid #EBE3D4; border-radius:16px; padding:22px 24px;
+    box-shadow:0 8px 30px rgba(80,60,30,0.07);
+  }
+  .cal-head {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .cal-head .m {
+    font-family:'Barlow Semi Condensed',sans-serif; font-weight:700;
+    font-size:19px; color:#2B2520;
+  }
+  .cal-head .nav { color:#B5A992; font-size:20px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-grid .dow {
+    text-align:center; font-size:10px; font-weight:700; letter-spacing:0.08em;
+    color:#A88B6E; text-transform:uppercase; padding-bottom:4px;
+  }
+  .cal-grid .d {
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:500; color:#5C5349; border-radius:9px;
+    background:#FAF5EC;
+  }
+  .cal-grid .d.free { background:#FDF6EF; color:#2B2520; font-weight:600; }
+  .cal-grid .d.sel  { background:#EA580C; color:#fff; font-weight:700; }
+  .cal-grid .d.off  { color:#CFC6B6; background:transparent; }
+
+  /* ===== OVERLAY: vela + sfoca la home ===== */
+  .overlay {
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:rgba(43,37,32,0.34);
+    -webkit-backdrop-filter:blur(7px) saturate(115%);
+    backdrop-filter:blur(7px) saturate(115%);
+    animation:fadeIn .4s ease both;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* ===== PANNELLO liquid glass ===== */
+  .glass {
+    position:relative; width:400px; max-width:100%;
+    border-radius:32px; padding:32px 26px 26px;
+    background:
+      linear-gradient(155deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.10) 44%, rgba(255,255,255,0.22) 100%);
+    -webkit-backdrop-filter:blur(60px) saturate(210%) brightness(1.08);
+    backdrop-filter:blur(60px) saturate(210%) brightness(1.08);
+    border:1px solid rgba(255,255,255,0.72);
+    box-shadow:
+      0 36px 90px rgba(35,25,15,0.46),
+      0 2px 10px rgba(35,25,15,0.18),
+      inset 0 1.5px 1px rgba(255,255,255,0.95),
+      inset 0 -22px 48px rgba(255,255,255,0.14),
+      inset 0 0 60px rgba(255,255,255,0.12);
+    animation:popIn .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes popIn {
+    from { opacity:0; transform:scale(.93) translateY(10px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+  /* riflesso di luce sul "labbro" superiore del vetro */
+  .glass::before {
+    content:''; position:absolute; left:10%; right:10%; top:0; height:46%;
+    border-radius:32px 32px 50% 50%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.50), rgba(255,255,255,0));
+    pointer-events:none;
+  }
+  /* bagliore curvo sul bordo inferiore */
+  .glass::after {
+    content:''; position:absolute; left:20%; right:20%; bottom:-1px; height:28%;
+    border-radius:50% 50% 32px 32px;
+    background:linear-gradient(0deg, rgba(255,255,255,0.22), rgba(255,255,255,0));
+    pointer-events:none;
+  }
+
+  .gx {
+    position:absolute; top:16px; right:16px; width:30px; height:30px;
+    border:none; border-radius:50%; cursor:pointer;
+    background:rgba(255,255,255,0.30); color:#5C5349; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid rgba(255,255,255,0.5);
+  }
+
+  .g-head { text-align:center; margin-bottom:22px; }
+  .g-globe {
+    width:42px; height:42px; margin:0 auto 12px; display:block;
+  }
+  .g-title {
+    font-family:'Barlow Semi Condensed',sans-serif; font-weight:700;
+    font-size:23px; color:#2B2520; letter-spacing:-0.005em;
+  }
+  .g-sub {
+    font-size:12.5px; font-weight:600; letter-spacing:0.07em;
+    color:#574F45; text-transform:uppercase; margin-top:5px;
+    text-shadow:0 1px 2px rgba(255,255,255,0.6);
+  }
+
+  /* tile lingua */
+  .langs { display:flex; flex-direction:column; gap:9px; }
+  .lang {
+    display:flex; align-items:center; gap:14px;
+    padding:11px 15px; cursor:pointer;
+    border-radius:16px;
+    background:linear-gradient(150deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16));
+    -webkit-backdrop-filter:blur(14px) saturate(150%);
+    backdrop-filter:blur(14px) saturate(150%);
+    border:1px solid rgba(255,255,255,0.58);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.7);
+    transition:transform .18s cubic-bezier(.22,1,.36,1),
+               background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .lang:hover {
+    transform:translateY(-1px);
+    background:linear-gradient(150deg, rgba(255,255,255,0.66), rgba(255,255,255,0.34));
+    border-color:#EA580C;
+    box-shadow:0 6px 20px rgba(234,88,12,0.22), inset 0 1px 1px rgba(255,255,255,0.85);
+  }
+  .flag {
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    overflow:hidden; border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 2px 6px rgba(0,0,0,0.14);
+  }
+  .flag svg { width:100%; height:100%; display:block; }
+  .lang-name {
+    font-size:16px; font-weight:600; color:#2B2520; flex:1;
+  }
+  .lang-go { color:#C9BEAE; font-size:17px; font-weight:700; }
+  .lang:hover .lang-go { color:#EA580C; }
+
+  .note {
+    position:fixed; bottom:16px; left:0; right:0; text-align:center;
+    font-size:12px; color:#fff; opacity:.65; z-index:60;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== BACKGROUND: la home / calendario del sito ===== -->
+<div class="site">
+  <div class="site-top">
+    <div class="site-brand">Arfanta <span>Bike Rental</span></div>
+    <div class="site-lang"><b class="on">IT</b><b>EN</b><b>DE</b><b>ES</b><b>FR</b></div>
+  </div>
+  <div class="site-hero">
+    <h1>Prenota la tua e-bike</h1>
+    <p>Scegli la data del noleggio tra le Colline del Prosecco</p>
+  </div>
+  <div class="cal">
+    <div class="cal-head">
+      <span class="nav">&#8249;</span>
+      <span class="m">Maggio 2026</span>
+      <span class="nav">&#8250;</span>
+    </div>
+    <div class="cal-grid">
+      <div class="dow">Lu</div><div class="dow">Ma</div><div class="dow">Me</div><div class="dow">Gi</div><div class="dow">Ve</div><div class="dow">Sa</div><div class="dow">Do</div>
+      <div class="d off"></div><div class="d off"></div><div class="d off"></div><div class="d free">1</div><div class="d free">2</div><div class="d free">3</div><div class="d free">4</div>
+      <div class="d free">5</div><div class="d free">6</div><div class="d free">7</div><div class="d free">8</div><div class="d free">9</div><div class="d free">10</div><div class="d free">11</div>
+      <div class="d free">12</div><div class="d free">13</div><div class="d free">14</div><div class="d free">15</div><div class="d free">16</div><div class="d sel">17</div><div class="d free">18</div>
+      <div class="d free">19</div><div class="d free">20</div><div class="d free">21</div><div class="d free">22</div><div class="d free">23</div><div class="d free">24</div><div class="d free">25</div>
+      <div class="d free">26</div><div class="d free">27</div><div class="d free">28</div><div class="d free">29</div><div class="d free">30</div><div class="d free">31</div><div class="d off"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== POP-UP liquid glass ===== -->
+<div class="overlay">
+  <div class="glass">
+    <button class="gx" aria-label="Chiudi">&#10005;</button>
+
+    <div class="g-head">
+      <svg class="g-globe" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="20" stroke="#EA580C" stroke-width="2.4"/>
+        <ellipse cx="22" cy="22" rx="9" ry="20" stroke="#EA580C" stroke-width="2.4"/>
+        <path d="M3 16 H41 M3 28 H41" stroke="#EA580C" stroke-width="2.4"/>
+      </svg>
+      <div class="g-title">Scegli la tua lingua</div>
+      <div class="g-sub">Choose &middot; Sprache &middot; Idioma &middot; Langue</div>
+    </div>
+
+    <div class="langs">
+      <!-- Italiano -->
+      <div class="lang">
+        <span class="flag"><svg viewBox="0 0 3 3"><rect width="1" height="3" x="0" fill="#009246"/><rect width="1" height="3" x="1" fill="#fff"/><rect width="1" height="3" x="2" fill="#CE2B37"/></svg></span>
+        <span class="lang-name">Italiano</span>
+        <span class="lang-go">&#8250;</span>
+      </div>
+      <!-- English -->
+      <div class="lang">
+        <span class="flag"><svg viewBox="0 0 60 60">
+          <rect width="60" height="60" fill="#012169"/>
+          <path d="M0,0 60,60 M60,0 0,60" stroke="#fff" stroke-width="9"/>
+          <path d="M0,0 60,60 M60,0 0,60" stroke="#C8102E" stroke-width="5"/>
+          <path d="M30,0 V60 M0,30 H60" stroke="#fff" stroke-width="15"/>
+          <path d="M30,0 V60 M0,30 H60" stroke="#C8102E" stroke-width="9"/>
+        </svg></span>
+        <span class="lang-name">English</span>
+        <span class="lang-go">&#8250;</span>
+      </div>
+      <!-- Deutsch -->
+      <div class="lang">
+        <span class="flag"><svg viewBox="0 0 3 3"><rect width="3" height="1" y="0" fill="#000"/><rect width="3" height="1" y="1" fill="#DD0000"/><rect width="3" height="1" y="2" fill="#FFCE00"/></svg></span>
+        <span class="lang-name">Deutsch</span>
+        <span class="lang-go">&#8250;</span>
+      </div>
+      <!-- Español -->
+      <div class="lang">
+        <span class="flag"><svg viewBox="0 0 4 4"><rect width="4" height="1" y="0" fill="#AA151B"/><rect width="4" height="2" y="1" fill="#F1BF00"/><rect width="4" height="1" y="3" fill="#AA151B"/></svg></span>
+        <span class="lang-name">Español</span>
+        <span class="lang-go">&#8250;</span>
+      </div>
+      <!-- Français -->
+      <div class="lang">
+        <span class="flag"><svg viewBox="0 0 3 3"><rect width="1" height="3" x="0" fill="#0055A4"/><rect width="1" height="3" x="1" fill="#fff"/><rect width="1" height="3" x="2" fill="#EF4135"/></svg></span>
+        <span class="lang-name">Français</span>
+        <span class="lang-go">&#8250;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="note">Mockup — Pop-up selezione lingua liquid glass · passa il mouse sulle lingue</div>
+
+</body>
+</html>
