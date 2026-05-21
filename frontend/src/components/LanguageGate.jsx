@@ -39,14 +39,14 @@ export default function LanguageGate() {
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
-  // Al mount: mostra il pop-up solo se la lingua non è ancora stata scelta.
+  // Al mount: il pop-up appare sempre, a ogni apertura della home.
+  // La scelta NON viene memorizzata: ogni visitatore lo rivede ogni volta.
   useEffect(() => {
-    if (!localStorage.getItem('langChosen')) setVisible(true);
+    setVisible(true);
   }, []);
 
-  // Chiusura: marca la scelta come fatta e avvia l'animazione di uscita.
+  // Chiusura: avvia l'animazione di uscita.
   function dismiss() {
-    localStorage.setItem('langChosen', '1');
     setLeaving(true);
   }
 

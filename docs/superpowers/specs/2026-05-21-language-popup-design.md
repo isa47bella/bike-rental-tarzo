@@ -2,7 +2,13 @@
 
 **Data:** 2026-05-21
 **Autore:** Giulio Ballarin (brainstorming con Claude, skill impeccable)
-**Stato:** Design — in attesa di approvazione
+**Stato:** Implementato
+
+> **Aggiornamento 2026-05-21 (post-implementazione):** su richiesta dell'utente il
+> comportamento è cambiato — il pop-up appare **a ogni apertura della home**, non
+> più solo al primo accesso. La scelta non viene memorizzata e il flag `langChosen`
+> non è più usato. I riferimenti a "primo accesso" e `langChosen` qui sotto sono
+> superati da questa nota.
 
 ## Obiettivo
 
