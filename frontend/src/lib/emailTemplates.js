@@ -106,7 +106,7 @@ export const EMAIL_TEMPLATES = [
     },
     en: {
       subject: "Bike return reminder — Arfanta Bike Rental",
-      message: `Our records show that the rented bike has not yet been returned at the scheduled time.\n\nWe kindly ask you to return the bike as soon as possible to Via Pecol 22, Arfanta di Tarzo (TV).\n\nIf you are having any difficulty, contact us right away on WhatsApp at +39 392 8614635.\n\nThank you for your cooperation.`,
+      message: `Our records show that the rented bike has not yet been returned by the scheduled time.\n\nWe kindly ask you to return the bike as soon as possible to Via Pecol 22, Arfanta di Tarzo (TV).\n\nIf you are having any difficulty, contact us right away on WhatsApp at +39 392 8614635.\n\nThank you for your cooperation.`,
     },
     de: {
       subject: "Erinnerung an die Fahrradrückgabe — Arfanta Bike Rental",
