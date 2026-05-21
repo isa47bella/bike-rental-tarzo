@@ -7,15 +7,16 @@
 ## Obiettivo
 
 Permettere all'admin di inviare le email manuali al cliente (menu 3 puntini → "Invia email")
-nella lingua del cliente, scegliendola da un selettore. Gli 8 template rapidi già esistenti
+nella lingua del cliente, scegliendola da un selettore. I template rapidi già esistenti
 vengono tradotti in tutte e 5 le lingue del sito (it/en/de/es/fr).
 
 ## Problema attuale
 
 Il menu 3 puntini di una prenotazione → "Invia email" apre una finestra con un menu
-**"Template rapido"** (8 messaggi pronti) + campi Oggetto e Messaggio. Oggi:
+**"Template rapido"** (11 voci: 10 messaggi pronti + "Messaggio libero" vuoto) + campi
+Oggetto e Messaggio. Oggi:
 
-1. **Gli 8 template sono scritti solo in italiano**, hardcoded in `EMAIL_TEMPLATES` dentro
+1. **I template sono scritti solo in italiano**, hardcoded in `EMAIL_TEMPLATES` dentro
    `AdminDashboard.jsx`. Se il cliente è tedesco, l'admin non ha un template in tedesco.
 2. **Bug backend**: l'endpoint `POST /api/admin/bookings/:id/send-email` seleziona la
    prenotazione senza la colonna `lingua`. La funzione `sendAdminEmail` fa
@@ -51,10 +52,11 @@ Nuovo file `frontend/src/lib/emailTemplates.js`. Sposta `EMAIL_TEMPLATES` fuori 
 }
 ```
 
-Gli 8 template attuali (Promemoria ritiro domani, Conferma rimborso, Cauzione non
-autorizzata, Cambio bicicletta, Ritardo restituzione, Danni rilevati, Ringraziamento
-post-noleggio, Avviso meteo avverso) vengono mantenuti. L'italiano esiste già; si
-aggiungono en/de/es/fr. Numero WhatsApp e indirizzo restano invariati in ogni lingua.
+Gli 11 template attuali vengono mantenuti: 10 con contenuto (Promemoria ritiro domani,
+Conferma rimborso, Cauzione non autorizzata, Cambio bicicletta, Ritardo restituzione,
+Danni rilevati, Ringraziamento post-noleggio, Avviso meteo avverso, Richiesta recensione,
+Richiesta modifica) più "Messaggio libero" (campi vuoti, in tutte le lingue). L'italiano
+esiste già; si aggiungono en/de/es/fr. Numero WhatsApp e indirizzo restano invariati.
 
 ### Finestra "Invia email" (`renderEmailModal`)
 
@@ -106,7 +108,7 @@ finestra `emailLang` viene inizializzata con la lingua della prenotazione e
 
 | File | Modifica |
 |---|---|
-| `frontend/src/lib/emailTemplates.js` | Create — gli 8 template con `label` IT + testo in 5 lingue |
+| `frontend/src/lib/emailTemplates.js` | Create — gli 11 template con `label` IT + testo in 5 lingue |
 | `frontend/src/components/AdminDashboard.jsx` | Modify — rimuove `EMAIL_TEMPLATES` inline, importa dal nuovo file; aggiunge selettore Lingua, stato `emailLang`/`emailTemplateIdx`, aggiorna `renderEmailModal`, l'apertura della finestra e `handleSendEmail` |
 | `frontend/src/lib/api.js` | Modify — `sendEmail` invia `lang` |
 | `backend/routes/admin.js` | Modify — `send-email` legge/valida `lang`, seleziona `lingua` |
