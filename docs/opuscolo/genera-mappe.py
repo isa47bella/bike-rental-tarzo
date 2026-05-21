@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-"""Genera le immagini delle mappe dei percorsi dell'opuscolo dai file GPX.
+"""Genera le immagini dell'opuscolo a partire dai file GPX dei percorsi:
 
-Basemap: CARTO Positron (light) su dati OpenStreetMap. La traccia e il punto di
-partenza sono disegnati sopra. Le mappe vengono salvate in mappe/<nome>.png.
+  mappe/<nome>.png       mappa del percorso (basemap CARTO/OSM + traccia GPS)
+  mappe/qr-<nome>.png    QR code che apre la traccia su Wikiloc
 
-Le mappe NON sono disegnate a memoria: la linea del percorso e' la traccia GPS
-reale del file GPX, il fondo cartografico e' OpenStreetMap. Uso una tantum.
+Niente e' disegnato a memoria: la linea del percorso e' la traccia GPS reale
+del file GPX, il fondo cartografico e' OpenStreetMap, e il link del QR e' la
+pagina Wikiloc indicata nei metadati dello stesso GPX. Uso una tantum.
 
     python3 genera-mappe.py
+
+Dipendenze: Pillow, segno.
 """
 import io
 import math
@@ -16,6 +19,7 @@ import time
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import segno
 from PIL import Image, ImageDraw, ImageFont
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -29,21 +33,28 @@ ROUTES = [
     ("pian-de-le-femene", "pian-de-le-femene-bivacco-col-dei-gai.gpx"),
 ]
 
-FRAME_W, FRAME_H = 720, 450        # frame in geo-pixel (tile da 256) -> immagine 1440x900
-FILL = 0.80                        # quota del frame occupata dalla traccia
+FRAME_W, FRAME_H = 720, 290         # geo-pixel (tile 256) -> immagine 1440x580
+FILL = 0.82                         # quota del frame occupata dalla traccia
 TILE = 256
-SCALE = 2                          # tile @2x: immagine finale ad alta risoluzione
-ARANCIO = (234, 88, 12)            # #EA580C, arancio brand
+SCALE = 2                           # tile @2x: immagine ad alta risoluzione
+ARANCIO = (234, 88, 12)             # #EA580C, arancio brand
+INK = (42, 39, 35)                  # "nero" caldo
 UA = "ArfantaBikeRental-opuscolo/1.0 (mappe percorsi, uso una tantum)"
 
 
 def parse_gpx(path):
+    """Restituisce (lista di punti lat/lon, url Wikiloc della traccia)."""
     pts = []
+    url = None
     for _, el in ET.iterparse(path):
-        if el.tag.split("}")[-1] == "trkpt":
+        tag = el.tag.split("}")[-1]
+        if tag == "trkpt":
             pts.append((float(el.get("lat")), float(el.get("lon"))))
-            el.clear()
-    return pts
+        elif tag == "link":
+            href = el.get("href") or ""
+            if "mountain-biking-trails" in href:
+                url = href
+    return pts, url
 
 
 def proj(lon, lat, z):
@@ -73,23 +84,25 @@ def fetch_tile(z, x, y):
         return Image.open(io.BytesIO(r.read())).convert("RGBA")
 
 
-def load_font(size):
-    for p in (
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
-        "/Library/Fonts/Arial.ttf",
-    ):
-        if os.path.exists(p):
-            try:
-                return ImageFont.truetype(p, size)
-            except Exception:
-                pass
+def load_font(size, bold=False):
+    names = ["Arial Bold.ttf"] if bold else ["Arial.ttf", "Arial Unicode.ttf"]
+    for d in ("/System/Library/Fonts/Supplemental/", "/Library/Fonts/"):
+        for n in names:
+            p = d + n
+            if os.path.exists(p):
+                try:
+                    return ImageFont.truetype(p, size)
+                except Exception:
+                    pass
+    if os.path.exists("/System/Library/Fonts/Helvetica.ttc"):
+        try:
+            return ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", size)
+        except Exception:
+            pass
     return ImageFont.load_default()
 
 
-def build(name, gpx):
-    print(f"- {name}")
-    pts = parse_gpx(os.path.join(TRACCE, gpx))
+def build_map(name, pts):
     z = pick_zoom(pts)
     xy = [proj(lon, lat, z) for lat, lon in pts]
     xs = [p[0] for p in xy]
@@ -118,33 +131,59 @@ def build(name, gpx):
     oy = (top - ty0 * TILE) * SCALE
     img = canvas.crop((round(ox), round(oy),
                        round(ox + FRAME_W * SCALE), round(oy + FRAME_H * SCALE))).convert("RGB")
-
+    W, H = img.size
     draw = ImageDraw.Draw(img, "RGBA")
+
     line = [((x - left) * SCALE, (y - top) * SCALE) for x, y in xy]
     draw.line(line, fill=(255, 255, 255, 235), width=16, joint="curve")
     draw.line(line, fill=ARANCIO + (255,), width=9, joint="curve")
-
     sx, sy = line[0]
-    for r, col in ((19, (255, 255, 255, 255)), (11, ARANCIO + (255,))):
+
+    # etichetta "Partenza" sopra (o sotto) il punto di partenza
+    lf = load_font(27, bold=True)
+    label = "Partenza"
+    lb = draw.textbbox((0, 0), label, font=lf)
+    lw, lh = lb[2] - lb[0], lb[3] - lb[1]
+    pad = 10
+    bw, bh = lw + 2 * pad, lh + 2 * pad
+    bx = min(max(8, sx - bw / 2), W - bw - 8)
+    by = sy - 32 - bh
+    if by < 8:
+        by = sy + 32
+    draw.rounded_rectangle((bx, by, bx + bw, by + bh), radius=9, fill=(255, 255, 255, 240))
+    draw.text((bx + pad, by + pad - lb[1]), label, fill=INK + (255,), font=lf)
+
+    # marcatore del punto di partenza
+    for r, col in ((20, (255, 255, 255, 255)), (11, ARANCIO + (255,))):
         draw.ellipse((sx - r, sy - r, sx + r, sy + r), fill=col)
 
+    # attribuzione cartografica
     txt = "© OpenStreetMap  © CARTO"
-    font = load_font(15)
-    tb = draw.textbbox((0, 0), txt, font=font)
+    af = load_font(15)
+    tb = draw.textbbox((0, 0), txt, font=af)
     tw, th = tb[2] - tb[0], tb[3] - tb[1]
-    W, H = img.size
-    pad = 7
-    draw.rectangle((W - tw - 2 * pad - 5, H - th - 2 * pad - 5, W - 5, H - 5),
-                   fill=(255, 255, 255, 205))
-    draw.text((W - tw - pad - 5, H - th - pad - 5 - tb[1]), txt,
-              fill=(120, 120, 118, 255), font=font)
+    p = 7
+    draw.rectangle((W - tw - 2 * p - 5, H - th - 2 * p - 5, W - 5, H - 5), fill=(255, 255, 255, 205))
+    draw.text((W - tw - p - 5, H - th - p - 5 - tb[1]), txt, fill=(120, 120, 118, 255), font=af)
 
     out = os.path.join(MAPPE, name + ".png")
     img.save(out)
-    print(f"  zoom {z}, {len(pts)} punti -> {out} ({img.size[0]}x{img.size[1]})")
+    print(f"  mappa: zoom {z}, {len(pts)} punti -> {out} ({W}x{H})")
+
+
+def build_qr(name, url):
+    out = os.path.join(MAPPE, "qr-" + name + ".png")
+    segno.make(url, error="m").save(out, scale=16, border=3, dark="#2a2723", light="#ffffff")
+    print(f"  qr:    {out}  ->  {url}")
 
 
 if __name__ == "__main__":
     for name, gpx in ROUTES:
-        build(name, gpx)
+        print(f"- {name}")
+        pts, url = parse_gpx(os.path.join(TRACCE, gpx))
+        build_map(name, pts)
+        if url:
+            build_qr(name, url)
+        else:
+            print("  ATTENZIONE: nessun link Wikiloc trovato nel GPX")
     print("Fatto.")

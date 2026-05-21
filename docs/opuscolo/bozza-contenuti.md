@@ -147,4 +147,5 @@ buon spread di prezzi (qualche € economico, qualche €€, qualche €€€)
 - [ ] Cantine verificate dal proprietario (5 candidate da ricerca web già nell'opuscolo)
 - [ ] Ristoranti verificati dal proprietario
 - [x] Mappe dei 3 percorsi generate dai GPX (basemap OpenStreetMap / CARTO)
+- [x] QR code per percorso verso la traccia su Wikiloc (navigazione GPS sul telefono)
 - [x] Foto di copertina inserita (Unsplash, licenza libera per uso commerciale)
