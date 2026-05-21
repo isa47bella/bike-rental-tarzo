@@ -2274,6 +2274,10 @@ ${ritardoSection}
 
     const maxRev = Math.max(...(report.by_month || []).map(m => m.revenue), 1);
     const tipoLabels = { mezza_mattina: '½ Mattina', mezza_pomeriggio: '½ Pomeriggio', intera_giornata: 'Giornata', multi_giorno: 'Multi-giorno', '4_ore': '4 Ore', '3_piu_giorni': '3+ Giorni' };
+    const bikeRanking = Object.entries(report.by_bike || {}).sort(([, a], [, b]) => b - a);
+    const maxBike     = Math.max(...bikeRanking.map(([, c]) => c), 1);
+    const giorniSett  = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    const maxWeekday  = Math.max(...(report.by_weekday || []), 1);
 
     return (
       <div className="ac-report">
@@ -2289,6 +2293,13 @@ ${ritardoSection}
           <div className="ac-report-stat">
             <div className="ac-stat-label">Valore Medio</div>
             <div className="ac-stat-value">€{Number(report.avg_booking).toFixed(0)}</div>
+          </div>
+          <div className="ac-report-stat">
+            <div className="ac-stat-label">Clienti di Ritorno</div>
+            <div className="ac-stat-value">{report.returning?.percentuale ?? 0}%</div>
+            <div style={{ fontSize: '.72rem', color: '#9CA3AF', marginTop: 2 }}>
+              {report.returning?.di_ritorno ?? 0} di {report.returning?.totali ?? 0} clienti
+            </div>
           </div>
         </div>
 
@@ -2320,6 +2331,38 @@ ${ritardoSection}
               <div key={tipo} className="ac-type-row">
                 <span className="ac-type-label">{tipoLabels[tipo] || tipo}</span>
                 <span className="ac-type-value">€{Number(rev).toFixed(0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ac-report-section">
+          <h3 className="ac-section-title">Bici più noleggiate</h3>
+          <div className="ac-bar-chart">
+            {bikeRanking.length === 0
+              ? <p className="ac-empty-sm">Nessun dato</p>
+              : bikeRanking.map(([id, count]) => (
+                <div key={id} className="ac-bar-row">
+                  <span className="ac-bar-month">Bici #{id}</span>
+                  <div className="ac-bar-track">
+                    <div className="ac-bar-fill" style={{ width: `${(count / maxBike) * 100}%` }} />
+                  </div>
+                  <span className="ac-bar-value">{count}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        <div className="ac-report-section">
+          <h3 className="ac-section-title">Giorni più richiesti</h3>
+          <div className="ac-bar-chart">
+            {giorniSett.map((nome, i) => (
+              <div key={nome} className="ac-bar-row">
+                <span className="ac-bar-month">{nome}</span>
+                <div className="ac-bar-track">
+                  <div className="ac-bar-fill" style={{ width: `${((report.by_weekday?.[i] || 0) / maxWeekday) * 100}%` }} />
+                </div>
+                <span className="ac-bar-value">{report.by_weekday?.[i] || 0}</span>
               </div>
             ))}
           </div>
