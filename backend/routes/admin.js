@@ -17,6 +17,7 @@ const {
   sendAdminEmail,
   sendFirmaLinkEmail,
   sendWhatsAppAlert,
+  sendNotificationToGestore,
   sendCheckoutFarewellEmail,
   sendCancellationEmail,
   sendRefundEmail,
@@ -1197,6 +1198,10 @@ router.post('/bookings/manual', async (req, res) => {
   // WhatsApp alert (singola prenotazione con info su tutte le bici)
   const leadAlert = { ...prenotazioni[0], _total_bikes: assignedBikes.length };
   sendWhatsAppAlert(leadAlert).catch(e => console.error('WhatsApp manual:', e));
+
+  // Email di notifica al gestore (OWNER_EMAIL) — stesso flusso delle prenotazioni
+  // online (webhook Stripe). prenotazioni[0] ha già il prezzo_totale complessivo.
+  sendNotificationToGestore(prenotazioni[0]).catch(e => console.error('Email gestore manual:', e));
 
   await logAction('manual_booking', prenotazioni[0].id, {
     nome: cliente_nome, tipo: tipo_noleggio, data: data_ritiro,
