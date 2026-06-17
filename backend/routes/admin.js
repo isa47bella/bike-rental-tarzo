@@ -1488,7 +1488,7 @@ router.get('/bookings/:id/contratto', async (req, res) => {
   const f          = CONTRATTO_FIELDS[lang] || CONTRATTO_FIELDS.it;
   const title      = CONTRATTO_TITLE[lang]  || CONTRATTO_TITLE.it;
   const tipoLabels = TIPO_LABEL[lang]        || TIPO_LABEL.it;
-  const tipoStr    = (tipoLabels[b.tipo_noleggio] || b.tipo_noleggio) + (Number(b.giorni) > 1 ? ` · ${b.giorni} giorni` : '');
+  const tipoStr    = (tipoLabels[b.tipo_noleggio] || b.tipo_noleggio) + (Number(b.giorni) > 1 ? ` · ${b.giorni} ${f.giorni || 'giorni'}` : '');
   const terms      = CONTRATTO_TERMS[lang]   || CONTRATTO_TERMS.it;
   const shortId    = b.id.toUpperCase().slice(0, 8);
 
@@ -1506,6 +1506,7 @@ router.get('/bookings/:id/contratto', async (req, res) => {
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 @page{margin:15mm 13mm;size:A4}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 :root{--green:#1f7a4d;--ink:#1c1f1d;--muted:#8b908b}
 body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5pt;line-height:1.6;color:#1c1f1d;background:#eceeec}
 @media print{body{background:#fff}.no-print{display:none!important}}
@@ -1520,7 +1521,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5pt;line-height:
 .body{padding:26px 48px 40px}
 .sec{margin-bottom:30px}
 .sec-title{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:#1f7a4d;font-weight:700;margin-bottom:14px}
-.grid{display:flex;flex-wrap:wrap;border:1px solid #e8e8e8;border-radius:6px;overflow:hidden}
+.grid{display:flex;flex-wrap:wrap;border:1px solid #e8e8e8;border-radius:6px;overflow:hidden;page-break-inside:avoid}
 .cell{width:50%;padding:12px 15px;border-bottom:1px solid #f0f0f0}
 .cell:nth-child(even){border-left:1px solid #f0f0f0}
 .cell .k{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#8b908b;margin-bottom:3px}
@@ -1532,7 +1533,7 @@ ol.cond li{counter-increment:c;display:flex;gap:18px;padding:13px 0;border-top:1
 ol.cond li:first-child{border-top:none;padding-top:0}
 ol.cond li::before{content:counter(c,decimal-leading-zero);font-family:Georgia,serif;font-size:1.4rem;color:#cdd9d1;font-weight:400;min-width:38px;line-height:1.1}
 ol.cond li .t{font-family:Georgia,serif;font-size:.9rem;line-height:1.6;color:#33392f}
-.rules{border:1px solid #e4e8e4;border-left:3px solid #1f7a4d;border-radius:0 8px 8px 0;padding:18px 22px;background:#fbfdfb}
+.rules{border:1px solid #e4e8e4;border-left:3px solid #1f7a4d;border-radius:0 8px 8px 0;padding:18px 22px;background:#fbfdfb;page-break-inside:avoid}
 .rules ul{list-style:none}
 .rules li{font-family:Georgia,serif;font-size:.88rem;color:#33392f;padding:5px 0 5px 22px;position:relative}
 .rules li::before{content:'';position:absolute;left:0;top:11px;width:7px;height:7px;border:1.5px solid #1f7a4d;border-radius:50%}
@@ -1544,7 +1545,7 @@ ol.cond li .t{font-family:Georgia,serif;font-size:.9rem;line-height:1.6;color:#3
 .cert-table tr:last-child{border-bottom:none}
 .cert-table td{padding:7px 2px}
 .cert-table td:first-child{color:#8b908b;width:40%;font-size:.7rem;letter-spacing:.04em;text-transform:uppercase}
-.cert-table td:last-child{font-weight:600;color:#1c1f1d;font-family:'Courier New',monospace;font-size:.8rem;text-align:right}
+.cert-table td:last-child{font-weight:600;color:#1c1f1d;font-family:'Courier New',monospace;font-size:.8rem;text-align:right;word-break:break-all}
 .cert-table .hash td:last-child{color:#1f7a4d}
 .cert-foot{margin-top:12px;font-size:.66rem;color:#a0a59f;border-top:1px solid #e7eee9;padding-top:9px;line-height:1.6}
 .foot{margin-top:34px;padding-top:14px;border-top:1px solid #eef0ee;display:flex;justify-content:space-between;font-size:.64rem;color:#aab0aa;letter-spacing:.04em}
