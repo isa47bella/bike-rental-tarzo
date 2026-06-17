@@ -1492,11 +1492,10 @@ router.get('/bookings/:id/contratto', async (req, res) => {
   const terms      = CONTRATTO_TERMS[lang]   || CONTRATTO_TERMS.it;
   const shortId    = b.id.toUpperCase().slice(0, 8);
 
-  const termsHtml = terms.map(a => `
-    <div class="article">
-      <h3>${esc(a.title)}</h3>
-      <p>${esc(a.text)}</p>
-    </div>`).join('');
+  const condHtml = (terms.conditions || []).map(c => `
+        <li><span class="t">${esc(c)}</span></li>`).join('');
+  const rulesHtml = (terms.rules || []).map(r => `
+          <li>${esc(r)}</li>`).join('');
 
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
@@ -1506,82 +1505,99 @@ router.get('/bookings/:id/contratto', async (req, res) => {
 <title>${esc(title)} — ${shortId} — Arfanta Bike Rental</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-@page{margin:18mm 14mm;size:A4}
-body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65;color:#1a1a1a;background:#f2f4f0}
+@page{margin:15mm 13mm;size:A4}
+:root{--green:#1f7a4d;--ink:#1c1f1d;--muted:#8b908b}
+body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5pt;line-height:1.6;color:#1c1f1d;background:#eceeec}
 @media print{body{background:#fff}.no-print{display:none!important}}
-.page{max-width:794px;margin:0 auto;background:#fff}
-.hdr{background:#2D8659;color:#fff;padding:26px 36px 22px;display:flex;align-items:center;gap:18px}
-.hdr-logo{font-size:44px;line-height:1}
-.hdr-text h1{font-size:1.4rem;font-weight:700;margin-bottom:3px}
-.hdr-text p{font-size:0.78rem;opacity:.82;font-family:Arial,sans-serif}
-.body{padding:30px 36px}
-.sec{margin-bottom:26px}
-.sec-title{font-family:Arial,sans-serif;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#2D8659;margin-bottom:10px;border-bottom:2px solid #2D8659;padding-bottom:3px}
-.sum-table{width:100%;border-collapse:collapse;font-family:Arial,sans-serif}
-.sum-table tr{border-bottom:1px solid #e4ece4}
-.sum-table tr:last-child{border-bottom:none}
-.sum-table td{padding:7px 4px;font-size:.87rem}
-.sum-table td:first-child{color:#666;width:36%}
-.sum-table td:last-child{font-weight:600;color:#111}
-.code{background:#1a5c3a;color:#fff;border-radius:4px;padding:3px 10px;font-size:.83rem;letter-spacing:.12em;font-family:'Courier New',monospace;display:inline-block}
-.terms-box{border:1px solid #cddacd;border-radius:6px;padding:15px 20px;background:#fafffe;font-size:.82rem;line-height:1.72}
-.article+.article{border-top:1px solid #e8ede8;margin-top:11px;padding-top:11px}
-.article h3{font-family:Arial,sans-serif;font-size:.78rem;font-weight:700;color:#1a5c3a;margin-bottom:4px}
-.article p{color:#444}
-.cert{background:#f0faf4;border:2px solid #2D8659;border-radius:10px;padding:22px 26px;margin-top:26px;page-break-inside:avoid}
-.cert-hdr{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.cert-seal{font-size:34px}
-.cert-htitle{font-family:Arial,sans-serif;font-size:.97rem;font-weight:700;color:#1a5c3a}
-.cert-hsub{font-family:Arial,sans-serif;font-size:.7rem;color:#666;margin-top:2px}
-.cert-table{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:.86rem}
-.cert-table tr{border-bottom:1px solid #c4e0cc}
+.page{max-width:820px;margin:0 auto;background:#fff}
+.hdr{padding:34px 48px 0;display:flex;justify-content:space-between;align-items:flex-start}
+.hdr img{height:56px;width:auto}
+.hdr .meta{text-align:right;font-size:.66rem;letter-spacing:.05em;color:#8b908b;line-height:1.7}
+.title{padding:22px 48px 0}
+.title .kick{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:#1f7a4d;font-weight:700}
+.title h1{font-family:Georgia,serif;font-size:2.1rem;font-weight:400;color:#1c1f1d;letter-spacing:-.01em;margin-top:7px;line-height:1.05}
+.hairline{height:2px;background:#1f7a4d;margin:18px 48px 0;width:52px}
+.body{padding:26px 48px 40px}
+.sec{margin-bottom:30px}
+.sec-title{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:#1f7a4d;font-weight:700;margin-bottom:14px}
+.grid{display:flex;flex-wrap:wrap;border:1px solid #e8e8e8;border-radius:6px;overflow:hidden}
+.cell{width:50%;padding:12px 15px;border-bottom:1px solid #f0f0f0}
+.cell:nth-child(even){border-left:1px solid #f0f0f0}
+.cell .k{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#8b908b;margin-bottom:3px}
+.cell .v{font-size:.9rem;font-weight:600;color:#1c1f1d}
+.cell .v.code{font-family:'Courier New',monospace;letter-spacing:.1em;color:#1f7a4d}
+.intro{font-family:Georgia,serif;font-size:1rem;font-style:italic;color:#55605a;margin-bottom:18px;line-height:1.55}
+ol.cond{list-style:none;counter-reset:c}
+ol.cond li{counter-increment:c;display:flex;gap:18px;padding:13px 0;border-top:1px solid #eef0ee;page-break-inside:avoid}
+ol.cond li:first-child{border-top:none;padding-top:0}
+ol.cond li::before{content:counter(c,decimal-leading-zero);font-family:Georgia,serif;font-size:1.4rem;color:#cdd9d1;font-weight:400;min-width:38px;line-height:1.1}
+ol.cond li .t{font-family:Georgia,serif;font-size:.9rem;line-height:1.6;color:#33392f}
+.rules{border:1px solid #e4e8e4;border-left:3px solid #1f7a4d;border-radius:0 8px 8px 0;padding:18px 22px;background:#fbfdfb}
+.rules ul{list-style:none}
+.rules li{font-family:Georgia,serif;font-size:.88rem;color:#33392f;padding:5px 0 5px 22px;position:relative}
+.rules li::before{content:'';position:absolute;left:0;top:11px;width:7px;height:7px;border:1.5px solid #1f7a4d;border-radius:50%}
+.privacy{font-size:.72rem;line-height:1.65;color:#7c827c}
+.cert{border:1px solid #d8e3dc;border-radius:10px;padding:20px 24px;margin-top:6px;page-break-inside:avoid;background:#fbfdfb}
+.cert-htitle{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:#1f7a4d;font-weight:700;margin-bottom:14px}
+.cert-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.cert-table tr{border-bottom:1px solid #e7eee9}
 .cert-table tr:last-child{border-bottom:none}
-.cert-table td{padding:7px 4px}
-.cert-table td:first-child{color:#555;width:38%}
-.cert-table td:last-child{font-weight:600;color:#111;font-family:'Courier New',monospace;font-size:.82rem}
-.cert-table .hash td:last-child{color:#1a5c3a;font-size:.8rem}
-.cert-foot{margin-top:12px;font-family:Arial,sans-serif;font-size:.7rem;color:#888;border-top:1px solid #c4e0cc;padding-top:9px;line-height:1.6}
-.doc-foot{text-align:center;margin-top:26px;padding-top:12px;border-top:1px solid #ddd;font-family:Arial,sans-serif;font-size:.7rem;color:#aaa;line-height:1.8}
-.print-btn{display:block;margin:18px auto 0;padding:11px 30px;background:#2D8659;color:#fff;border:none;border-radius:8px;font-family:Arial,sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;letter-spacing:.03em}
-.print-btn:hover{background:#1a5c3a}
+.cert-table td{padding:7px 2px}
+.cert-table td:first-child{color:#8b908b;width:40%;font-size:.7rem;letter-spacing:.04em;text-transform:uppercase}
+.cert-table td:last-child{font-weight:600;color:#1c1f1d;font-family:'Courier New',monospace;font-size:.8rem;text-align:right}
+.cert-table .hash td:last-child{color:#1f7a4d}
+.cert-foot{margin-top:12px;font-size:.66rem;color:#a0a59f;border-top:1px solid #e7eee9;padding-top:9px;line-height:1.6}
+.foot{margin-top:34px;padding-top:14px;border-top:1px solid #eef0ee;display:flex;justify-content:space-between;font-size:.64rem;color:#aab0aa;letter-spacing:.04em}
+.print-btn{display:block;margin:20px auto 0;padding:11px 30px;background:#1f7a4d;color:#fff;border:none;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;letter-spacing:.03em}
 </style>
 </head>
 <body>
 <div class="page">
   <div class="hdr">
-    <div class="hdr-logo">🚲</div>
-    <div class="hdr-text">
-      <h1>${esc(title)}</h1>
-      <p>Arfanta Bike Rental &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; arfantabikerental@gmail.com</p>
-    </div>
+    <img src="https://bike-rental-tarzo-app.vercel.app/logo.png" alt="Arfanta Bike Rental">
+    <div class="meta">ARFANTA BIKE RENTAL<br>Via Pecol 22, Arfanta di Tarzo (TV)<br>arfantabikerental@gmail.com</div>
   </div>
+  <div class="title">
+    <div class="kick">${esc(f.kicker)}</div>
+    <h1>${esc(title)}</h1>
+  </div>
+  <div class="hairline"></div>
   <div class="body">
 
     <div class="sec">
       <div class="sec-title">${esc(f.summary)}</div>
-      <table class="sum-table">
-        <tr><td>${esc(f.code)}</td><td><span class="code">${shortId}</span></td></tr>
-        <tr><td>${esc(f.client)}</td><td>${esc(b.cliente_nome)}</td></tr>
-        <tr><td>${esc(f.type)}</td><td>${esc(tipoStr)}</td></tr>
-        <tr><td>${esc(f.pickup)}</td><td>${esc(fmtDate(b.data_ritiro))} &nbsp;${esc(b.orario_ritiro ? b.orario_ritiro.slice(0,5) : '')}</td></tr>
-        <tr><td>${esc(f.ret)}</td><td>${esc(fmtDate(b.data_restituzione))} &nbsp;${esc(b.orario_restituzione ? b.orario_restituzione.slice(0,5) : '')}</td></tr>
-        <tr><td>${esc(f.price)}</td><td>€${esc(Number(b.prezzo_totale || 0).toFixed(2))}</td></tr>
-      </table>
+      <div class="grid">
+        <div class="cell"><div class="k">${esc(f.code)}</div><div class="v code">${shortId}</div></div>
+        <div class="cell"><div class="k">${esc(f.client)}</div><div class="v">${esc(b.cliente_nome)}</div></div>
+        <div class="cell"><div class="k">${esc(f.type)}</div><div class="v">${esc(tipoStr)}</div></div>
+        <div class="cell"><div class="k">${esc(f.price)}</div><div class="v">€${esc(Number(b.prezzo_totale || 0).toFixed(2))}</div></div>
+        <div class="cell"><div class="k">${esc(f.pickup)}</div><div class="v">${esc(fmtDate(b.data_ritiro))} · ${esc(b.orario_ritiro ? b.orario_ritiro.slice(0,5) : '')}</div></div>
+        <div class="cell"><div class="k">${esc(f.ret)}</div><div class="v">${esc(fmtDate(b.data_restituzione))} · ${esc(b.orario_restituzione ? b.orario_restituzione.slice(0,5) : '')}</div></div>
+      </div>
     </div>
 
     <div class="sec">
-      <div class="sec-title">${esc(f.terms)}</div>
-      <div class="terms-box">${termsHtml}</div>
+      <div class="sec-title">${esc(f.condTitle)}</div>
+      <p class="intro">${esc(terms.intro)}</p>
+      <ol class="cond">${condHtml}
+      </ol>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">${esc(terms.rulesTitle)}</div>
+      <div class="rules">
+        <ul>${rulesHtml}
+        </ul>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">${esc(f.privacyTitle)}</div>
+      <p class="privacy">${esc(terms.privacy)}</p>
     </div>
 
     <div class="cert">
-      <div class="cert-hdr">
-        <div class="cert-seal">✍️</div>
-        <div>
-          <div class="cert-htitle">${esc(f.cert)}</div>
-          <div class="cert-hsub">Arfanta Bike Rental — ${shortId}</div>
-        </div>
-      </div>
+      <div class="cert-htitle">${esc(f.cert)}</div>
       <table class="cert-table">
         <tr><td>${esc(f.signer)}</td><td>${esc(b.firma_nome)}</td></tr>
         <tr><td>${esc(f.date)}</td><td>${esc(fmtDateTime(b.firma_at))}</td></tr>
@@ -1592,9 +1608,9 @@ body{font-family:Georgia,'Times New Roman',serif;font-size:11pt;line-height:1.65
       <div class="cert-foot">${esc(f.footer)}</div>
     </div>
 
-    <div class="doc-foot">
-      Arfanta Bike Rental &nbsp;·&nbsp; Via Pecol 22, Arfanta di Tarzo (TV) &nbsp;·&nbsp; Italy<br>
-      arfantabikerental@gmail.com &nbsp;·&nbsp; Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO
+    <div class="foot">
+      <span>Arfanta Bike Rental — Italy</span>
+      <span>Colline del Prosecco — UNESCO</span>
     </div>
   </div>
   <button class="print-btn no-print" onclick="window.print()">${esc(f.print)}</button>

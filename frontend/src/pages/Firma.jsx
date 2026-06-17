@@ -1,222 +1,147 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-// ─── Termini e Condizioni completi (5 lingue) ─────────────────────────────────
+// ─── Contenuti contratto (5 lingue) — allineati a backend/lib/contratto-terms.js ──
+// Struttura per lingua: { intro, conditions[], rulesTitle, rules[], privacy }
 
 const TERMS = {
-  it: [
-    {
-      title: 'Art. 1 — Oggetto e Parti',
-      text: 'Il presente contratto regola il noleggio di una bicicletta elettrica da parte di Arfanta Bike Rental (di seguito "Noleggiatore"), con sede in Via Pecol 22, Arfanta di Tarzo (TV), email: arfantabikerental@gmail.com, nei confronti del cliente (di seguito "Conduttore").',
-    },
-    {
-      title: 'Art. 2 — Requisiti del Conduttore',
-      text: 'Il Conduttore dichiara di avere almeno 18 anni di età, di essere fisicamente idoneo alla guida di una bicicletta elettrica e di non essere sotto l\'effetto di alcol, droghe o farmaci che possano alterare la capacità di guida. Al momento del ritiro dovrà esibire un documento d\'identità valido.',
-    },
-    {
-      title: 'Art. 3 — Uso del Veicolo',
-      text: 'La bicicletta è consegnata in perfetto stato di manutenzione. Il Conduttore si impegna a: (a) utilizzarla esclusivamente per uso personale e ricreativo su strade e percorsi idonei; (b) rispettare il Codice della Strada e le norme locali; (c) non partecipare a gare, competizioni o prove cronometrate; (d) non subaffittare il mezzo a terzi; (e) non apportare modifiche ai componenti della bicicletta; (f) non trasportare passeggeri se non espressamente previsto dal modello; (g) indossare il casco (vivamente consigliato). È vietato l\'uso fuori strada (off-road) non concordato con il Noleggiatore.',
-    },
-    {
-      title: 'Art. 4 — Ritiro e Restituzione',
-      text: 'La bicicletta deve essere ritirata e restituita negli orari concordati in sede. Per ritardi nella restituzione superiori a 30 minuti, il Noleggiatore si riserva il diritto di addebitare €10 per ogni ora o frazione di ora aggiuntiva. La bicicletta va restituita nello stesso stato in cui è stata consegnata: pulita, funzionante e con la batteria non completamente scarica.',
-    },
-    {
-      title: 'Art. 5 — Responsabilità per Danni e Furto',
-      text: 'Il Conduttore è responsabile di qualsiasi danno alla bicicletta (ammaccature, rotture, graffi profondi) causato per negligenza, uso improprio o incidente durante il periodo di noleggio, indipendentemente dall\'autore del sinistro. In caso di furto, il Conduttore è responsabile per il valore integrale del mezzo. Una cauzione di €500 viene pre-autorizzata sulla carta di credito al momento del ritiro e sbloccata alla restituzione senza danni. L\'usura fisiologica derivante dal normale utilizzo non è addebitata.',
-    },
-    {
-      title: 'Art. 6 — Esclusioni di Responsabilità',
-      text: 'Il Noleggiatore declina ogni responsabilità per: (a) danni a terzi o a cose causati dal Conduttore durante il noleggio; (b) infortuni fisici subiti dal Conduttore durante l\'utilizzo del mezzo; (c) guasti meccanici dovuti ad uso improprio o negligenza. Il Conduttore è invitato a verificare la propria copertura assicurativa personale. La bicicletta è dotata di assistenza di primo livello (kit foratura disponibile su richiesta).',
-    },
-    {
-      title: 'Art. 7 — Cancellazione e Rimborso',
-      text: 'Cancellazioni comunicate oltre 48 ore prima dell\'inizio del noleggio: rimborso integrale dell\'importo pagato. Cancellazioni entro 48 ore dall\'inizio: nessun rimborso, salvo forza maggiore documentata (es. ricovero ospedaliero, grave lutto familiare), valutata individualmente dal Noleggiatore. Condizioni meteorologiche avverse non danno diritto a rimborso automatico.',
-    },
-    {
-      title: 'Art. 8 — Trattamento dei Dati Personali (GDPR)',
-      text: 'Ai sensi del Regolamento UE 2016/679 (GDPR) e del D.lgs. 196/2003, i dati personali del Conduttore (nome, cognome, email, telefono, dati di prenotazione) sono trattati da Arfanta Bike Rental in qualità di Titolare del trattamento per le seguenti finalità: (a) esecuzione del contratto di noleggio; (b) invio di comunicazioni relative alla prenotazione; (c) adempimento di obblighi legali e fiscali. I dati non sono ceduti a terzi, ad eccezione dei soggetti strettamente necessari all\'erogazione del servizio (es. gestore pagamenti Stripe). Sono conservati per un periodo massimo di 5 anni dalla data della prenotazione, dopodiché vengono cancellati in modo sicuro. Il Conduttore ha diritto di accedere, rettificare, cancellare i propri dati, opporsi al trattamento, richiederne la portabilità e revocare il consenso in qualsiasi momento, scrivendo a arfantabikerental@gmail.com.',
-    },
-    {
-      title: 'Art. 9 — Legge Applicabile e Foro Competente',
-      text: 'Il presente contratto è regolato dalla legge italiana. Per qualsiasi controversia derivante dal presente contratto, le parti concordano la competenza esclusiva del Tribunale di Treviso.',
-    },
-  ],
-
-  en: [
-    {
-      title: 'Art. 1 — Subject and Parties',
-      text: 'This agreement governs the rental of an electric bicycle by Arfanta Bike Rental (hereinafter "Lessor"), located at Via Pecol 22, Arfanta di Tarzo (TV), Italy, email: arfantabikerental@gmail.com, to the customer (hereinafter "Renter").',
-    },
-    {
-      title: 'Art. 2 — Requirements',
-      text: 'The Renter declares to be at least 18 years of age, physically fit to ride an electric bicycle, and not under the influence of alcohol, drugs or medications that may impair riding ability. A valid identity document must be presented at the time of pickup.',
-    },
-    {
-      title: 'Art. 3 — Use of the Bicycle',
-      text: 'The bicycle is provided in perfect working condition. The Renter agrees to: (a) use it solely for personal and recreational purposes on suitable roads and paths; (b) comply with the Italian Highway Code and local regulations; (c) not participate in any race, competition or timed event; (d) not sublet the bicycle to third parties; (e) not modify any bicycle components; (f) not carry passengers unless the model expressly permits it; (g) wear a helmet (strongly recommended). Off-road use must be agreed in advance with the Lessor.',
-    },
-    {
-      title: 'Art. 4 — Pickup and Return',
-      text: 'The bicycle must be picked up and returned at the agreed times and location. For returns more than 30 minutes late, the Lessor reserves the right to charge €10 per additional hour or fraction thereof. The bicycle must be returned in the same condition as delivered: clean, functioning, and not with a completely discharged battery.',
-    },
-    {
-      title: 'Art. 5 — Liability for Damage and Theft',
-      text: 'The Renter is liable for any damage to the bicycle (dents, breakages, deep scratches) caused by negligence, improper use, or accident during the rental period, regardless of who caused the incident. In the event of theft, the Renter is liable for the full replacement value of the bicycle. A €500 security deposit is pre-authorized on the credit card at pickup and released upon undamaged return. Normal wear and tear from ordinary use is not charged.',
-    },
-    {
-      title: 'Art. 6 — Limitation of Liability',
-      text: 'The Lessor accepts no liability for: (a) damage to third parties or property caused by the Renter during the rental; (b) personal injuries sustained by the Renter during use; (c) mechanical failures due to improper use or negligence. The Renter is advised to verify their personal insurance coverage.',
-    },
-    {
-      title: 'Art. 7 — Cancellation and Refund',
-      text: 'Cancellations made more than 48 hours before the start of the rental: full refund. Cancellations within 48 hours of the start: no refund, unless force majeure is documented (e.g. hospitalisation, bereavement), assessed individually by the Lessor. Adverse weather conditions do not entitle the Renter to an automatic refund.',
-    },
-    {
-      title: 'Art. 8 — Personal Data Processing (GDPR)',
-      text: 'Pursuant to EU Regulation 2016/679 (GDPR), the Renter\'s personal data (name, email, telephone, booking details) are processed by Arfanta Bike Rental as Data Controller for the following purposes: (a) performance of the rental agreement; (b) sending booking-related communications; (c) fulfilment of legal and fiscal obligations. Data are not shared with third parties, except those strictly necessary for service delivery (e.g. Stripe payment processor). Data are retained for a maximum of 5 years from the booking date, after which they are securely deleted. The Renter has the right to access, rectify, delete, object to processing, request portability and withdraw consent at any time by writing to arfantabikerental@gmail.com.',
-    },
-    {
-      title: 'Art. 9 — Governing Law and Jurisdiction',
-      text: 'This agreement is governed by Italian law. For any dispute arising from this agreement, the parties agree on the exclusive jurisdiction of the Court of Treviso, Italy.',
-    },
-  ],
-
-  de: [
-    {
-      title: 'Art. 1 — Gegenstand und Parteien',
-      text: 'Dieser Vertrag regelt die Vermietung eines Elektrofahrrads durch Arfanta Bike Rental (im Folgenden „Vermieter"), mit Sitz in Via Pecol 22, Arfanta di Tarzo (TV), Italien, E-Mail: arfantabikerental@gmail.com, an den Kunden (im Folgenden „Mieter").',
-    },
-    {
-      title: 'Art. 2 — Anforderungen',
-      text: 'Der Mieter erklärt, mindestens 18 Jahre alt zu sein, körperlich in der Lage zu sein, ein Elektrofahrrad zu fahren, und nicht unter dem Einfluss von Alkohol, Drogen oder Medikamenten zu stehen, die die Fahrtüchtigkeit beeinträchtigen könnten. Bei der Abholung ist ein gültiger Personalausweis vorzulegen.',
-    },
-    {
-      title: 'Art. 3 — Nutzung des Fahrrads',
-      text: 'Das Fahrrad wird in einwandfreiem Zustand übergeben. Der Mieter verpflichtet sich: (a) es ausschließlich für den persönlichen Freizeitgebrauch auf geeigneten Straßen und Wegen zu nutzen; (b) die Straßenverkehrsordnung und lokale Vorschriften einzuhalten; (c) nicht an Rennen, Wettkämpfen oder Zeitfahrten teilzunehmen; (d) das Fahrrad nicht unterzuvermieten; (e) keine Änderungen an den Fahrradkomponenten vorzunehmen; (f) keinen Beifahrer zu befördern, sofern das Modell dies nicht ausdrücklich erlaubt; (g) einen Helm zu tragen (dringend empfohlen). Geländefahrten (Offroad) müssen im Voraus mit dem Vermieter abgestimmt werden.',
-    },
-    {
-      title: 'Art. 4 — Abholung und Rückgabe',
-      text: 'Das Fahrrad muss zu den vereinbarten Zeiten abgeholt und zurückgegeben werden. Bei Rückgabe von mehr als 30 Minuten Verspätung behält sich der Vermieter das Recht vor, €10 pro angefangene Stunde in Rechnung zu stellen. Das Fahrrad ist in demselben Zustand zurückzugeben, in dem es übergeben wurde: sauber, funktionsfähig und nicht mit vollständig entladener Batterie.',
-    },
-    {
-      title: 'Art. 5 — Haftung für Schäden und Diebstahl',
-      text: 'Der Mieter haftet für alle Schäden am Fahrrad (Dellen, Brüche, tiefe Kratzer), die durch Fahrlässigkeit, unsachgemäßen Gebrauch oder einen Unfall während der Mietzeit verursacht wurden, unabhängig davon, wer den Schaden verursacht hat. Im Falle eines Diebstahls haftet der Mieter für den vollen Wiederbeschaffungswert des Fahrrads. Eine Kaution von €500 wird bei der Abholung auf der Kreditkarte vorläufig autorisiert und nach unbeschädigter Rückgabe freigegeben. Normaler Verschleiß durch übliche Nutzung wird nicht in Rechnung gestellt.',
-    },
-    {
-      title: 'Art. 6 — Haftungsausschluss',
-      text: 'Der Vermieter übernimmt keine Haftung für: (a) Schäden an Dritten oder Sachen, die durch den Mieter während der Mietzeit verursacht werden; (b) körperliche Verletzungen des Mieters bei der Nutzung des Fahrrads; (c) mechanische Störungen aufgrund unsachgemäßer Nutzung oder Fahrlässigkeit. Der Mieter wird empfohlen, seinen persönlichen Versicherungsschutz zu überprüfen.',
-    },
-    {
-      title: 'Art. 7 — Stornierung und Erstattung',
-      text: 'Stornierungen, die mehr als 48 Stunden vor Beginn der Miete mitgeteilt werden: vollständige Rückerstattung. Stornierungen innerhalb von 48 Stunden vor Beginn: keine Rückerstattung, es sei denn, es liegt ein nachgewiesener Fall höherer Gewalt vor (z.B. Krankenhausaufenthalt, schwerer Trauerfall), der individuell vom Vermieter bewertet wird. Ungünstige Wetterbedingungen berechtigen nicht zu einer automatischen Rückerstattung.',
-    },
-    {
-      title: 'Art. 8 — Datenschutz (DSGVO)',
-      text: 'Gemäß der EU-Verordnung 2016/679 (DSGVO) werden die personenbezogenen Daten des Mieters (Name, E-Mail, Telefon, Buchungsdaten) von Arfanta Bike Rental als Verantwortlichem für folgende Zwecke verarbeitet: (a) Erfüllung des Mietvertrags; (b) Zusendung buchungsbezogener Mitteilungen; (c) Erfüllung rechtlicher und steuerlicher Pflichten. Die Daten werden nicht an Dritte weitergegeben, außer an jene, die zur Erbringung des Dienstes unbedingt erforderlich sind (z.B. Stripe für die Zahlungsabwicklung). Die Daten werden maximal 5 Jahre ab dem Buchungsdatum aufbewahrt und anschließend sicher gelöscht. Der Mieter hat das Recht auf Auskunft, Berichtigung, Löschung, Widerspruch, Datenübertragbarkeit und Widerruf der Einwilligung, durch Schreiben an arfantabikerental@gmail.com.',
-    },
-    {
-      title: 'Art. 9 — Anwendbares Recht und Gerichtsstand',
-      text: 'Dieser Vertrag unterliegt italienischem Recht. Für etwaige Streitigkeiten aus diesem Vertrag vereinbaren die Parteien die ausschließliche Zuständigkeit des Gerichts Treviso, Italien.',
-    },
-  ],
-
-  es: [
-    {
-      title: 'Art. 1 — Objeto y Partes',
-      text: 'El presente contrato regula el alquiler de una bicicleta eléctrica por parte de Arfanta Bike Rental (en adelante "Arrendador"), con sede en Via Pecol 22, Arfanta di Tarzo (TV), Italia, email: arfantabikerental@gmail.com, al cliente (en adelante "Arrendatario").',
-    },
-    {
-      title: 'Art. 2 — Requisitos',
-      text: 'El Arrendatario declara tener al menos 18 años de edad, estar físicamente capacitado para conducir una bicicleta eléctrica y no estar bajo los efectos del alcohol, drogas o medicamentos que puedan afectar la capacidad de conducción. Deberá presentar un documento de identidad válido en el momento de la recogida.',
-    },
-    {
-      title: 'Art. 3 — Uso de la Bicicleta',
-      text: 'La bicicleta se entrega en perfecto estado de mantenimiento. El Arrendatario se compromete a: (a) utilizarla exclusivamente para uso personal y recreativo en carreteras y caminos adecuados; (b) respetar el Código de Circulación y las normativas locales; (c) no participar en carreras, competiciones ni pruebas cronometradas; (d) no subarrendar el vehículo; (e) no realizar modificaciones en los componentes; (f) no transportar pasajeros salvo que el modelo lo permita expresamente; (g) llevar casco (muy recomendado). El uso fuera de carretera debe acordarse previamente con el Arrendador.',
-    },
-    {
-      title: 'Art. 4 — Recogida y Devolución',
-      text: 'La bicicleta debe recogerse y devolverse en los horarios acordados. Por retrasos en la devolución superiores a 30 minutos, el Arrendador se reserva el derecho de cobrar €10 por cada hora adicional o fracción. La bicicleta debe devolverse en el mismo estado en que fue entregada: limpia, en funcionamiento y sin la batería completamente descargada.',
-    },
-    {
-      title: 'Art. 5 — Responsabilidad por Daños y Robo',
-      text: 'El Arrendatario es responsable de cualquier daño a la bicicleta (abolladuras, roturas, arañazos profundos) causado por negligencia, uso indebido o accidente durante el período de alquiler, independientemente de quién haya causado el incidente. En caso de robo, el Arrendatario es responsable del valor íntegro del vehículo. Una fianza de €500 se preautoriza en la tarjeta de crédito al recoger y se libera al devolver sin daños. El desgaste normal por uso ordinario no se factura.',
-    },
-    {
-      title: 'Art. 6 — Limitación de Responsabilidad',
-      text: 'El Arrendador declina toda responsabilidad por: (a) daños a terceros o a bienes causados por el Arrendatario durante el alquiler; (b) lesiones físicas sufridas por el Arrendatario durante el uso; (c) averías mecánicas debidas a uso indebido o negligencia. Se recomienda al Arrendatario verificar su cobertura de seguro personal.',
-    },
-    {
-      title: 'Art. 7 — Cancelación y Reembolso',
-      text: 'Cancelaciones comunicadas con más de 48 horas de antelación: reembolso íntegro. Cancelaciones dentro de las 48 horas previas: sin reembolso, salvo fuerza mayor debidamente documentada (p. ej. hospitalización, duelo grave), evaluada individualmente por el Arrendador. Las condiciones meteorológicas adversas no dan derecho a un reembolso automático.',
-    },
-    {
-      title: 'Art. 8 — Protección de Datos (RGPD)',
-      text: 'De conformidad con el Reglamento UE 2016/679 (RGPD), los datos personales del Arrendatario (nombre, email, teléfono, datos de reserva) son tratados por Arfanta Bike Rental como Responsable del tratamiento con las siguientes finalidades: (a) ejecución del contrato de alquiler; (b) envío de comunicaciones relacionadas con la reserva; (c) cumplimiento de obligaciones legales y fiscales. Los datos no se ceden a terceros, salvo los estrictamente necesarios para la prestación del servicio (p. ej. Stripe para el pago). Se conservan un máximo de 5 años desde la fecha de reserva, tras los cuales se eliminan de forma segura. El Arrendatario tiene derecho a acceder, rectificar, suprimir, oponerse al tratamiento, solicitar la portabilidad y revocar el consentimiento en cualquier momento escribiendo a arfantabikerental@gmail.com.',
-    },
-    {
-      title: 'Art. 9 — Ley Aplicable y Jurisdicción',
-      text: 'El presente contrato se rige por la legislación italiana. Para cualquier controversia derivada de este contrato, las partes acuerdan la competencia exclusiva del Tribunal de Treviso, Italia.',
-    },
-  ],
-
-  fr: [
-    {
-      title: 'Art. 1 — Objet et Parties',
-      text: 'Le présent contrat régit la location d\'un vélo électrique par Arfanta Bike Rental (ci-après « Loueur »), dont le siège est Via Pecol 22, Arfanta di Tarzo (TV), Italie, email : arfantabikerental@gmail.com, au profit du client (ci-après « Locataire »).',
-    },
-    {
-      title: 'Art. 2 — Conditions requises',
-      text: 'Le Locataire déclare avoir au moins 18 ans, être physiquement apte à conduire un vélo électrique et ne pas être sous l\'influence de l\'alcool, de drogues ou de médicaments susceptibles d\'altérer ses capacités de conduite. Une pièce d\'identité valide devra être présentée au moment de la prise en charge.',
-    },
-    {
-      title: 'Art. 3 — Utilisation du Vélo',
-      text: 'Le vélo est remis en parfait état de fonctionnement. Le Locataire s\'engage à : (a) l\'utiliser exclusivement à des fins personnelles et récréatives sur des routes et chemins appropriés ; (b) respecter le Code de la route et les réglementations locales ; (c) ne pas participer à des courses, compétitions ou épreuves chronométrées ; (d) ne pas sous-louer le vélo à des tiers ; (e) ne pas modifier les composants du vélo ; (f) ne pas transporter de passagers sauf si le modèle le permet expressément ; (g) porter un casque (fortement recommandé). L\'utilisation hors route doit être convenue à l\'avance avec le Loueur.',
-    },
-    {
-      title: 'Art. 4 — Prise en Charge et Restitution',
-      text: 'Le vélo doit être pris en charge et restitué aux horaires convenus. Pour tout retard de restitution supérieur à 30 minutes, le Loueur se réserve le droit de facturer €10 par heure supplémentaire ou fraction d\'heure. Le vélo doit être restitué dans le même état qu\'au moment de la remise : propre, en état de marche et avec une batterie non complètement déchargée.',
-    },
-    {
-      title: 'Art. 5 — Responsabilité pour Dommages et Vol',
-      text: 'Le Locataire est responsable de tout dommage au vélo (bosses, casses, griffures profondes) causé par négligence, mauvais usage ou accident pendant la période de location, quel que soit l\'auteur du sinistre. En cas de vol, le Locataire est responsable de la valeur intégrale du vélo. Une caution de €500 est pré-autorisée sur la carte de crédit lors de la prise en charge et débloquée à la restitution sans dommage. L\'usure normale due à une utilisation ordinaire n\'est pas facturée.',
-    },
-    {
-      title: 'Art. 6 — Limitation de Responsabilité',
-      text: 'Le Loueur décline toute responsabilité pour : (a) les dommages causés à des tiers ou à des biens par le Locataire pendant la location ; (b) les blessures physiques subies par le Locataire lors de l\'utilisation du vélo ; (c) les pannes mécaniques dues à un mauvais usage ou à la négligence. Il est conseillé au Locataire de vérifier sa couverture d\'assurance personnelle.',
-    },
-    {
-      title: 'Art. 7 — Annulation et Remboursement',
-      text: 'Annulations effectuées plus de 48 heures avant le début de la location : remboursement intégral. Annulations dans les 48 heures précédant la location : aucun remboursement, sauf cas de force majeure dûment documenté (ex. hospitalisation, deuil grave), apprécié individuellement par le Loueur. Les mauvaises conditions météorologiques n\'ouvrent pas droit à un remboursement automatique.',
-    },
-    {
-      title: 'Art. 8 — Protection des Données (RGPD)',
-      text: 'Conformément au Règlement UE 2016/679 (RGPD), les données personnelles du Locataire (nom, email, téléphone, données de réservation) sont traitées par Arfanta Bike Rental en qualité de Responsable du traitement aux fins suivantes : (a) exécution du contrat de location ; (b) envoi de communications relatives à la réservation ; (c) respect des obligations légales et fiscales. Les données ne sont pas transmises à des tiers, sauf à ceux strictement nécessaires à la prestation du service (ex. Stripe pour les paiements). Elles sont conservées pendant 5 ans maximum à compter de la date de réservation, puis supprimées de manière sécurisée. Le Locataire dispose des droits d\'accès, de rectification, d\'effacement, d\'opposition, de portabilité et de retrait du consentement à tout moment en écrivant à arfantabikerental@gmail.com.',
-    },
-    {
-      title: 'Art. 9 — Droit Applicable et Juridiction',
-      text: 'Le présent contrat est régi par le droit italien. Pour tout litige découlant de ce contrat, les parties conviennent de la compétence exclusive du Tribunal de Trévise, Italie.',
-    },
-  ],
+  it: {
+    intro: `Le sotto elencate condizioni di noleggio sono parte integrante del presente contratto.`,
+    conditions: [
+      `Il locatario si assume la completa responsabilità dell'oggetto/i che prende in noleggio, dichiarando di essere idoneo e capace di usarlo, senza creare rischi propri e a terzi.`,
+      `Il locatario dichiara di ritirare il materiale noleggiato in perfetto stato di funzionamento e manutenzione, assumendosi la piena responsabilità dei rischi durante l'uso dello stesso.`,
+      `Durante l'uso delle bici e accessori, il locatario deve sempre attenersi al codice stradale e rispettare le norme di sicurezza; in caso di sosta chiudere la bici con apposito lucchetto o tenerla sempre vicino a vista per evitare possibili furti o manomissioni.`,
+      `Il materiale non è assicurato; in caso di furto il locatario deve fare regolare denuncia presso le forze dell'ordine competenti. In caso di smarrimento o danni vandalici il locatario si impegna ad avvisare e pagare entro la giornata l'oggetto/i in causa, o i danni avvenuti, secondo il valore di mercato.`,
+      `In caso di uso inadeguato o danneggiamento del materiale noleggiato, il ripristino sarà addebitato al locatario secondo il valore e listino in vigore + costo lavorativo.`,
+      `Al momento del ritiro viene pre-autorizzata sulla carta di credito una cauzione di €500 a garanzia del mezzo e degli accessori; tale importo viene rilasciato alla restituzione del materiale in assenza di danni. In caso di danni, furto o smarrimento, l'importo necessario al ripristino o alla sostituzione potrà essere trattenuto fino al valore della cauzione, fermo restando quanto stabilito ai punti precedenti.`,
+      `La sostituzione del materiale con uno alla pari valore durante il noleggio sarà sempre possibile.`,
+      `La presente esclusione di responsabilità civile e penale comprende in particolare diritti di risarcimento danni a persone/materiali derivati sia da colpa che da messa in pericolo, indipendentemente dalla loro causa legale.`,
+      `Il presente contratto deve essere esclusivamente accettato e firmato da persona maggiorenne, anche per più persone o gruppo, rendendosi responsabile di tutte le voci del contratto, esibendo documento di identità valido.`,
+      `Le riconsegne del materiale noleggiato devono avvenire nel posto accordato entro l'orario di chiusura; in caso di ritardo avvisare per tempo telefonicamente il gestore del punto di riconsegna.`,
+      `La risoluzione anticipata del contratto di noleggio è possibile mediante la restituzione del materiale senza pretese di rimborso da parte del locatario; i rimborsi si effettuano esclusivamente per malattie e/o infortunio mediante l'esibizione di certificato medico.`,
+    ],
+    rulesTitle: `Regole di buon comportamento e utilizzo delle bici`,
+    rules: [
+      `Rispettare il codice stradale e i sensi di marcia, rispettando i pedoni e tutti i mezzi in circolazione.`,
+      `Rispettare gli abitanti, la natura e gli animali; non percorrere strade o sentieri vietati alle bici.`,
+      `Usare sempre il casco di protezione adeguato e a norma.`,
+      `Controllare sempre il materiale noleggiato prima di partire.`,
+    ],
+    privacy: `Dichiaro di aver letto e compreso l'informativa sul trattamento dei miei dati personali in conformità dell'art. 13 e 14 del Regolamento Europeo 679/2016 e del Codice della Privacy novellato dal D.lgs. 101/2018. Il locatario autorizza l'uso dei propri dati personali per uso statistico; eventuali comunicazioni commerciali verranno inviate in ottemperanza a quanto previsto dall'Art. 6 Comma 1 lettera f) e dal correlato Considerando 47 del GDPR. Mediante la firma accetto tutte le condizioni e il materiale elencato di noleggio.`,
+  },
+  en: {
+    intro: `The following rental terms are an integral part of this agreement.`,
+    conditions: [
+      `The tenant takes full responsibility for the rental item(s), declaring to be fit and able to use it, without creating any risks to themselves or to third parties.`,
+      `The tenant declares to collect the rented material in perfect working and maintenance condition, taking full responsibility for the risks during its use.`,
+      `When using the bikes and accessories, the tenant must always comply with the road code and observe the safety regulations; when stopping, lock the bike with a suitable lock or keep it always close and within sight to avoid possible theft or tampering.`,
+      `The material is not insured; in case of theft the tenant must file a regular report with the relevant law enforcement authorities. In the event of loss or vandalism, the tenant undertakes to notify and pay for the item(s) in question, or the damage that has occurred, within the same day, according to the market value.`,
+      `In the event of inadequate use or damage to the rented material, the restoration will be charged to the tenant according to the value and price list in force + labour cost.`,
+      `At pickup, a security deposit of €500 is pre-authorised on the credit card to guarantee the vehicle and accessories; this amount is released upon return of the material without damage. In the event of damage, theft or loss, the amount required for repair or replacement may be withheld up to the value of the deposit, without prejudice to the preceding clauses.`,
+      `The replacement of the material with one of equal value during the rental will always be possible.`,
+      `This exclusion of civil and criminal liability includes in particular rights to compensation for damage to persons/materials arising from both fault and endangerment, irrespective of their legal cause.`,
+      `This contract must be accepted and signed exclusively by an adult, also on behalf of several persons or a group, taking responsibility for all the items of the contract and presenting a valid identity document.`,
+      `The return of the rented material must take place at the agreed location within the closing time; in case of delay, notify the operator of the return point in good time by telephone.`,
+      `The early termination of the rental agreement is possible by returning the material, with no claim to a refund by the tenant; refunds are made exclusively in case of illness and/or injury upon presentation of a medical certificate.`,
+    ],
+    rulesTitle: `Rules of good behaviour and use of the bikes`,
+    rules: [
+      `Respect the road code and the directions of travel, respecting pedestrians and all vehicles in circulation.`,
+      `Respect the inhabitants, nature and animals; do not travel on roads or paths prohibited to bikes.`,
+      `Always use an appropriate and standard-compliant protective helmet.`,
+      `Always check the rented material before you leave.`,
+    ],
+    privacy: `I declare that I have read and understood the information on the processing of my personal data in accordance with art. 13 and 14 of European Regulation 679/2016 and the Italian Privacy Code as amended by Legislative Decree 101/2018. The customer authorises the use of his/her personal data for statistical purposes; any commercial communications will be sent in compliance with the provisions of Art. 6 Paragraph 1 letter f) and the related Recital 47 of the GDPR. By signing, I accept all conditions and the listed rental material.`,
+  },
+  de: {
+    intro: `Die folgenden Mietbedingungen sind integraler Bestandteil dieser Vereinbarung.`,
+    conditions: [
+      `Der Mieter übernimmt die volle Verantwortung für den/die Mietgegenstand(e) und erklärt, dass er fit und in der Lage ist, ihn zu nutzen, ohne Risiken für sich selbst oder für Dritte zu schaffen.`,
+      `Der Mieter erklärt, das gemietete Material in einwandfreiem Betriebs- und Wartungszustand zu übernehmen und dabei die volle Verantwortung für die Risiken bei der Nutzung zu übernehmen.`,
+      `Bei der Nutzung von Fahrrädern und Zubehör muss der Mieter stets die Straßenverkehrsordnung einhalten und die Sicherheitsvorschriften beachten; bei einer Pause das Fahrrad mit einem geeigneten Schloss sperren oder es stets in der Nähe und in Sichtweite halten, um möglichen Diebstahl oder Manipulation zu vermeiden.`,
+      `Das Material ist nicht versichert; im Falle eines Diebstahls muss der Mieter eine ordnungsgemäße Anzeige bei den zuständigen Strafverfolgungsbehörden erstatten. Im Falle von Verlust oder Vandalismus verpflichtet sich der Mieter, den betreffenden Gegenstand bzw. den entstandenen Schaden noch am selben Tag zu melden und entsprechend dem Marktwert zu bezahlen.`,
+      `Bei unsachgemäßer Nutzung oder Beschädigung des Mietmaterials werden die Wiederherstellungskosten dem Mieter nach dem geltenden Wert und der geltenden Preisliste + Arbeitskosten in Rechnung gestellt.`,
+      `Bei der Abholung wird eine Kaution von €500 auf der Kreditkarte vorautorisiert, um das Fahrzeug und das Zubehör abzusichern; dieser Betrag wird bei schadenfreier Rückgabe des Materials freigegeben. Im Falle von Schäden, Diebstahl oder Verlust kann der für die Reparatur oder den Ersatz erforderliche Betrag bis zur Höhe der Kaution einbehalten werden, unbeschadet der vorstehenden Punkte.`,
+      `Der Austausch des Materials gegen ein gleichwertiges ist während der Anmietung jederzeit möglich.`,
+      `Dieser Ausschluss der zivil- und strafrechtlichen Haftung umfasst insbesondere Schadensersatzansprüche an Personen/Sachen, die sowohl aus Verschulden als auch aus Gefährdung entstehen, unabhängig von ihrer rechtlichen Ursache.`,
+      `Dieser Vertrag darf ausschließlich von einer volljährigen Person akzeptiert und unterzeichnet werden, auch im Namen mehrerer Personen oder einer Gruppe, wobei diese die Verantwortung für alle Punkte des Vertrages übernimmt und einen gültigen Ausweis vorlegt.`,
+      `Die Rückgabe des gemieteten Materials muss am vereinbarten Ort innerhalb der Schließzeit erfolgen; im Falle einer Verspätung den Betreiber des Rückgabepunkts rechtzeitig telefonisch benachrichtigen.`,
+      `Die vorzeitige Beendigung des Mietvertrages ist durch Rückgabe des Materials ohne Erstattungsanspruch des Mieters möglich; Erstattungen erfolgen ausschließlich bei Krankheit und/oder Verletzung gegen Vorlage eines ärztlichen Attests.`,
+    ],
+    rulesTitle: `Regeln für gutes Verhalten und Nutzung der Fahrräder`,
+    rules: [
+      `Die Straßenverkehrsordnung und die Fahrtrichtungen beachten, unter Rücksichtnahme auf Fußgänger und alle Fahrzeuge im Verkehr.`,
+      `Die Einwohner, die Natur und die Tiere respektieren; keine für Fahrräder gesperrten Straßen oder Wege befahren.`,
+      `Stets einen geeigneten und normgerechten Schutzhelm tragen.`,
+      `Das gemietete Material stets vor der Abfahrt überprüfen.`,
+    ],
+    privacy: `Hiermit erkläre ich, dass ich die Informationsmitteilung über die Verarbeitung meiner personenbezogenen Daten gemäß Art. 13 und 14 der Europäischen Verordnung 679/2016 und des italienischen Datenschutzkodex in der durch das Gesetzesdekret 101/2018 geänderten Fassung gelesen und verstanden habe. Der Kunde ermächtigt die Verwendung seiner personenbezogenen Daten für statistische Zwecke; etwaige kommerzielle Mitteilungen werden unter Beachtung der Bestimmungen von Art. 6 Abs. 1 Buchstabe f) und dem damit verbundenen Erwägungsgrund 47 der DS-GVO versandt. Mit der Unterzeichnung akzeptiere ich alle Bedingungen und das aufgeführte Mietmaterial.`,
+  },
+  es: {
+    intro: `Las condiciones de alquiler que se enumeran a continuación son parte integrante del presente contrato.`,
+    conditions: [
+      `El arrendatario asume la completa responsabilidad del/de los objeto(s) que toma en alquiler, declarando ser idóneo y capaz de usarlo, sin crear riesgos para sí mismo ni para terceros.`,
+      `El arrendatario declara retirar el material alquilado en perfecto estado de funcionamiento y mantenimiento, asumiendo la plena responsabilidad de los riesgos durante el uso del mismo.`,
+      `Durante el uso de las bicicletas y los accesorios, el arrendatario debe atenerse siempre al código de circulación y respetar las normas de seguridad; en caso de parada, cerrar la bicicleta con el candado correspondiente o mantenerla siempre cerca y a la vista para evitar posibles robos o manipulaciones.`,
+      `El material no está asegurado; en caso de robo el arrendatario debe presentar la correspondiente denuncia ante las fuerzas del orden competentes. En caso de pérdida o daños por vandalismo, el arrendatario se compromete a avisar y pagar dentro del mismo día el/los objeto(s) en cuestión, o los daños ocurridos, según el valor de mercado.`,
+      `En caso de uso inadecuado o daño del material alquilado, la reparación se cargará al arrendatario según el valor y la lista de precios vigente + el coste de mano de obra.`,
+      `En el momento de la recogida se preautoriza en la tarjeta de crédito una fianza de €500 como garantía del vehículo y los accesorios; dicho importe se libera a la devolución del material sin daños. En caso de daños, robo o pérdida, el importe necesario para la reparación o sustitución podrá retenerse hasta el valor de la fianza, sin perjuicio de lo establecido en los puntos anteriores.`,
+      `La sustitución del material por otro de igual valor durante el alquiler será siempre posible.`,
+      `La presente exclusión de responsabilidad civil y penal comprende en particular los derechos de indemnización por daños a personas/materiales derivados tanto de culpa como de puesta en peligro, independientemente de su causa legal.`,
+      `El presente contrato debe ser aceptado y firmado exclusivamente por una persona mayor de edad, también en nombre de varias personas o de un grupo, haciéndose responsable de todos los puntos del contrato y exhibiendo un documento de identidad válido.`,
+      `Las devoluciones del material alquilado deben realizarse en el lugar acordado dentro del horario de cierre; en caso de retraso, avisar con tiempo telefónicamente al gestor del punto de devolución.`,
+      `La resolución anticipada del contrato de alquiler es posible mediante la devolución del material sin derecho a reembolso por parte del arrendatario; los reembolsos se efectúan exclusivamente por enfermedad y/o accidente mediante la presentación de un certificado médico.`,
+    ],
+    rulesTitle: `Reglas de buen comportamiento y uso de las bicicletas`,
+    rules: [
+      `Respetar el código de circulación y los sentidos de marcha, respetando a los peatones y a todos los vehículos en circulación.`,
+      `Respetar a los habitantes, la naturaleza y los animales; no recorrer carreteras o senderos prohibidos a las bicicletas.`,
+      `Usar siempre el casco de protección adecuado y homologado.`,
+      `Controlar siempre el material alquilado antes de partir.`,
+    ],
+    privacy: `Declaro haber leído y comprendido la información sobre el tratamiento de mis datos personales de conformidad con los art. 13 y 14 del Reglamento Europeo 679/2016 y del Código de Privacidad italiano modificado por el D.lgs. 101/2018. El arrendatario autoriza el uso de sus datos personales con fines estadísticos; las eventuales comunicaciones comerciales se enviarán de conformidad con lo previsto en el Art. 6, apartado 1, letra f) y el correspondiente Considerando 47 del RGPD. Mediante la firma acepto todas las condiciones y el material de alquiler enumerado.`,
+  },
+  fr: {
+    intro: `Les conditions de location énumérées ci-dessous font partie intégrante du présent contrat.`,
+    conditions: [
+      `Le locataire assume l'entière responsabilité du/des objet(s) qu'il prend en location, déclarant être apte et capable de l'utiliser, sans créer de risques pour lui-même ni pour des tiers.`,
+      `Le locataire déclare retirer le matériel loué en parfait état de fonctionnement et d'entretien, en assumant l'entière responsabilité des risques pendant son utilisation.`,
+      `Lors de l'utilisation des vélos et des accessoires, le locataire doit toujours respecter le code de la route et les règles de sécurité ; en cas d'arrêt, attacher le vélo avec un antivol approprié ou le garder toujours à proximité et en vue afin d'éviter d'éventuels vols ou actes de malveillance.`,
+      `Le matériel n'est pas assuré ; en cas de vol, le locataire doit déposer une plainte régulière auprès des forces de l'ordre compétentes. En cas de perte ou de dommages dus au vandalisme, le locataire s'engage à signaler et à payer dans la journée le(s) objet(s) concerné(s), ou les dommages survenus, selon la valeur de marché.`,
+      `En cas d'utilisation inappropriée ou de détérioration du matériel loué, la remise en état sera facturée au locataire selon la valeur et le tarif en vigueur + le coût de main-d'œuvre.`,
+      `Au moment de la prise en charge, une caution de €500 est pré-autorisée sur la carte de crédit pour garantir le matériel et les accessoires ; ce montant est débloqué à la restitution du matériel sans dommage. En cas de dommage, vol ou perte, le montant nécessaire à la réparation ou au remplacement pourra être retenu à hauteur de la valeur de la caution, sans préjudice des points précédents.`,
+      `Le remplacement du matériel par un autre de valeur équivalente pendant la location sera toujours possible.`,
+      `La présente exclusion de responsabilité civile et pénale comprend en particulier les droits à l'indemnisation des dommages aux personnes/matériels résultant aussi bien d'une faute que d'une mise en danger, indépendamment de leur cause juridique.`,
+      `Le présent contrat doit être accepté et signé exclusivement par une personne majeure, également au nom de plusieurs personnes ou d'un groupe, se rendant responsable de tous les points du contrat et présentant une pièce d'identité valide.`,
+      `La restitution du matériel loué doit avoir lieu au lieu convenu avant l'heure de fermeture ; en cas de retard, prévenir à temps par téléphone le gestionnaire du point de restitution.`,
+      `La résiliation anticipée du contrat de location est possible par la restitution du matériel, sans aucune prétention de remboursement de la part du locataire ; les remboursements sont effectués exclusivement pour maladie et/ou accident sur présentation d'un certificat médical.`,
+    ],
+    rulesTitle: `Règles de bon comportement et d'utilisation des vélos`,
+    rules: [
+      `Respecter le code de la route et les sens de circulation, en respectant les piétons et tous les véhicules en circulation.`,
+      `Respecter les habitants, la nature et les animaux ; ne pas emprunter de routes ou de sentiers interdits aux vélos.`,
+      `Toujours porter un casque de protection adéquat et conforme aux normes.`,
+      `Toujours vérifier le matériel loué avant de partir.`,
+    ],
+    privacy: `Je déclare avoir lu et compris les informations relatives au traitement de mes données personnelles conformément aux art. 13 et 14 du Règlement Européen 679/2016 et du Code de la Confidentialité italien modifié par le D.lgs. 101/2018. Le locataire autorise l'utilisation de ses données personnelles à des fins statistiques ; les éventuelles communications commerciales seront envoyées conformément aux dispositions de l'Art. 6, paragraphe 1, lettre f) et du Considérant 47 correspondant du RGPD. En signant, j'accepte toutes les conditions et le matériel de location énuméré.`,
+  },
 };
 
 // ─── Traduzioni UI ────────────────────────────────────────────────────────────
 
 const T = {
   it: {
-    title: 'Contratto di Noleggio',
-    subtitle: 'Bicicletta Elettrica — Arfanta Bike Rental',
-    summary: 'Riepilogo Prenotazione',
-    code: 'Codice prenotazione',
+    kicker: 'Documento da firmare', title: 'Contratto di Noleggio', subtitle: 'E-bike — Arfanta Bike Rental',
+    summary: 'Riepilogo prenotazione', code: 'Codice',
     fCliente: 'Cliente', fTipo: 'Tipo noleggio', fRitiro: 'Ritiro', fRestituzione: 'Restituzione', fPrezzo: 'Importo pagato',
     types: { mezza_mattina: 'Mezza Giornata Mattina (09:00–13:00)', mezza_pomeriggio: 'Mezza Giornata Pomeriggio (14:00–18:00)', intera_giornata: 'Giornata Intera (09:00–18:00)', multi_giorno: 'Multi-Giorno' },
-    termsTitle: 'Termini e Condizioni Completi',
-    termsHint: 'Scorri per leggere i termini completi prima di firmare',
+    termsTitle: 'Condizioni di noleggio', privacyTitle: 'Informativa privacy',
+    termsHint: 'Scorri per leggere tutto il contratto prima di firmare',
     checks: [
-      'Ho letto e accetto integralmente i <strong>Termini e Condizioni</strong> di noleggio sopra riportati (Artt. 1–7).',
-      'Mi impegno a restituire la bicicletta in perfette condizioni <strong>entro l\'orario concordato</strong> (Art. 4).',
-      'Sono consapevole della mia <strong>responsabilità per danni e furto</strong> e della cauzione di €500 (Art. 5).',
-      'Acconsento al <strong>trattamento dei miei dati personali</strong> ai sensi del GDPR per la gestione del noleggio (Art. 8).',
+      'Ho letto e accetto integralmente le <strong>Condizioni di Noleggio</strong> sopra riportate.',
+      'Mi impegno a restituire il materiale in perfette condizioni <strong>entro l\'orario concordato</strong>.',
+      'Sono consapevole della mia <strong>responsabilità per danni e furto</strong> e della <strong>cauzione di €500</strong>.',
+      'Acconsento al <strong>trattamento dei miei dati personali</strong> secondo l\'informativa privacy.',
     ],
     nameLabel: 'Il tuo nome completo', namePlaceholder: 'Es. Mario Rossi',
     signBtn: 'Firma il Contratto', signing: 'Firma in corso…',
@@ -227,20 +152,19 @@ const T = {
     signedBy: 'Firmato da:', signedOn: 'Data firma:',
     loading: 'Caricamento…', notFound: 'Prenotazione non trovata o non ancora confermata.', errGeneric: 'Si è verificato un errore. Riprova.',
     location: 'Via Pecol 22, Arfanta di Tarzo (TV)', giorni: 'giorni',
-    scrollRead: 'Scorri ↓',
   },
   en: {
-    title: 'Rental Agreement', subtitle: 'Electric Bicycle — Arfanta Bike Rental',
-    summary: 'Booking Summary', code: 'Booking code',
+    kicker: 'Document to sign', title: 'Rental Agreement', subtitle: 'E-bike — Arfanta Bike Rental',
+    summary: 'Booking summary', code: 'Code',
     fCliente: 'Customer', fTipo: 'Rental type', fRitiro: 'Pickup', fRestituzione: 'Return', fPrezzo: 'Amount paid',
     types: { mezza_mattina: 'Half Day Morning (09:00–13:00)', mezza_pomeriggio: 'Half Day Afternoon (14:00–18:00)', intera_giornata: 'Full Day (09:00–18:00)', multi_giorno: 'Multi-Day' },
-    termsTitle: 'Full Terms & Conditions',
-    termsHint: 'Scroll to read all terms before signing',
+    termsTitle: 'Rental terms', privacyTitle: 'Privacy notice',
+    termsHint: 'Scroll to read the whole agreement before signing',
     checks: [
-      'I have read and fully accept the <strong>Terms and Conditions</strong> above (Arts. 1–7).',
-      'I commit to returning the bicycle in perfect condition <strong>by the agreed return time</strong> (Art. 4).',
-      'I acknowledge my <strong>liability for damage and theft</strong> and the €500 security deposit (Art. 5).',
-      'I consent to the <strong>processing of my personal data</strong> under GDPR for rental management purposes (Art. 8).',
+      'I have read and fully accept the <strong>Rental Terms</strong> above.',
+      'I commit to returning the material in perfect condition <strong>by the agreed return time</strong>.',
+      'I acknowledge my <strong>liability for damage and theft</strong> and the <strong>€500 security deposit</strong>.',
+      'I consent to the <strong>processing of my personal data</strong> as described in the privacy notice.',
     ],
     nameLabel: 'Your full name', namePlaceholder: 'E.g. John Smith',
     signBtn: 'Sign the Agreement', signing: 'Signing…',
@@ -250,20 +174,20 @@ const T = {
     alreadyTitle: 'Agreement already signed', alreadyMsg: 'This agreement has already been signed. No further action is required.',
     signedBy: 'Signed by:', signedOn: 'Date signed:',
     loading: 'Loading…', notFound: 'Booking not found or not yet confirmed.', errGeneric: 'An error occurred. Please try again.',
-    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italy', giorni: 'days', scrollRead: 'Scroll ↓',
+    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italy', giorni: 'days',
   },
   de: {
-    title: 'Mietvertrag', subtitle: 'Elektrofahrrad — Arfanta Bike Rental',
-    summary: 'Buchungsübersicht', code: 'Buchungscode',
+    kicker: 'Zu unterzeichnendes Dokument', title: 'Mietvertrag', subtitle: 'E-Bike — Arfanta Bike Rental',
+    summary: 'Buchungsübersicht', code: 'Code',
     fCliente: 'Kunde', fTipo: 'Mietart', fRitiro: 'Abholung', fRestituzione: 'Rückgabe', fPrezzo: 'Bezahlter Betrag',
     types: { mezza_mattina: 'Halbtag Vormittag (09:00–13:00)', mezza_pomeriggio: 'Halbtag Nachmittag (14:00–18:00)', intera_giornata: 'Ganztag (09:00–18:00)', multi_giorno: 'Mehrtägig' },
-    termsTitle: 'Vollständige Allgemeine Geschäftsbedingungen',
-    termsHint: 'Scrollen Sie, um alle Bedingungen vor der Unterschrift zu lesen',
+    termsTitle: 'Mietbedingungen', privacyTitle: 'Datenschutzhinweis',
+    termsHint: 'Scrollen Sie, um den gesamten Vertrag vor der Unterschrift zu lesen',
     checks: [
-      'Ich habe die <strong>Allgemeinen Geschäftsbedingungen</strong> (Art. 1–7) vollständig gelesen und akzeptiere sie.',
-      'Ich verpflichte mich, das Fahrrad in einwandfreiem Zustand <strong>bis zur vereinbarten Rückgabezeit</strong> zurückzugeben (Art. 4).',
-      'Ich bin mir meiner <strong>Haftung für Schäden und Diebstahl</strong> und der Kaution von €500 bewusst (Art. 5).',
-      'Ich stimme der <strong>Verarbeitung meiner personenbezogenen Daten</strong> gemäß DSGVO zum Zweck der Mietverwaltung zu (Art. 8).',
+      'Ich habe die <strong>Mietbedingungen</strong> vollständig gelesen und akzeptiere sie.',
+      'Ich verpflichte mich, das Material in einwandfreiem Zustand <strong>bis zur vereinbarten Rückgabezeit</strong> zurückzugeben.',
+      'Ich bin mir meiner <strong>Haftung für Schäden und Diebstahl</strong> und der <strong>Kaution von €500</strong> bewusst.',
+      'Ich stimme der <strong>Verarbeitung meiner personenbezogenen Daten</strong> gemäß dem Datenschutzhinweis zu.',
     ],
     nameLabel: 'Ihr vollständiger Name', namePlaceholder: 'z.B. Max Mustermann',
     signBtn: 'Vertrag unterzeichnen', signing: 'Unterschrift läuft…',
@@ -273,20 +197,20 @@ const T = {
     alreadyTitle: 'Vertrag bereits unterzeichnet', alreadyMsg: 'Dieser Vertrag wurde bereits unterzeichnet.',
     signedBy: 'Unterzeichnet von:', signedOn: 'Datum:',
     loading: 'Laden…', notFound: 'Buchung nicht gefunden oder noch nicht bestätigt.', errGeneric: 'Ein Fehler ist aufgetreten.',
-    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italien', giorni: 'Tage', scrollRead: 'Scrollen ↓',
+    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italien', giorni: 'Tage',
   },
   es: {
-    title: 'Contrato de Alquiler', subtitle: 'Bicicleta Eléctrica — Arfanta Bike Rental',
-    summary: 'Resumen de la Reserva', code: 'Código de reserva',
+    kicker: 'Documento a firmar', title: 'Contrato de Alquiler', subtitle: 'E-bike — Arfanta Bike Rental',
+    summary: 'Resumen de la reserva', code: 'Código',
     fCliente: 'Cliente', fTipo: 'Tipo de alquiler', fRitiro: 'Recogida', fRestituzione: 'Devolución', fPrezzo: 'Importe pagado',
     types: { mezza_mattina: 'Medio Día Mañana (09:00–13:00)', mezza_pomeriggio: 'Medio Día Tarde (14:00–18:00)', intera_giornata: 'Día Completo (09:00–18:00)', multi_giorno: 'Varios Días' },
-    termsTitle: 'Términos y Condiciones Completos',
-    termsHint: 'Desplácese para leer todos los términos antes de firmar',
+    termsTitle: 'Condiciones de alquiler', privacyTitle: 'Información de privacidad',
+    termsHint: 'Desplácese para leer todo el contrato antes de firmar',
     checks: [
-      'He leído y acepto íntegramente los <strong>Términos y Condiciones</strong> anteriores (Arts. 1–7).',
-      'Me comprometo a devolver la bicicleta en perfectas condiciones <strong>antes del horario acordado</strong> (Art. 4).',
-      'Soy consciente de mi <strong>responsabilidad por daños y robo</strong> y de la fianza de €500 (Art. 5).',
-      'Consiento el <strong>tratamiento de mis datos personales</strong> según el RGPD para la gestión del alquiler (Art. 8).',
+      'He leído y acepto íntegramente las <strong>Condiciones de Alquiler</strong> anteriores.',
+      'Me comprometo a devolver el material en perfectas condiciones <strong>antes del horario acordado</strong>.',
+      'Soy consciente de mi <strong>responsabilidad por daños y robo</strong> y de la <strong>fianza de €500</strong>.',
+      'Consiento el <strong>tratamiento de mis datos personales</strong> según la información de privacidad.',
     ],
     nameLabel: 'Su nombre completo', namePlaceholder: 'Ej. Juan García',
     signBtn: 'Firmar el Contrato', signing: 'Firmando…',
@@ -296,20 +220,20 @@ const T = {
     alreadyTitle: 'Contrato ya firmado', alreadyMsg: 'Este contrato ya ha sido firmado.',
     signedBy: 'Firmado por:', signedOn: 'Fecha:',
     loading: 'Cargando…', notFound: 'Reserva no encontrada o aún no confirmada.', errGeneric: 'Se ha producido un error.',
-    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italia', giorni: 'días', scrollRead: 'Desplazar ↓',
+    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italia', giorni: 'días',
   },
   fr: {
-    title: 'Contrat de Location', subtitle: 'Vélo Électrique — Arfanta Bike Rental',
-    summary: 'Récapitulatif de Réservation', code: 'Code de réservation',
+    kicker: 'Document à signer', title: 'Contrat de Location', subtitle: 'E-bike — Arfanta Bike Rental',
+    summary: 'Récapitulatif de réservation', code: 'Code',
     fCliente: 'Client', fTipo: 'Type de location', fRitiro: 'Prise en charge', fRestituzione: 'Retour', fPrezzo: 'Montant payé',
     types: { mezza_mattina: 'Demi-Journée Matin (09h00–13h00)', mezza_pomeriggio: 'Demi-Journée Après-midi (14h00–18h00)', intera_giornata: 'Journée Complète (09h00–18h00)', multi_giorno: 'Plusieurs Jours' },
-    termsTitle: 'Conditions Générales Complètes',
-    termsHint: 'Faites défiler pour lire toutes les conditions avant de signer',
+    termsTitle: 'Conditions de location', privacyTitle: 'Informations sur la confidentialité',
+    termsHint: 'Faites défiler pour lire tout le contrat avant de signer',
     checks: [
-      'J\'ai lu et j\'accepte intégralement les <strong>Conditions Générales</strong> ci-dessus (Art. 1–7).',
-      'Je m\'engage à restituer le vélo en parfait état <strong>avant l\'heure de retour convenue</strong> (Art. 4).',
-      'Je reconnais ma <strong>responsabilité en cas de dommages et de vol</strong> et la caution de €500 (Art. 5).',
-      'Je consens au <strong>traitement de mes données personnelles</strong> au titre du RGPD pour la gestion de la location (Art. 8).',
+      'J\'ai lu et j\'accepte intégralement les <strong>Conditions de Location</strong> ci-dessus.',
+      'Je m\'engage à restituer le matériel en parfait état <strong>avant l\'heure de retour convenue</strong>.',
+      'Je reconnais ma <strong>responsabilité en cas de dommages et de vol</strong> et la <strong>caution de €500</strong>.',
+      'Je consens au <strong>traitement de mes données personnelles</strong> selon les informations sur la confidentialité.',
     ],
     nameLabel: 'Votre nom complet', namePlaceholder: 'Ex. Jean Dupont',
     signBtn: 'Signer le Contrat', signing: 'Signature en cours…',
@@ -319,13 +243,14 @@ const T = {
     alreadyTitle: 'Contrat déjà signé', alreadyMsg: 'Ce contrat a déjà été signé.',
     signedBy: 'Signé par :', signedOn: 'Date :',
     loading: 'Chargement…', notFound: 'Réservation introuvable ou pas encore confirmée.', errGeneric: 'Une erreur s\'est produite.',
-    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — Italie', giorni: 'jours', scrollRead: 'Défiler ↓',
+    location: 'Via Pecol 22, Arfanta di Tarzo (TV) — France', giorni: 'jours',
   },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const LOCALE_MAP = { it: 'it-IT', en: 'en-GB', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' };
+const GREEN = '#1f7a4d';
 
 function fmtDate(dateStr, lang) {
   if (!dateStr) return '—';
@@ -339,45 +264,49 @@ function fmtDateTime(isoStr, lang) {
   return d.toLocaleString(LOCALE_MAP[lang] || 'it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Styles (design "Premium Moderno") ─────────────────────────────────────────
 
 const S = {
-  page:        { minHeight: '100vh', background: '#f0f4f8', fontFamily: "'Segoe UI', Arial, sans-serif", padding: '0 0 60px' },
-  header:      { background: '#2D8659', color: '#fff', padding: '28px 24px 24px', textAlign: 'center' },
-  logo:        { fontSize: 36, marginBottom: 4 },
-  h1:          { margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 700, color: '#fff' },
-  hsub:        { margin: 0, fontSize: '0.85rem', color: '#b7e4c7', fontWeight: 400 },
-  card:        { background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,.08)', maxWidth: 620, margin: '28px auto 0', padding: '28px 28px 24px' },
-  secTitle:    { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#2D8659', marginBottom: 14, marginTop: 0 },
-  summaryBox:  { background: '#f0faf4', borderRadius: 8, padding: '16px 18px', marginBottom: 24 },
-  row:         { display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #d8eed6', fontSize: '0.88rem', gap: 8 },
-  rowLabel:    { color: '#666', flexShrink: 0 },
-  rowVal:      { fontWeight: 600, color: '#1a3a2a', textAlign: 'right' },
-  codeBox:     { background: '#1a5c3a', color: '#fff', borderRadius: 6, padding: '5px 14px', fontSize: '1rem', fontWeight: 700, letterSpacing: '0.12em', display: 'inline-block', marginTop: 10 },
-  divider:     { border: 'none', borderTop: '1px solid #e8f0eb', margin: '20px 0' },
-  // T&C box
-  termsBox:    { border: '1px solid #c8ddd0', borderRadius: 8, maxHeight: 280, overflowY: 'auto', background: '#fafffe', marginBottom: 6, padding: '16px 18px', fontSize: '0.82rem', lineHeight: 1.65, color: '#333' },
-  termsHint:   { textAlign: 'center', fontSize: '0.74rem', color: '#2D8659', marginBottom: 18, opacity: 0.8 },
-  artTitle:    { fontWeight: 700, color: '#1a5c3a', marginBottom: 4, marginTop: 14, fontSize: '0.84rem' },
-  artText:     { margin: '0 0 8px', color: '#444' },
-  // checkboxes
+  page:        { minHeight: '100vh', background: '#eef0ed', fontFamily: "'Helvetica Neue', Arial, sans-serif", padding: '0 0 60px', color: '#1c1f1d' },
+  header:      { background: '#fff', padding: '30px 24px 26px', textAlign: 'center', borderBottom: '1px solid #e7eae6' },
+  logo:        { height: 56, width: 'auto', marginBottom: 12 },
+  kicker:      { fontSize: '0.6rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: GREEN, fontWeight: 700, marginBottom: 8 },
+  h1:          { margin: '0 0 4px', fontFamily: 'Georgia, serif', fontSize: '1.8rem', fontWeight: 400, color: '#1c1f1d', letterSpacing: '-0.01em' },
+  hsub:        { margin: 0, fontSize: '0.82rem', color: '#8b908b' },
+  card:        { background: '#fff', borderRadius: 14, boxShadow: '0 4px 22px rgba(0,0,0,.07)', maxWidth: 640, margin: '24px auto 0', padding: '30px 28px 26px' },
+  secTitle:    { fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', color: GREEN, marginBottom: 14, marginTop: 0 },
+  grid:        { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: '#ededed', border: '1px solid #ededed', borderRadius: 8, overflow: 'hidden', marginBottom: 24 },
+  cell:        { background: '#fff', padding: '12px 14px' },
+  cellK:       { fontSize: '0.56rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8b908b', marginBottom: 4 },
+  cellV:       { fontSize: '0.9rem', fontWeight: 600, color: '#1c1f1d' },
+  codeV:       { fontFamily: "'Courier New', monospace", letterSpacing: '0.1em', color: GREEN, fontWeight: 700 },
+  termsBox:    { border: '1px solid #e6eae6', borderRadius: 10, maxHeight: 300, overflowY: 'auto', background: '#fbfcfb', marginBottom: 8, padding: '18px 20px' },
+  intro:       { fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: '0.92rem', color: '#55605a', margin: '0 0 14px', lineHeight: 1.55 },
+  condItem:    { display: 'flex', gap: 14, padding: '11px 0', borderTop: '1px solid #eef0ee' },
+  condNum:     { fontFamily: 'Georgia, serif', fontSize: '1.2rem', color: '#cdd9d1', minWidth: 28, lineHeight: 1.2 },
+  condText:    { fontFamily: 'Georgia, serif', fontSize: '0.86rem', lineHeight: 1.6, color: '#33392f' },
+  subTitle:    { fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.16em', color: GREEN, margin: '22px 0 10px' },
+  rulesBox:    { borderLeft: `3px solid ${GREEN}`, background: '#f4faf6', borderRadius: '0 8px 8px 0', padding: '10px 16px' },
+  ruleItem:    { fontFamily: 'Georgia, serif', fontSize: '0.86rem', color: '#33392f', padding: '5px 0 5px 20px', position: 'relative', lineHeight: 1.5 },
+  ruleDot:     { position: 'absolute', left: 0, top: 9, width: 6, height: 6, border: `1.5px solid ${GREEN}`, borderRadius: '50%' },
+  privacy:     { fontSize: '0.74rem', lineHeight: 1.6, color: '#7c827c', margin: '4px 0 0' },
+  termsHint:   { textAlign: 'center', fontSize: '0.72rem', color: GREEN, marginBottom: 18, opacity: 0.85 },
   checkItem:   { display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12, cursor: 'pointer' },
   checkbox:    { width: 20, height: 20, minWidth: 20, borderRadius: 4, border: '2px solid #ccc', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .15s', marginTop: 1, background: '#fff' },
-  checkboxOn:  { background: '#2D8659', borderColor: '#2D8659' },
+  checkboxOn:  { background: GREEN, borderColor: GREEN },
   checkText:   { fontSize: '0.86rem', color: '#333', lineHeight: 1.55 },
-  // name + button
-  fieldLabel:  { display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#2D8659', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 },
-  input:       { width: '100%', padding: '12px 14px', border: '2px solid #d1e5d9', borderRadius: 8, fontSize: '1rem', outline: 'none', boxSizing: 'border-box', transition: 'border .15s' },
+  divider:     { border: 'none', borderTop: '1px solid #eef0ee', margin: '20px 0' },
+  fieldLabel:  { display: 'block', fontSize: '0.64rem', fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 7 },
+  input:       { width: '100%', padding: '13px 14px', border: '1.5px solid #d8e0da', borderRadius: 9, fontSize: '1rem', outline: 'none', boxSizing: 'border-box', transition: 'border .15s', fontFamily: 'inherit' },
   errBox:      { background: '#fff0f0', border: '1px solid #ffaaaa', borderRadius: 8, padding: '10px 14px', fontSize: '0.88rem', color: '#c0392b', marginBottom: 14 },
-  signBtn:     { width: '100%', padding: '15px', background: '#2D8659', color: '#fff', border: 'none', borderRadius: 10, fontSize: '1.05rem', fontWeight: 700, cursor: 'pointer', transition: 'background .15s', marginTop: 6 },
-  signBtnDis:  { background: '#9bb5a8', cursor: 'not-allowed' },
-  // success
+  signBtn:     { width: '100%', padding: '15px', background: GREEN, color: '#fff', border: 'none', borderRadius: 11, fontSize: '1.02rem', fontWeight: 700, cursor: 'pointer', transition: 'background .15s', marginTop: 6, letterSpacing: '0.02em' },
+  signBtnDis:  { background: '#9bbcab', cursor: 'not-allowed' },
   successCard: { textAlign: 'center', padding: '20px 0 4px' },
-  successIcon: { fontSize: 56, marginBottom: 12 },
-  successH:    { fontSize: '1.4rem', fontWeight: 700, color: '#2D8659', margin: '0 0 8px' },
+  successIcon: { fontSize: 54, marginBottom: 12 },
+  successH:    { fontFamily: 'Georgia, serif', fontSize: '1.5rem', fontWeight: 400, color: GREEN, margin: '0 0 8px' },
   successP:    { color: '#555', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 0 20px' },
-  successMeta: { background: '#f0faf4', borderRadius: 8, padding: '14px 18px', fontSize: '0.88rem', textAlign: 'left' },
-  footer:      { textAlign: 'center', fontSize: '0.75rem', color: '#999', marginTop: 24, lineHeight: 1.8 },
+  successMeta: { background: '#f4faf6', borderRadius: 8, padding: '14px 18px', fontSize: '0.88rem', textAlign: 'left' },
+  footer:      { textAlign: 'center', fontSize: '0.72rem', color: '#9a9f99', marginTop: 24, lineHeight: 1.8 },
   spinner:     { textAlign: 'center', padding: '80px 24px', color: '#666', fontSize: '0.95rem' },
   notFound:    { textAlign: 'center', padding: '80px 24px', color: '#c0392b', fontSize: '0.95rem' },
 };
@@ -416,7 +345,7 @@ export default function FirmaPage() {
 
   const lang       = booking?.lingua || 'it';
   const t          = T[lang]     || T.it;
-  const articles   = TERMS[lang] || TERMS.it;
+  const terms      = TERMS[lang] || TERMS.it;
   const allChecked = checks.every(Boolean);
 
   function toggleCheck(i) {
@@ -459,7 +388,8 @@ export default function FirmaPage() {
 
       {/* Header */}
       <div style={S.header}>
-        <div style={S.logo}>🚲</div>
+        <img src="/logo.png" alt="Arfanta Bike Rental" style={S.logo} />
+        <div style={S.kicker}>{t.kicker}</div>
         <h1 style={S.h1}>{t.title}</h1>
         <p style={S.hsub}>{t.subtitle}</p>
       </div>
@@ -473,8 +403,8 @@ export default function FirmaPage() {
             <h2 style={S.successH}>{t.successTitle}</h2>
             <p style={S.successP}>{t.successMsg}</p>
             <div style={S.successMeta}>
-              <div style={{ marginBottom: 6 }}><strong style={{ color: '#2D8659' }}>{t.successName}</strong> {nome || b.firma_nome}</div>
-              <div><strong style={{ color: '#2D8659' }}>{t.successDate}</strong> {fmtDateTime(signedAt || b.firma_at, lang)}</div>
+              <div style={{ marginBottom: 6 }}><strong style={{ color: GREEN }}>{t.successName}</strong> {nome || b.firma_nome}</div>
+              <div><strong style={{ color: GREEN }}>{t.successDate}</strong> {fmtDateTime(signedAt || b.firma_at, lang)}</div>
             </div>
           </div>
         )}
@@ -486,8 +416,8 @@ export default function FirmaPage() {
             <h2 style={S.successH}>{t.alreadyTitle}</h2>
             <p style={S.successP}>{t.alreadyMsg}</p>
             <div style={S.successMeta}>
-              <div style={{ marginBottom: 6 }}><strong style={{ color: '#2D8659' }}>{t.signedBy}</strong> {b.firma_nome}</div>
-              <div><strong style={{ color: '#2D8659' }}>{t.signedOn}</strong> {fmtDateTime(b.firma_at, lang)}</div>
+              <div style={{ marginBottom: 6 }}><strong style={{ color: GREEN }}>{t.signedBy}</strong> {b.firma_nome}</div>
+              <div><strong style={{ color: GREEN }}>{t.signedOn}</strong> {fmtDateTime(b.firma_at, lang)}</div>
             </div>
           </div>
         )}
@@ -497,40 +427,35 @@ export default function FirmaPage() {
           <>
             {/* Booking Summary */}
             <p style={S.secTitle}>{t.summary}</p>
-            <div style={S.summaryBox}>
-              <div style={{ ...S.row, borderBottom: 'none', paddingBottom: 0 }}>
-                <span style={S.rowLabel}>{t.code}</span>
-                <span style={S.codeBox}>{b.id.toUpperCase().substring(0, 8)}</span>
-              </div>
-              <div style={{ ...S.row, marginTop: 10 }}>
-                <span style={S.rowLabel}>{t.fCliente}</span>
-                <span style={S.rowVal}>{b.cliente_nome}</span>
-              </div>
-              <div style={S.row}>
-                <span style={S.rowLabel}>{t.fTipo}</span>
-                <span style={S.rowVal}>{(t.types[b.tipo_noleggio] || b.tipo_noleggio) + (b.giorni > 1 ? ` · ${b.giorni} ${t.giorni}` : '')}</span>
-              </div>
-              <div style={S.row}>
-                <span style={S.rowLabel}>{t.fRitiro}</span>
-                <span style={S.rowVal}>{fmtDate(b.data_ritiro, lang)} {b.orario_ritiro?.substring(0, 5)}</span>
-              </div>
-              <div style={{ ...S.row, borderBottom: 'none' }}>
-                <span style={S.rowLabel}>{t.fRestituzione}</span>
-                <span style={S.rowVal}>{fmtDate(b.data_restituzione, lang)} {b.orario_restituzione?.substring(0, 5)}</span>
-              </div>
+            <div style={S.grid}>
+              <div style={S.cell}><div style={S.cellK}>{t.code}</div><div style={{ ...S.cellV, ...S.codeV }}>{b.id.toUpperCase().substring(0, 8)}</div></div>
+              <div style={S.cell}><div style={S.cellK}>{t.fCliente}</div><div style={S.cellV}>{b.cliente_nome}</div></div>
+              <div style={S.cell}><div style={S.cellK}>{t.fTipo}</div><div style={S.cellV}>{(t.types[b.tipo_noleggio] || b.tipo_noleggio) + (b.giorni > 1 ? ` · ${b.giorni} ${t.giorni}` : '')}</div></div>
+              <div style={S.cell}><div style={S.cellK}>{t.fPrezzo}</div><div style={S.cellV}>€{Number(b.prezzo_totale || 0).toFixed(2)}</div></div>
+              <div style={S.cell}><div style={S.cellK}>{t.fRitiro}</div><div style={S.cellV}>{fmtDate(b.data_ritiro, lang)} · {b.orario_ritiro?.substring(0, 5)}</div></div>
+              <div style={S.cell}><div style={S.cellK}>{t.fRestituzione}</div><div style={S.cellV}>{fmtDate(b.data_restituzione, lang)} · {b.orario_restituzione?.substring(0, 5)}</div></div>
             </div>
 
-            <hr style={S.divider} />
-
-            {/* Full T&C */}
+            {/* Full contract */}
             <p style={S.secTitle}>{t.termsTitle}</p>
             <div ref={termsRef} style={S.termsBox}>
-              {articles.map((art, i) => (
-                <div key={i}>
-                  <p style={{ ...S.artTitle, marginTop: i === 0 ? 0 : 14 }}>{art.title}</p>
-                  <p style={S.artText}>{art.text}</p>
+              <p style={S.intro}>{terms.intro}</p>
+              {terms.conditions.map((c, i) => (
+                <div key={i} style={{ ...S.condItem, ...(i === 0 ? { borderTop: 'none', paddingTop: 0 } : {}) }}>
+                  <span style={S.condNum}>{String(i + 1).padStart(2, '0')}</span>
+                  <span style={S.condText}>{c}</span>
                 </div>
               ))}
+
+              <p style={S.subTitle}>{terms.rulesTitle}</p>
+              <div style={S.rulesBox}>
+                {terms.rules.map((r, i) => (
+                  <div key={i} style={S.ruleItem}><span style={S.ruleDot} />{r}</div>
+                ))}
+              </div>
+
+              <p style={S.subTitle}>{t.privacyTitle}</p>
+              <p style={S.privacy}>{terms.privacy}</p>
             </div>
             <p style={S.termsHint}>{t.termsHint}</p>
 
@@ -559,8 +484,8 @@ export default function FirmaPage() {
                 value={nome}
                 onChange={e => { setNome(e.target.value); setSignErr(null); }}
                 style={S.input}
-                onFocus={e => (e.target.style.borderColor = '#2D8659')}
-                onBlur={e => (e.target.style.borderColor = '#d1e5d9')}
+                onFocus={e => (e.target.style.borderColor = GREEN)}
+                onBlur={e => (e.target.style.borderColor = '#d8e0da')}
                 autoComplete="name"
               />
             </div>
@@ -581,7 +506,7 @@ export default function FirmaPage() {
         <div style={S.footer}>
           📍 {t.location}<br />
           Arfanta Bike Rental · Colline del Prosecco di Conegliano e Valdobbiadene — UNESCO<br />
-          <a href="mailto:arfantabikerental@gmail.com" style={{ color: '#2D8659' }}>arfantabikerental@gmail.com</a>
+          <a href="mailto:arfantabikerental@gmail.com" style={{ color: GREEN }}>arfantabikerental@gmail.com</a>
         </div>
       </div>
     </div>
