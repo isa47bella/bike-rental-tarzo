@@ -1238,6 +1238,102 @@ ${ritardoSection}
     navigator.clipboard.writeText(url).then(() => alert('Link copiato!\n' + url)).catch(() => alert(url));
   }
 
+  // ─── Email invito ospiti B&B (copia formattata, da incollare in Gmail) ───────
+
+  async function copyBnbEmail(lang) {
+    const LOGO = 'https://bike-rental-tarzo-app.vercel.app/logo.png';
+    const HERO = 'https://bike-rental-tarzo-app.vercel.app/email-hero.jpg';
+    const SITE = 'https://bike-rental-tarzo-app.vercel.app';
+    const shell = (heroAlt, h1, p1, p2, p3, cta, b1, b2, b3) => `<div style="margin:0;padding:0;background:#ffffff;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-collapse:collapse;">
+    <tr><td align="center" style="padding:0;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;font-family:Georgia,'Times New Roman',serif;">
+        <tr><td align="center" style="padding:30px 30px 14px;background:#FBF8F1;"><img src="${LOGO}" alt="Arfanta Bike Rental" width="190" style="display:block;width:190px;max-width:60%;height:auto;border:0;"></td></tr>
+        <tr><td style="padding:0;"><img src="${HERO}" alt="${heroAlt}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></td></tr>
+        <tr><td style="padding:34px 44px 10px;">
+          <h1 style="margin:0 0 14px;font-size:27px;line-height:1.2;color:#23402b;font-weight:normal;">${h1}</h1>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4a443d;">${p1}</p>
+          <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4a443d;">${p2}</p>
+          <p style="margin:0 0 26px;font-size:16px;line-height:1.7;color:#4a443d;">${p3}</p>
+        </td></tr>
+        <tr><td align="center" style="padding:0 44px 28px;"><a href="${SITE}" style="display:inline-block;background:#EA580C;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;padding:16px 38px;border-radius:10px;">${cta}&nbsp;&nbsp;&rarr;</a></td></tr>
+        <tr><td style="padding:0 44px 30px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#F6F8F2;border:1px solid #E3EBDA;border-radius:10px;">
+            <tr><td style="padding:16px 22px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.9;color:#3f5a45;">${b1}<br>${b2}<br>${b3}</td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:22px 44px 34px;border-top:1px solid #EFE8DA;">
+          <p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.7;color:#8a8175;"><b style="color:#23402b;">Arfanta Bike Rental</b><br>Via Pecol 22, Arfanta di Tarzo (TV)<br>WhatsApp <a href="https://wa.me/393928614635" style="color:#EA580C;text-decoration:none;">+39 392 861 4635</a> &middot; <a href="${SITE}" style="color:#EA580C;text-decoration:none;">bike-rental-tarzo-app.vercel.app</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</div>`;
+
+    const BNB = {
+      it: {
+        subject: 'La tua e-bike per esplorare le Colline del Prosecco 🚲',
+        text: `Ciao e grazie per aver scelto la nostra struttura per il tuo soggiorno!\n\nProprio qui, nella nostra struttura, puoi noleggiare un'e-bike e scoprire i sentieri tra i vigneti del Prosecco — Patrimonio UNESCO.\n\nPrenota online in pochi minuti con Arfanta Bike Rental:\n${SITE}\n\n🚲 E-bike nuove e comode · 🗺️ Percorsi per tutti i livelli · 📍 Ritiro direttamente qui da noi\n\nArfanta Bike Rental — Via Pecol 22, Arfanta di Tarzo (TV)\nWhatsApp +39 392 861 4635`,
+        html: shell(
+          'Colline del Prosecco UNESCO',
+          'Esplora le Colline del Prosecco in e-bike 🚲',
+          'Ciao e grazie per aver scelto la nostra struttura per il tuo soggiorno! 🍇',
+          'Proprio qui, nella nostra struttura, puoi noleggiare un\'<b>e-bike</b> e scoprire i sentieri tra i vigneti del Prosecco — Patrimonio UNESCO. Colline, cantine e panorami che si vivono molto meglio in sella.',
+          'Scegli il giorno e prenota online in pochi minuti con <b>Arfanta Bike Rental</b>.',
+          'Prenota la tua e-bike',
+          '🚲 &nbsp;E-bike nuove e comode',
+          '🗺️ &nbsp;Percorsi panoramici per tutti i livelli',
+          '📍 &nbsp;Ritiro comodo, direttamente qui da noi',
+        ),
+      },
+      en: {
+        subject: 'Your e-bike to explore the Prosecco Hills 🚲',
+        text: `Hello, and thank you for choosing us for your stay!\n\nRight here, at our property, you can rent an e-bike and discover the trails through the Prosecco vineyards — a UNESCO World Heritage site.\n\nBook online in just a few minutes with Arfanta Bike Rental:\n${SITE}\n\n🚲 New, comfortable e-bikes · 🗺️ Scenic routes for every level · 📍 Convenient pickup, right here on site\n\nArfanta Bike Rental — Via Pecol 22, Arfanta di Tarzo (TV)\nWhatsApp +39 392 861 4635`,
+        html: shell(
+          'Prosecco Hills UNESCO',
+          'Explore the Prosecco Hills by e-bike 🚲',
+          'Hello, and thank you for choosing us for your stay! 🍇',
+          'Right here, at our property, you can rent an <b>e-bike</b> and discover the trails through the Prosecco vineyards — a UNESCO World Heritage site. Hills, wineries and views that are best enjoyed from the saddle.',
+          'Pick your day and book online in just a few minutes with <b>Arfanta Bike Rental</b>.',
+          'Book your e-bike',
+          '🚲 &nbsp;New, comfortable e-bikes',
+          '🗺️ &nbsp;Scenic routes for every level',
+          '📍 &nbsp;Convenient pickup, right here on site',
+        ),
+      },
+    };
+
+    const e = BNB[lang] || BNB.it;
+    const done = () => alert(`✓ Email copiata!\n\nOggetto suggerito:\n${e.subject}\n\nOra: Gmail → Scrivi → incolla (Cmd/Ctrl+V) → metti destinatario e oggetto → Invia.`);
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new window.ClipboardItem({
+          'text/html':  new Blob([e.html], { type: 'text/html' }),
+          'text/plain': new Blob([e.text], { type: 'text/plain' }),
+        })]);
+        return done();
+      }
+    } catch (_) { /* prova il fallback sotto */ }
+    try {
+      const div = document.createElement('div');
+      div.contentEditable = 'true';
+      div.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
+      div.innerHTML = e.html;
+      document.body.appendChild(div);
+      const range = document.createRange();
+      range.selectNodeContents(div);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+      sel.removeAllRanges();
+      document.body.removeChild(div);
+      done();
+    } catch (err) {
+      alert('Copia non riuscita: ' + (err.message || err));
+    }
+  }
+
   // ─── Chiusure ────────────────────────────────────────────────────────────────
 
   async function handleAddChiusura() {
@@ -3852,6 +3948,15 @@ ${ritardoSection}
           </div>
         </div>
 
+        {/* Email invito per ospiti B&B */}
+        <div className="ac-settings-section">
+          <h3 className="ac-section-title"><IconMail /> Email per ospiti B&amp;B</h3>
+          <p className="ac-settings-desc">Copia l'invito formattato (noleggio e-bike) da inviare agli ospiti del B&amp;B. Poi: Gmail &rarr; Scrivi &rarr; incolla (Cmd/Ctrl+V) &rarr; aggiungi destinatario e oggetto &rarr; Invia. Il destinatario vede l'email impaginata, non il codice.</p>
+          <div className="ac-push-row">
+            <button className="ac-btn sm primary" onClick={() => copyBnbEmail('it')}>🇮🇹 Copia email (IT)</button>
+            <button className="ac-btn sm primary" onClick={() => copyBnbEmail('en')}>🇬🇧 Copy email (EN)</button>
+          </div>
+        </div>
 
       </div>
     );
