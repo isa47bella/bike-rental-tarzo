@@ -50,7 +50,7 @@
       "Sam",
       "Dim"
     ],
-    "minAdvance": "La réservation doit être effectuée au moins 2 jours à l'avance"
+    "minAdvance": "La réservation doit être effectuée au moins la veille — la réservation pour le jour même n'est pas possible"
   },
   "stepTime": {
     "title": "Heure de retrait",

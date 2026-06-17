@@ -50,7 +50,7 @@
       "Sab",
       "Dom"
     ],
-    "minAdvance": "La prenotazione deve essere effettuata almeno 2 giorni prima"
+    "minAdvance": "La prenotazione va effettuata almeno il giorno prima — non è possibile prenotare per il giorno stesso"
   },
   "stepTime": {
     "title": "Orario di ritiro",

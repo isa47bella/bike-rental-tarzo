@@ -91,12 +91,12 @@ router.post('/checkout', async (req, res) => { try {
     return res.status(400).json({ error: 'Multi-giorno richiede almeno 2 giorni' });
   }
 
-  // Min 2 giorni di anticipo
+  // Anticipo minimo: 1 giorno (si può prenotare per domani, non per il giorno stesso)
   const oggi     = new Date(); oggi.setHours(0,0,0,0);
   const ritiro   = new Date(data_ritiro + 'T00:00:00');
   const diffDays = Math.floor((ritiro - oggi) / (1000*60*60*24));
-  if (diffDays < 2) {
-    return res.status(400).json({ error: 'La prenotazione richiede almeno 2 giorni di anticipo' });
+  if (diffDays < 1) {
+    return res.status(400).json({ error: 'La prenotazione richiede almeno 1 giorno di anticipo (non per il giorno stesso)' });
   }
 
   // Verifica stagione

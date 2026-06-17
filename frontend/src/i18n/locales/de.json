@@ -50,7 +50,7 @@
       "Sa",
       "So"
     ],
-    "minAdvance": "Die Buchung muss mindestens 2 Tage im Voraus erfolgen"
+    "minAdvance": "Die Buchung muss mindestens am Vortag erfolgen — eine Buchung für denselben Tag ist nicht möglich"
   },
   "stepTime": {
     "title": "Abholzeit",

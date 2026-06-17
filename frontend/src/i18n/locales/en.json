@@ -50,7 +50,7 @@
       "Sat",
       "Sun"
     ],
-    "minAdvance": "Booking must be made at least 2 days in advance"
+    "minAdvance": "Booking must be made at least the day before — same-day booking is not available"
   },
   "stepTime": {
     "title": "Pick-up time",

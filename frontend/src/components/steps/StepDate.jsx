@@ -9,8 +9,9 @@ export default function StepDate({ booking, onChange, onNext }) {
 
   const today = new Date();
   today.setHours(0,0,0,0);
+  // Anticipo minimo: il giorno dopo (no stesso giorno). Primo giorno prenotabile = domani.
   const minDate = new Date(today);
-  minDate.setDate(minDate.getDate() + 2);
+  minDate.setDate(minDate.getDate() + 1);
 
   const [viewYear,  setViewYear]  = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);

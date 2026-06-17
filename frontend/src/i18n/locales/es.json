@@ -50,7 +50,7 @@
       "Sáb",
       "Dom"
     ],
-    "minAdvance": "La reserva debe hacerse con al menos 2 días de antelación"
+    "minAdvance": "La reserva debe hacerse al menos el día anterior — no es posible reservar para el mismo día"
   },
   "stepTime": {
     "title": "Hora de recogida",
