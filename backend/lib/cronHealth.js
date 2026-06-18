@@ -9,6 +9,7 @@ const CRON_EXPECTATIONS = {
   'reminder':            26,
   'auto-cancel-pending': 26,
   'retry-cauzioni':      26,
+  'reconcile-cauzioni':  26,
   'daily-summary':       26,
   'cleanup-documenti':   26,
   'cleanup-audit':       216, // settimanale → 9 giorni

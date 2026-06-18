@@ -753,4 +753,122 @@ router.get('/cron-health', cronAuth, async (req, res) => {
   return res.json({ ok: false, down });
 });
 
+// ─── GET /api/cron/reconcile-cauzioni ─────────────────────────────────────────
+// Rete di sicurezza: allinea lo stato cauzione del DB alla realtà di Stripe.
+// NON cattura e NON addebita mai — si limita a recuperare/segnalare.
+//   (A) Righe bloccate in 'authorizing' (processo morto a metà): cerca su Stripe
+//       l'eventuale hold orfano e lo adotta; se non esiste, riporta a 'failed'
+//       (così il cron retry potrà riprovare per i ritiri futuri).
+//   (B) Cauzioni 'authorized' il cui hold su Stripe è 'canceled' (scaduto ~7 giorni
+//       o annullato fuori dall'app): aggiorna lo stato e avvisa il gestore.
+router.get('/reconcile-cauzioni', cronAuth, async (req, res) => {
+  const out = { authorizing_scanned: 0, recovered: 0, reset: 0, authorized_scanned: 0, lost: 0, errors: 0 };
+
+  // ── (A) Righe appese in 'authorizing' ──
+  const { data: stuck, error: stuckErr } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, stripe_customer_id, cauzione_pi_id, data_ritiro')
+    .eq('cauzione_status', 'authorizing');
+
+  if (stuckErr) {
+    console.error('[reconcile-cauzioni] db error (authorizing):', stuckErr.message);
+    return res.status(500).json({ error: stuckErr.message });
+  }
+
+  for (const b of (stuck || [])) {
+    out.authorizing_scanned++;
+    try {
+      let holdPi = null;
+
+      // 1) Se conosciamo già un PI, verifichiamo che sia un hold valido.
+      if (b.cauzione_pi_id) {
+        try {
+          const pi = await stripe.paymentIntents.retrieve(b.cauzione_pi_id);
+          if (pi.status === 'requires_capture') holdPi = pi;
+        } catch (_) { /* PI non trovato */ }
+      }
+
+      // 2) Altrimenti cerchiamo tra i PI recenti del cliente un hold cauzione
+      //    valido (capture manuale, importo cauzione, requires_capture).
+      if (!holdPi && b.stripe_customer_id) {
+        const list = await stripe.paymentIntents.list({ customer: b.stripe_customer_id, limit: 10 });
+        holdPi = (list.data || []).find(pi =>
+          pi.status === 'requires_capture' &&
+          pi.amount === CAUZIONE_AMOUNT_CENTS &&
+          pi.capture_method === 'manual'
+        ) || null;
+      }
+
+      if (holdPi) {
+        // Hold orfano trovato → adottalo (guardia sullo stato per non sovrascrivere
+        // un cambiamento concorrente).
+        await supabase.from('prenotazioni')
+          .update({ cauzione_pi_id: holdPi.id, cauzione_status: 'authorized' })
+          .eq('id', b.id)
+          .eq('cauzione_status', 'authorizing');
+        out.recovered++;
+      } else {
+        // Nessun hold reale: la riga era solo "appesa" → torna a 'failed'
+        // (il cron retry riproverà per i ritiri futuri).
+        await supabase.from('prenotazioni')
+          .update({ cauzione_status: 'failed' })
+          .eq('id', b.id)
+          .eq('cauzione_status', 'authorizing');
+        out.reset++;
+      }
+    } catch (e) {
+      out.errors++;
+      console.error(`[reconcile-cauzioni] authorizing ${b.id}:`, e.message);
+    }
+  }
+
+  // ── (B) Cauzioni 'authorized' con hold non più valido su Stripe ──
+  // Orizzonte limitato (ritiri ultimi 30 giorni o futuri) per non scandire righe vecchie.
+  const horizon = romeDateStr(-30);
+  const { data: authd, error: authErr } = await supabase
+    .from('prenotazioni')
+    .select('id, cliente_nome, cauzione_pi_id, data_ritiro')
+    .eq('cauzione_status', 'authorized')
+    .not('cauzione_pi_id', 'is', null)
+    .gte('data_ritiro', horizon);
+
+  if (authErr) {
+    console.error('[reconcile-cauzioni] db error (authorized):', authErr.message);
+    return res.status(500).json({ ...out, error: authErr.message });
+  }
+
+  for (const b of (authd || [])) {
+    out.authorized_scanned++;
+    try {
+      const pi = await stripe.paymentIntents.retrieve(b.cauzione_pi_id);
+      // Solo 'canceled' = hold perso (scaduto/annullato). 'succeeded' = già catturato
+      // (gestito da capture-deposit), 'requires_capture' = ancora valido → non toccare.
+      if (pi.status === 'canceled') {
+        await supabase.from('prenotazioni')
+          .update({ cauzione_status: 'failed' })
+          .eq('id', b.id)
+          .eq('cauzione_status', 'authorized');
+        out.lost++;
+        const eur = CAUZIONE_AMOUNT_CENTS / 100;
+        await sendPushToAll({
+          title: '⚠️ Cauzione non più valida',
+          body:  `${b.cliente_nome} (${b.data_ritiro}) — hold da €${eur} scaduto/annullato`,
+          url:   '/admin',
+        }).catch(() => {});
+        await writeNotification('cauzione_lost', {
+          titolo: `Cauzione non più valida — ${b.cliente_nome}`,
+          descrizione: `L'hold da €${eur} non è più catturabile (Stripe: canceled). Per i ritiri futuri il retry proverà a ribloccarla; verifica se serve agire.`,
+          booking_id: b.id,
+        }).catch(() => {});
+      }
+    } catch (e) {
+      out.errors++;
+      console.error(`[reconcile-cauzioni] authorized ${b.id}:`, e.message);
+    }
+  }
+
+  console.log(`[reconcile-cauzioni] ${JSON.stringify(out)}`);
+  return res.json(out);
+});
+
 module.exports = router;
