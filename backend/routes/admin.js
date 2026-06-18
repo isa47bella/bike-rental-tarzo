@@ -234,7 +234,7 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
 
   const { data: prenotazione, error } = await supabase
     .from('prenotazioni')
-    .select('stripe_customer_id, stripe_payment_method_id, cliente_nome, danno_status')
+    .select('stripe_customer_id, stripe_payment_method_id, cliente_nome, danno_status, cauzione_status')
     .eq('id', req.params.id)
     .single();
 
@@ -244,6 +244,16 @@ router.post('/bookings/:id/charge-damage', async (req, res) => {
   }
   if (prenotazione.danno_status === 'charged') {
     return res.status(400).json({ error: 'Danno già addebitato' });
+  }
+  // Policy "prima la cauzione, poi l'extra": se c'è una cauzione di €500 ancora
+  // BLOCCATA (authorized), va incassata prima con "Incassa cauzione" (capture-deposit).
+  // 'charge-damage' è un addebito NUOVO e separato: consentirlo mentre l'hold è attivo
+  // creerebbe un doppio addebito per lo stesso danno. Permesso solo quando non c'è un
+  // hold da incassare (cauzione già incassata, fallita, no_card, o assente).
+  if (prenotazione.cauzione_status === 'authorized') {
+    return res.status(409).json({
+      error: 'C\'è una cauzione di €500 ancora bloccata. Incassala prima con "Incassa cauzione"; usa "Addebita danno" solo per l\'eventuale eccedenza oltre i €500 (o quando non c\'è cauzione).',
+    });
   }
 
   try {

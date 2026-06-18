@@ -357,6 +357,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
     if (error) {
       console.error('Errore update prenotazioni:', error);
+      // Rimuovi il marcatore di idempotenza così il retry di Stripe RIPROCESSA
+      // l'evento. Senza questo, il retry vedrebbe event.id già in stripe_events,
+      // lo scarterebbe come duplicato e la prenotazione pagata resterebbe 'pending'.
+      await supabase.from('stripe_events').delete().eq('id', event.id);
       return res.status(500).send('DB error');
     }
 

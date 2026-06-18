@@ -457,13 +457,16 @@ router.get('/auto-cancel-pending', cronAuth, async (req, res) => {
 router.get('/retry-cauzioni', cronAuth, async (req, res) => {
   const today = romeDateStr(0);
 
+  // NB: non filtriamo più su cauzione_pi_id IS NULL. Una cauzione 'failed' che ha
+  // salvato un PI (es. decline che popola err.payment_intent, o salvataggio post-crash)
+  // PRIMA restava esclusa per sempre → mai ritentata, mai escalata a failed_permanent.
+  // Ora la includiamo e gestiamo il PI esistente verificandolo su Stripe (sotto).
   const { data: bookings, error } = await supabase
     .from('prenotazioni')
-    .select('id, cliente_nome, stripe_customer_id, stripe_payment_method_id, cauzione_retry_count, data_ritiro')
+    .select('id, cliente_nome, stripe_customer_id, stripe_payment_method_id, cauzione_retry_count, cauzione_pi_id, data_ritiro')
     .eq('cauzione_status', 'failed')
     .gte('data_ritiro', today)
-    .lt('cauzione_retry_count', 3)
-    .is('cauzione_pi_id', null);
+    .lt('cauzione_retry_count', 3);
 
   if (error) {
     console.error('[cron retry-cauzioni] db error:', error.message);
@@ -474,7 +477,7 @@ router.get('/retry-cauzioni', cronAuth, async (req, res) => {
     return res.json({ retried: 0 });
   }
 
-  const results = { ok: 0, failed: 0, permanent: 0 };
+  const results = { ok: 0, recovered: 0, failed: 0, permanent: 0, skipped: 0 };
 
   for (const b of bookings) {
     if (!b.stripe_customer_id || !b.stripe_payment_method_id) {
@@ -483,6 +486,36 @@ router.get('/retry-cauzioni', cronAuth, async (req, res) => {
       continue;
     }
 
+    // LOCK ATOMICO ('failed' → 'authorizing'): rende mutuamente esclusivi due giri
+    // di retry sovrapposti e il retry vs il pulsante admin 'autorizza-cauzione'.
+    // Chi perde la corsa ottiene locked=null e salta (niente doppio hold da €500).
+    const { data: locked } = await supabase
+      .from('prenotazioni')
+      .update({ cauzione_status: 'authorizing' })
+      .eq('id', b.id)
+      .eq('cauzione_status', 'failed')
+      .select('id')
+      .single();
+
+    if (!locked) {
+      results.skipped++;
+      continue;
+    }
+
+    // Se esiste già un PI, verificalo su Stripe prima di crearne un altro:
+    // se è un hold valido (requires_capture) recuperalo, evitando un secondo blocco.
+    if (b.cauzione_pi_id) {
+      try {
+        const existing = await stripe.paymentIntents.retrieve(b.cauzione_pi_id);
+        if (existing.status === 'requires_capture') {
+          await supabase.from('prenotazioni').update({ cauzione_status: 'authorized' }).eq('id', b.id);
+          results.recovered++;
+          continue;
+        }
+      } catch (_) { /* PI non trovato su Stripe → si procede a crearne uno nuovo */ }
+    }
+
+    const newCount = (b.cauzione_retry_count || 0) + 1;
     try {
       const pi = await stripe.paymentIntents.create({
         amount:         CAUZIONE_AMOUNT_CENTS,
@@ -493,24 +526,32 @@ router.get('/retry-cauzioni', cronAuth, async (req, res) => {
         confirm:        true,
         off_session:    true,
         description:    `Cauzione bici (retry) — ${b.cliente_nome} (${b.id.substring(0, 8)})`,
+      }, {
+        // Chiave deterministica per (prenotazione, tentativo): se la stessa riga
+        // viene riprocessata con lo stesso retry_count, Stripe non crea un doppione.
+        idempotencyKey: `retry-cauzione-${b.id}-${newCount}`,
       });
 
       const newStatus = pi.status === 'requires_capture' ? 'authorized' : 'failed';
       await supabase.from('prenotazioni').update({
         cauzione_pi_id: pi.id,
         cauzione_status: newStatus,
-        cauzione_retry_count: (b.cauzione_retry_count || 0) + 1,
+        cauzione_retry_count: newCount,
       }).eq('id', b.id);
 
       if (newStatus === 'authorized') results.ok++;
       else results.failed++;
     } catch (err) {
-      const newCount = (b.cauzione_retry_count || 0) + 1;
       const permanent = newCount >= 3;
-      await supabase.from('prenotazioni').update({
+      // Come nel cron deposit: se Stripe ha comunque creato un PI prima di fallire,
+      // salvane l'id — così non resta un hold orfano e non se ne crea un secondo.
+      const failedPiId = err.payment_intent?.id || err.raw?.payment_intent?.id || null;
+      const upd = {
         cauzione_status: permanent ? 'failed_permanent' : 'failed',
         cauzione_retry_count: newCount,
-      }).eq('id', b.id);
+      };
+      if (failedPiId) upd.cauzione_pi_id = failedPiId;
+      await supabase.from('prenotazioni').update(upd).eq('id', b.id);
 
       if (permanent) {
         results.permanent++;
@@ -525,7 +566,7 @@ router.get('/retry-cauzioni', cronAuth, async (req, res) => {
     }
   }
 
-  console.log(`[cron retry-cauzioni] ok=${results.ok} failed=${results.failed} permanent=${results.permanent}`);
+  console.log(`[cron retry-cauzioni] ok=${results.ok} recovered=${results.recovered} failed=${results.failed} permanent=${results.permanent} skipped=${results.skipped}`);
   return res.json({ retried: bookings.length, ...results });
 });
 
