@@ -13,6 +13,7 @@ const supabase = require('../lib/supabase');
 const { sendConfirmationToCliente, sendNotificationToGestore, sendWhatsAppAlert } = require('../lib/email');
 const { calcRange, calcRestituzione, getStagione, calcolaPrezzo } = require('./availability');
 const { sendPushToAll } = require('../lib/push');
+const { writeNotification } = require('../lib/notifications');
 
 const TIPO_IDS_BICI = { ecity: [1,2], emtb: [3,4,5,6,7,8,9], bimbo: [10] };
 
@@ -364,19 +365,38 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       return res.status(500).send('DB error');
     }
 
-    // Salva customer_id e payment_method su tutte le prenotazioni della sessione
+    // Salva customer_id e payment_method su tutte le prenotazioni della sessione.
+    // NB: supabase NON lancia sugli errori di query (ritorna {error}), quindi
+    // controlliamo saveErr esplicitamente. Se il salvataggio non riesce, la cauzione
+    // automatica da €500 non potrà partire → avvisiamo il gestore di gestirla a mano.
     if (session.payment_intent) {
+      let cardSaved = false;
       try {
         const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
-        await supabase
+        const { error: saveErr } = await supabase
           .from('prenotazioni')
           .update({
             stripe_customer_id:       session.customer,
             stripe_payment_method_id: paymentIntent.payment_method,
           })
           .eq('stripe_session_id', session.id);
+        if (saveErr) throw new Error(saveErr.message);
+        cardSaved = true;
       } catch (e) {
         console.error('Errore salvataggio payment method:', e);
+      }
+      if (!cardSaved) {
+        const lead = prenotazioni?.[0];
+        sendPushToAll({
+          title: '⚠️ Carta non salvata',
+          body:  `${lead?.cliente_nome || 'Cliente'} — cauzione automatica NON attivabile, da gestire a mano`,
+          url:   '/admin',
+        }).catch(e => console.error('Push card-save fail:', e.message));
+        writeNotification('card_save_failed', {
+          titolo: `Carta non salvata — ${lead?.cliente_nome || 'Cliente'}`,
+          descrizione: 'Il metodo di pagamento non è stato salvato: la cauzione automatica da €500 non partirà. Gestisci la cauzione manualmente o ricontatta il cliente.',
+          booking_id: lead?.id,
+        }).catch(() => {});
       }
     }
 
